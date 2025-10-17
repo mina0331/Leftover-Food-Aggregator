@@ -2,5 +2,5 @@ from django.shortcuts import render
 
 # Create your views here.
 
-def landingpage(request):
+def home(request):
     return render(request, 'landingpage/home.html')
