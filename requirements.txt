@@ -6,11 +6,14 @@ cryptography==46.0.3
 defusedxml==0.7.1
 dj-database-url==3.0.1
 Django==4.2.25
+django-allauth==65.12.1
 django-heroku==0.3.1
 gunicorn==23.0.0
 idna==3.11
 oauthlib==3.3.1
 packaging==25.0
+psycopg==3.2.10
+psycopg-binary==3.2.10
 psycopg2==2.9.10
 psycopg2-binary==2.9.10
 pycparser==2.23
