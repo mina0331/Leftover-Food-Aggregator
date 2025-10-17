@@ -2,9 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Login</title>
 </head>
-<body>
+<body style="text-align: center; font-family: Arial, sans-serif;">
+    <h1>Log In</h1>
 
+    <!-- "Continue with Google" button -->
+    {% load socialaccount %}
+    <a href="{% provider_login_url 'google' %}">
+        <button type="button" style="
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        ">
+            Continue with Google
+        </button>
+    </a>
 </body>
 </html>
