@@ -1,0 +1,25 @@
+# created by virtualenv automatically
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.Python
+
+# venv
+.venv/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# env files
+.env
+*
