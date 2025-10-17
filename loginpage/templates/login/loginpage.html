@@ -9,18 +9,15 @@
 
     <!-- "Continue with Google" button -->
     {% load socialaccount %}
-    <a href="{% provider_login_url 'google' %}">
-        <button type="button" style="
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        ">
-            Continue with Google
-        </button>
+   <a href="{% provider_login_url 'google' %}"
+      style="display:inline-block;
+      padding:10px 16px;
+      border:0;
+      background:#4285F4;
+      color:#fff;
+      border-radius:6px;
+      text-decoration:none;">
+  Log in
     </a>
 </body>
 </html>
