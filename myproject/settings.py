@@ -28,7 +28,16 @@ SECRET_KEY = "django-insecure-8bis&y=06s^*mr9f!pc#go*w!xilx(sa4op@!do_8%s44(nn!v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'your-app-name.herokuapp.com'
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://uva-leftover-food.herokuapp.com'
+]
+
 
 
 # Application definition
@@ -42,7 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "landingpage",
-    "login",
+    "loginpage",
 
     "allauth",
     "allauth.account",
@@ -62,6 +71,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
