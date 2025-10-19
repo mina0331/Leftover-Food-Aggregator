@@ -10,7 +10,7 @@ class Profile(models.Model):
         ORG = "org", "club"
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.STUDENT)
+    role = models.CharField(max_length=20, choices=Role.choices, blank=True, null=True, default=None)
     display_name = models.CharField(max_length=120, blank = True)
 
     def __str__(self):

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body Style="font-family: sans-serif; text-align: center">
+    <h2> Select your user type</h2>
+    <form method = "post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type = "submit"> Continue </button>
+    </form>
+
+</body>
+</html>
