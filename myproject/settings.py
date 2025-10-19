@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "loginpage",
     "landingpage",
+    "profiles",
 ]
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
