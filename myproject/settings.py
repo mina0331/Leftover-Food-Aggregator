@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "loginpage",
     "landingpage",
     "profiles.apps.ProfilesConfig",
+    "userprivileges",  
+
 ]
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "/post-login/"

@@ -4,15 +4,24 @@
     <meta charset="UTF-8">
     <title>My Profile</title>
 </head>
-<body style="font-family: Aria, sans-serif; text-align: center;">
-<h1> Welcome, {{ profile.display_name| default:request.user.username}} </h1>
-<p> Email: {{request.user.email}} </p>
-<p> Role: {{profile.get_role_display}} </p>
-<a href= "{% url 'landingpage' %}"> <button type = "button"> Back to home</button>
-</a>
+<body style="font-family: Arial, sans-serif; text-align: center;">
+    <h1>Welcome, {{ profile.display_name|default:request.user.username }}</h1>
+    <p>Email: {{ request.user.email }}</p>
+    <p>Role: {{ profile.get_role_display }}</p>
 
+    {% if profile.role == "student" %}
+        <a href="{% url 'userprivileges:student_home' %}">
+            <button type="button">See available food</button>
+        </a>
+    {% elif profile.role == "org" %}
+        <a href="{% url 'userprivileges:provider_home' %}">
+            <button type="button">Post listings</button>
+        </a>
+    {% endif %}
 
+    <br><br>
 
-
+    <a href="/"><button type="button">Back to home</button></a>
+    </a>
 </body>
 </html>
