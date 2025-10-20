@@ -31,11 +31,12 @@ DEBUG = False
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'your-app-name.herokuapp.com'
+    'swe-b-27-.herokuapp.com'
+
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://swe-b-27-.herokuapp.com/'
+    'https://swe-b-27-.herokuapp.com/',
     'http://localhost:8000'
 
 ]
