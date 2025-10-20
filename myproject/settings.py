@@ -35,9 +35,9 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://uva-leftover-food.herokuapp.com'
-    'http://localhost:8000'
     'https://swe-b-27-.herokuapp.com/'
+    'http://localhost:8000'
+
 ]
 
 
