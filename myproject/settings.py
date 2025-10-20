@@ -36,7 +36,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://swe-b-27.herokuapp.com/',
+    'https://swe-b-27.herokuapp.com',
     'http://localhost:8000'
 
 ]
