@@ -17,9 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from landingpage.views import home
+from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('landingpage.urls')),
     path('login/', include('loginpage.urls')),
     path('accounts/', include('allauth.urls')),
+    path("", include("userprivileges.urls")),
+    path("", home, name="landingpage"),
+    path("profile/", my_profile, name="my_profile"),
+    path("select-role/", select_role, name="select_role"),
+    path("post-login/", post_login_redirect, name="post_login_redirect"),
+    path("profile-page/" , profile_redirect, name="profile_redirect"),
+    
+
 ]

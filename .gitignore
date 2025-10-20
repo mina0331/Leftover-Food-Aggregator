@@ -22,4 +22,4 @@ media/
 
 # env files
 .env
-*
+/myvenv
