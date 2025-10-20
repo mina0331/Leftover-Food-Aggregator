@@ -29,15 +29,16 @@ SECRET_KEY = "django-insecure-8bis&y=06s^*mr9f!pc#go*w!xilx(sa4op@!do_8%s44(nn!v
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'swe-b-27-0f4424ee120f.herokuapp.com',
     '127.0.0.1',
     'localhost',
-    'swe-b-27.herokuapp.com'
+
 
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://swe-b-27.herokuapp.com',
-    'http://localhost:8000'
+    'https://swe-b-27-0f4424ee120f.herokuapp.com',
+    'http://localhost:8000',
 
 ]
 
