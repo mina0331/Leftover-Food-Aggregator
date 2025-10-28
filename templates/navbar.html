@@ -1,13 +1,5 @@
 {% load static %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Home Page</title>
-</head>
-<body style="margin:0; font-family: Arial, Helvetica, sans-serif; min-height:100vh; display:flex; flex-direction:column;">
-  {# Grab the current path once for active-link checks #}
+{# Grab the current path once for active-link checks #}
   {% with p=request.path %}
   <nav style="
       width:100%;
@@ -75,45 +67,8 @@
     .mt-24{ margin-top:24px; }
     .mt-40{ margin-top:40px; }
 
-    /* Hero */
-    .hero{
-      background: linear-gradient(180deg, rgba(35,45,75,0.95) 0%, rgba(35,45,75,0.85) 100%), url('') center/cover no-repeat;
-      color:#fff;
-      padding: 54px 0 48px;
-      text-align: center;
-      border-bottom: 4px solid var(--uva-orange);
-    }
-    .hero h1{ margin:0 0 8px; font-size: 36px; letter-spacing:.2px; }
-    .hero p{ margin:0; opacity:.95; }
-
-    /* CTA buttons (role-aware) */
-    .cta-row{ display:flex; gap:12px; justify-content:center; align-items:center; margin-top:18px; flex-wrap:wrap; }
-    .btn{
-      display:inline-block; text-decoration:none; border:2px solid transparent; border-radius:10px;
-      padding:10px 14px; font-weight:600; letter-spacing:.2px;
-      transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
-    }
-    .btn:hover{ transform:translateY(-3px); }
-    .btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(229,114,0,.35); }
-
-    .btn-orange{ background:var(--uva-orange); color:#fff; }
-    .btn-orange:hover{ background:#cf6400; }
-
-    .btn-outline{ background:transparent; color:#fff; border-color:#ffffff70; }
-    .btn-outline:hover{ border-color:#fff; color:#fff; }
-
-    /* Cards (optional content area) */
-    .grid{ display:grid; gap:16px; grid-template-columns:repeat(12,1fr); }
-    .col-4{ grid-column: span 4; }
-    .card{
-      background:#fff; border-radius:14px; padding:18px; box-shadow: 0 8px 24px rgba(10,18,42,.08);
-      transition: transform .18s ease, box-shadow .18s ease;
-      border:1px solid #eaecef;
-    }
-    .card:hover{ transform: translateY(-4px); box-shadow: 0 10px 28px rgba(10,18,42,.12); }
-    .card h3{ margin:0 0 6px; color:var(--uva-ink); }
-    .card p{ margin:0; color:#3a4157; }
-
+  
+  
     /* Footer */
     .site-footer{
       background:#10172A; color:#aab3c5; padding:18px 0; margin-top:40px; font-size:14px;
@@ -137,7 +92,7 @@
     <a href="/"
         class="brand {% if p == '/' %}active-link{% endif %}"
         style="display:flex; gap:10px; align-items:center; text-decoration:none; color:#fff;">
-        <img src="{% static 'img/image.png' %}"
+    <img src="{% static 'img/image.png' %}"
         alt="UVA Leftovers Logo"
         style="height:28px; width:28px; object-fit:contain;">
     <strong style="letter-spacing:.3px;">UVA Leftovers</strong>
@@ -183,6 +138,7 @@
             </li>
             {% endif %}
         {% endwith %}
+        
         {% endif %}
 
         <li>
@@ -219,64 +175,4 @@
   </nav>
   {% endwith %}
 
-  <!-- ======= NEW: Hero w/ role-aware CTAs ======= -->
-  <section class="hero">
-    <div class="container">
-      <h1>Welcome to UVA Leftovers</h1>
-      <p>Reducing waste. Filling Plates. One post at a time.</p>
-
-      <div class="cta-row">
-        {% if user.is_authenticated %}
-          {% with role=user.profile.role %}
-            {% if role == 'student' %}
-              <a class="btn btn-orange" href="{% url 'userprivileges:student_home' %}">Browse Food Listings</a>
-              <a class="btn btn-outline" href="{% url 'profile_redirect' %}">View Profile</a>
-            {% elif role == 'org' %}
-              <a class="btn btn-orange" href="{% url 'userprivileges:provider_home' %}">Post a Listing</a>
-              <a class="btn btn-outline" href="{% url 'profile_redirect' %}">View Profile</a>
-            {% else %}
-              <a class="btn btn-orange" href="{% url 'profile_redirect' %}">Complete Your Profile</a>
-            {% endif %}
-          {% endwith %}
-        {% else %}
-          <a class="btn btn-orange" href="{% url 'loginpage:login' %}">Sign In with Google</a>
-          <a class="btn btn-outline" href="{% url 'profile_redirect' %}">See Your Profile</a>
-        {% endif %}
-      </div>
-    </div>
-  </section>
-
-  <!-- ======= NEW: Content Cards (optional) ======= -->
-  <main class="container mt-40">
-    <div class="grid">
-      <div class="col-4">
-        <article class="card">
-          <h3>How it works</h3>
-          <p>Providers post extra food; students see live listings and pick up before it’s wasted.</p>
-        </article>
-      </div>
-      <div class="col-4">
-        <article class="card">
-          <h3>Why participate?</h3>
-          <p>Save money, reduce waste, and support the Hoo community with real-time sharing.</p>
-        </article>
-      </div>
-      <div class="col-4">
-        <article class="card">
-          <h3>Safety & guidelines</h3>
-          <p>Follow UVA’s food safety tips and pickup instructions on each listing.</p>
-        </article>
-      </div>
-    </div>
-  </main>
-
-  <!-- ======= NEW: Footer ======= -->
-  <footer class="site-footer" style="margin-top:auto;">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-      <span>© {{ now|date:"Y" }} UVA Leftovers</span>
-      <span>Built by B-27 • <a href="{% url 'profile_redirect' %}" style="color:#dbe3f6; text-decoration:none;">Your Profile</a></span>
-    </div>
-  </footer>
-
-</body>
-</html>
+  
