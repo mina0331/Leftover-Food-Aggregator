@@ -5,28 +5,28 @@
 {% block content %}
 <style>
     .start-conversation-container {
-        max-width: 600px;
+        max-width: 700px;
         margin: 40px auto;
         padding: 30px;
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    
+
     .page-header {
         text-align: center;
         margin-bottom: 30px;
     }
-    
+
     .page-header h1 {
         color: #10172A;
         margin-bottom: 10px;
     }
-    
+
     .search-form {
         margin-bottom: 30px;
     }
-    
+
     .search-form input {
         width: 100%;
         padding: 12px;
@@ -35,18 +35,18 @@
         font-size: 14px;
         box-sizing: border-box;
     }
-    
+
     .search-form input:focus {
         outline: none;
         border-color: #E57200;
     }
-    
+
     .users-list {
         list-style: none;
         padding: 0;
         margin: 0;
     }
-    
+
     .user-item {
         padding: 15px;
         border: 1px solid #e0e0e0;
@@ -57,27 +57,47 @@
         align-items: center;
         transition: all 0.3s ease;
     }
-    
+
     .user-item:hover {
         border-color: #E57200;
         transform: translateX(5px);
     }
-    
+
     .user-info {
         flex: 1;
     }
-    
+
     .user-name {
         font-weight: 600;
         color: #10172A;
         margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    
+
+    .user-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .badge-org {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .badge-friend {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
     .user-email {
         font-size: 13px;
         color: #666;
     }
-    
+
     .message-btn {
         padding: 8px 20px;
         background: #E57200;
@@ -90,7 +110,7 @@
         text-decoration: none;
         transition: background 0.3s ease;
     }
-    
+
     .message-btn:hover {
         background: #c76200;
     }
@@ -106,6 +126,36 @@
     .back-link:hover {
         text-decoration: underline;
     }
+
+    .no-contacts-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .no-contacts-state h2 {
+        color: #10172A;
+        margin-bottom: 15px;
+    }
+
+    .no-contacts-state p {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .action-link {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background: #E57200;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .action-link:hover {
+        background: #c76200;
+    }
 </style>
 
 <div class="start-conversation-container">
@@ -113,41 +163,65 @@
 
     <div class="page-header">
         <h1>Start a Conversation</h1>
-        <p style="color: #666;">Search for a user to message</p>
+        {% if user_role == 'student' %}
+        <p style="color: #666;">Message your friends or any organization</p>
+        {% else %}
+        <p style="color: #666;">Message students who have contacted you</p>
+        {% endif %}
     </div>
-    
-    <form method="GET" class="search-form">
-        <input 
-            type="text" 
-            name="q" 
-            placeholder="Search by username or email..." 
-            value="{{ query }}"
-            autofocus
-        >
-    </form>
-    
-    {% if query %}
+
+    {% if not has_contacts and user_role == 'org' %}
+        <div class="no-contacts-state">
+            <h2>No conversations yet</h2>
+            <p>Students will appear here once they message you</p>
+        </div>
+    {% else %}
+        <form method="GET" class="search-form">
+            <input
+                type="text"
+                name="q"
+                placeholder="{% if user_role == 'student' %}Search friends or organizations...{% else %}Search users...{% endif %}"
+                value="{{ query }}"
+                autofocus
+            >
+        </form>
+
         <ul class="users-list">
-            {% for user in users %}
+            {% for item in users %}
             <li class="user-item">
                 <div class="user-info">
-                    <div class="user-name">{{ user.username }}</div>
-                    <div class="user-email">{{ user.email }}</div>
+                    <div class="user-name">
+                        {{ item.user.username }}
+                        {% if item.is_org %}
+                            <span class="user-badge badge-org">Organization</span>
+                        {% elif item.is_friend %}
+                            <span class="user-badge badge-friend">Friend</span>
+                        {% endif %}
+                    </div>
+                    <div class="user-email">{{ item.user.email }}</div>
                 </div>
-                <a href="{% url 'chat:conversation' user.id %}" class="message-btn">
+                <a href="{% url 'chat:conversation' item.user.id %}" class="message-btn">
                     Message
                 </a>
             </li>
             {% empty %}
             <li style="text-align: center; padding: 40px; color: #999;">
-                No users found matching "{{ query }}"
+                {% if query %}
+                    No users found matching "{{ query }}"
+                {% else %}
+                    {% if user_role == 'student' %}
+                        <div class="no-contacts-state">
+                            <h2>Get Started!</h2>
+                            <p>Add friends to start messaging other students</p>
+                            <a href="{% url 'chat:find_friends' %}" class="action-link">Find Friends</a>
+                        </div>
+                    {% else %}
+                        No conversations yet
+                    {% endif %}
+                {% endif %}
             </li>
             {% endfor %}
         </ul>
-    {% else %}
-        <div style="text-align: center; padding: 40px; color: #999;">
-            <p>Enter a username or email to search</p>
-        </div>
     {% endif %}
 </div>
 {% endblock %}
