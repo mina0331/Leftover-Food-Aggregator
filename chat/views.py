@@ -12,7 +12,7 @@ from django.core.paginator import Paginator
 # Create your views here.
 @login_required
 def messages_index(request):
-    conversations = Message.get_conversation(request.user)
+    conversations = Message.get_conversations(request.user)
 
     return render(request, 'chat/index.html', {'conversations': conversations})
 
@@ -20,33 +20,36 @@ def messages_index(request):
 def conversation_detail(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
 
-    qs = Message.objects.filter(
+    # fetch the thread
+    thread_qs = Message.objects.filter(
         Q(sender=request.user, recipient=other_user) |
         Q(sender=other_user, recipient=request.user)
-    ).order_by('timestamp')  # ensure your model has `timestamp`
+    ).order_by('timestamp')
 
-    # mark other_user → me as read
+    # mark incoming as read
     Message.objects.filter(
         sender=other_user,
         recipient=request.user,
         is_read=False
     ).update(is_read=True)
 
+    # send a new message
     if request.method == 'POST':
-        content = request.POST.get('message', '').strip()
+        content = (request.POST.get('message') or '').strip()
         if content:
             Message.objects.create(
                 sender=request.user,
                 recipient=other_user,
                 content=content
             )
-            return redirect('chat:conversation', user_id=other_user.id)
+        return redirect('chat:conversation', user_id=other_user.id)
 
-    all_conversations = Message.get_conversations(request.user)  # be consistent: plural
+    # sidebar list (if you have this helper)
+    all_conversations = Message.get_conversations(request.user)
 
     return render(request, 'chat/conversation.html', {
         'other_user': other_user,
-        'messages': qs,
+        'messages': thread_qs,
         'all_conversations': all_conversations,
     })
 

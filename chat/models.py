@@ -4,6 +4,7 @@ from profiles.models import Profile
 from django.db.models import Q
 from django.utils import timezone
 from Friendslist.models import Friend, FriendRequest
+from datetime import datetime
 # Create your models here.
 
 
@@ -22,24 +23,50 @@ class Message(models.Model):
         return f"{self.sender} -> {self.recipient}: {self.content[:30]}"
 
     @classmethod
-    def get_conversation(cls, user):
+    def get_conversations(cls, user):
+        # 1) Who have I chatted with?
         sent_to = cls.objects.filter(sender=user).values_list('recipient', flat=True).distinct()
         received_from = cls.objects.filter(recipient=user).values_list('sender', flat=True).distinct()
+        user_ids = set(sent_to).union(set(received_from))
+        if not user_ids:
+            return []
 
-        user_ids = set(list(sent_to) + list(received_from))
+        # 2) Load all “other” users in bulk (avoid N+1)
+        others = User.objects.in_bulk(user_ids)  # dict {id: User}
 
         conversations = []
-        for user_id in user_ids:
-            other_user = User.objects.get(id=user_id)
-            last_message = cls.objects.filter(Q(sender=user, receiver=other_user) | Q(sender=other_user, receiver=user)).order_by('-timestamp').first()
+        for oid, other_user in others.items():
+            # 3) Latest message between us
+            last_msg = (
+                cls.objects
+                .filter(
+                    Q(sender=user, recipient=other_user) |
+                    Q(sender=other_user, recipient=user)
+                )
+                .only('content', 'timestamp')  # small optimization
+                .order_by('-timestamp')
+                .first()
+            )
 
-            unread_count = cls.objects.filter(sender=other_user, recipient=user, is_read=False).count()
-            conversations.append({'other_user': other_user,
-                                  'last_message': last_message.content if last_message else '',
-                                  last_message.time: last_message.timestamp if last_message else None,
-                                  unread_count: unread_count
-                                  })
-        conversations.sort(key=lambda x: x['last_message_time'] or '', reverse=True)
+            # 4) Unread messages from the other user → me
+            unread_count = cls.objects.filter(
+                sender=other_user,
+                recipient=user,
+                is_read=False
+            ).count()
+
+            conversations.append({
+                'other_user': other_user,
+                'last_message': last_msg.content if last_msg else '',
+                'last_message_time': last_msg.timestamp if last_msg else None,
+                'unread_count': unread_count,
+            })
+
+        # 5) Sort most-recent first (None goes last)
+        conversations.sort(
+            key=lambda c: c['last_message_time'] or datetime.min,
+            reverse=True
+        )
         return conversations
 
     @classmethod

@@ -159,69 +159,64 @@
 </style>
 
 <div class="start-conversation-container">
-    <a href="{% url 'chat:index' %}" class="back-link">← Back to Messages</a>
+  <a href="{% url 'chat:index' %}" class="back-link">← Back to Messages</a>
 
-    <div class="page-header">
-        <h1>Start a Conversation</h1>
-        {% if user_role == 'student' %}
-        <p style="color: #666;">Message your friends or any organization</p>
-        {% elif user_role == 'org' %}
-        <p style="color: #666;">Message students who have contacted you</p>
-        {% endif %}
-    </div>
-
-    {% if not has_contacts and user_role == 'org' %}
-        <div class="no-contacts-state">
-            <h2>No conversations yet</h2>
-            <p>Students will appear here once they message you</p>
-        </div>
-    {% else %}
-        <form method="GET" class="search-form">
-            <input
-                type="text"
-                name="q"
-                placeholder="{% if user_role == 'student' %}Search friends or organizations...{% else %}Search users...{% endif %}"
-                value="{{ query }}"
-                autofocus
-            >
-        </form>
-
-        <ul class="users-list">
-            {% for item in users %}
-            <li class="user-item">
-                <div class="user-info">
-                    <div class="user-name">
-                        {{ item.user.username }}
-                        {% if item.is_org %}
-                            <span class="user-badge badge-org">Organization</span>
-                        {% elif item.is_friend %}
-                            <span class="user-badge badge-friend">Friend</span>
-                        {% endif %}
-                    </div>
-                    <div class="user-email">{{ item.user.email }}</div>
-                </div>
-                <a href="{% url 'chat:start_conversation' %}" class="message-btn">
-                    Message
-                </a>
-            </li>
-            {% empty %}
-            <li style="text-align: center; padding: 40px; color: #999;">
-                {% if query %}
-                    No users found matching "{{ query }}"
-                {% else %}
-                    {% if user_role == 'student' %}
-                        <div class="no-contacts-state">
-                            <h2>Get Started!</h2>
-                            <p>Add friends to start messaging other students</p>
-                            <a href="{% url 'chat:find_friends' %}" class="action-link">Find Friends</a>
-                        </div>
-                    {% else %}
-                        No conversations yet
-                    {% endif %}
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
+  <div class="page-header">
+    <h1>Start a Conversation</h1>
+    {% if user_role == 'student' %}
+      <p style="color:#666;">Message your friends or any organization</p>
+    {% elif user_role == 'org' %}
+      <p style="color:#666;">Message students who have contacted you</p>
     {% endif %}
+  </div>
+
+  {# FIX: use has_friends, not has_contacts #}
+  {% if not has_friends and user_role == 'org' %}
+    <div class="no-contacts-state">
+      <h2>No conversations yet</h2>
+      <p>Students will appear here once they message you</p>
+    </div>
+  {% else %}
+    <form method="GET" class="search-form">
+      <input
+        type="text"
+        name="q"
+        placeholder="{% if user_role == 'student' %}Search friends or organizations...{% else %}Search users...{% endif %}"
+        value="{{ query }}"
+        autofocus
+      >
+    </form>
+
+    <ul class="users-list">
+
+      {% for u in users %}
+        <li class="user-item">
+          <div class="user-info">
+            <div class="user-name">
+              {{ u.username }}
+            </div>
+            <div class="user-email">{{ u.email }}</div>
+          </div>
+          <a href="{% url 'chat:conversation' u.id %}" class="message-btn">Message</a>
+        </li>
+      {% empty %}
+        <li style="text-align:center; padding:40px; color:#999;">
+          {% if query %}
+            No users found matching "{{ query }}"
+          {% else %}
+            {% if user_role == 'student' %}
+              <div class="no-contacts-state">
+                <h2>Get Started!</h2>
+                <p>Add friends to start messaging other students</p>
+                <a href="{% url 'chat:find_friends' %}" class="action-link">Find Friends</a>
+              </div>
+            {% else %}
+              No conversations yet
+            {% endif %}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 </div>
 {% endblock %}
