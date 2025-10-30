@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Start New Conversation - UVA Leftovers{% endblock %}
+
+{% block content %}
+<style>
+    .start-conversation-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        color: #10172A;
+        margin-bottom: 10px;
+    }
+    
+    .search-form {
+        margin-bottom: 30px;
+    }
+    
+    .search-form input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .search-form input:focus {
+        outline: none;
+        border-color: #E57200;
+    }
+    
+    .users-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .user-item {
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .user-item:hover {
+        border-color: #E57200;
+        transform: translateX(5px);
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: #10172A;
+        margin-bottom: 4px;
+    }
+    
+    .user-email {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .message-btn {
+        padding: 8px 20px;
+        background: #E57200;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.3s ease;
+    }
+    
+    .message-btn:hover {
+        background: #c76200;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #E57200;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="start-conversation-container">
+    <a href="{% url 'chat:index' %}" class="back-link">← Back to Messages</a>
+
+    <div class="page-header">
+        <h1>Start a Conversation</h1>
+        <p style="color: #666;">Search for a user to message</p>
+    </div>
+    
+    <form method="GET" class="search-form">
+        <input 
+            type="text" 
+            name="q" 
+            placeholder="Search by username or email..." 
+            value="{{ query }}"
+            autofocus
+        >
+    </form>
+    
+    {% if query %}
+        <ul class="users-list">
+            {% for user in users %}
+            <li class="user-item">
+                <div class="user-info">
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-email">{{ user.email }}</div>
+                </div>
+                <a href="{% url 'chat:conversation' user.id %}" class="message-btn">
+                    Message
+                </a>
+            </li>
+            {% empty %}
+            <li style="text-align: center; padding: 40px; color: #999;">
+                No users found matching "{{ query }}"
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div style="text-align: center; padding: 40px; color: #999;">
+            <p>Enter a username or email to search</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -26,11 +26,28 @@
         padding: 20px;
         background: linear-gradient(135deg, #10172A 0%, #E57200 100%);
         color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .sidebar-header h2 {
         margin: 0;
         font-size: 20px;
+    }
+    .new-message-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.3s ease;
+    }
+
+    .new-message-btn:hover {
+        background: rgba(255,255,255,0.3);
     }
 
     .search-box {
@@ -146,6 +163,7 @@
     <div class="conversations-sidebar">
         <div class="sidebar-header">
             <h2>💬 Messages</h2>
+            <a href="{% url 'chat:start_conversation' %}" class="new-message-btn">+ New</a>
         </div>
 
         <div class="search-box">
@@ -178,7 +196,7 @@
         </ul>
     </div>
 
-    <!-- Right Side: Placeholder when no conversation selected -->
+    <!-- right Side: Placeholder when no conversation selected -->
     <div class="chat-placeholder">
         <div>
             <h3 style="color: #10172A; margin-bottom: 10px;">Select a conversation</h3>

@@ -3,12 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Message
+from .models import Friend
 
 
 # Create your views here.
 @login_required
 def messages_index(request):
-    conversations = Message.get_conversations(request.user)
+    conversations = Message.get_conversation(request.user)
 
     return render(request, 'chat/index.html', {'conversations': conversations})
 
@@ -43,20 +44,27 @@ def conversation_detail(request, user_id):
                 'messages' : messages,
                 'all_conversations' : all_conversations})
 
+
 @login_required
 def start_conversation(request):
+    """Search for friends to start a conversation"""
     users = []
     query = request.GET.get('q', '').strip()
 
+    # Get all friends of current user
+    friends = Friend.get_friends(request.user)
+
     if query:
-        users = User.objects.filter(
+        # Search only within friends
+        users = friends.filter(
             Q(username__icontains=query) | Q(email__icontains=query)
-        ).exclude(id=request.user.id)[:10]
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        if user_id:
-            return redirect('chat:conversations', user_id=user_id)
-    return render(request, 'chat/conversation.html', {
-        'users' : users,
-        'query' : query
+        )[:10]
+    else:
+        # Show all friends if no query
+        users = friends
+
+    return render(request, 'chat/start_conversation.html', {
+        'users': users,
+        'query': query,
+        'has_friends': friends.exists()
     })
