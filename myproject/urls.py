@@ -30,6 +30,7 @@ urlpatterns = [
     path("select-role/", select_role, name="select_role"),
     path("post-login/", post_login_redirect, name="post_login_redirect"),
     path("profile-page/" , profile_redirect, name="profile_redirect"),
+    path('chat', include("chat.urls")),
     
 
 ]
