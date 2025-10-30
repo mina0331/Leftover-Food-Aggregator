@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     "loginpage",
     "landingpage",
     "profiles.apps.ProfilesConfig",
-    "userprivileges",  
+    "userprivileges",
+    "chat",
 
 ]
 SITE_ID = 1
