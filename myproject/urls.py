@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+import Friendslist
 from landingpage.views import home
 from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect
 
@@ -31,6 +32,7 @@ urlpatterns = [
     path("post-login/", post_login_redirect, name="post_login_redirect"),
     path("profile-page/" , profile_redirect, name="profile_redirect"),
     path('chat/', include("chat.urls")),
+    path("friends/", include(("Friendslist.urls", "friends"), namespace="friends")),
     
 
 ]

@@ -5,6 +5,7 @@ from django.db.models import Q, Case, When, IntegerField
 from .models import Message
 from .models import Friend
 from .models import FriendRequest
+from django.contrib import messages
 
 
 # Create your views here.
@@ -76,62 +77,43 @@ def start_conversation(request):
 def find_friends(request):
     q = request.GET.get('q', '').strip()
 
-    # Current friends (assumes Friend.get_friends(user) -> queryset of Users)
-    friend_qs = Friend.get_friends(request.user)
-    friend_ids = set(friend_qs.values_list('id', flat=True))
+    # current friends
+    friend_ids = set(Friend.get_friends(request.user).values_list('id', flat=True))
 
-    # Pending requests (adapt model/field names if yours differ)
-    # Assumes a FriendRequest model with from_user, to_user, status='pending'
-    pending_sent_ids = set(
-        FriendRequest.objects.filter(from_user=request.user, status='pending')
-        .values_list('to_user_id', flat=True)
+    # outgoing pending (map to_user_id -> request id)
+    outgoing = {
+        fr.to_user_id: fr.id
+        for fr in FriendRequest.objects
+            .filter(from_user=request.user, status='pending')
+            .only('id', 'to_user_id')
+    }
+
+    # incoming pending (from_user ids)
+    incoming_ids = set(
+        FriendRequest.objects
+            .filter(to_user=request.user, status='pending')
+            .values_list('from_user_id', flat=True)
     )
-    pending_received_ids = set(
-        FriendRequest.objects.filter(to_user=request.user, status='pending')
-        .values_list('from_user_id', flat=True)
-    )
 
-    # Base pool: all non-self, non-friends
-    pool = (User.objects
-            .select_related('profile')
-            .exclude(id=request.user.id)
-            .exclude(id__in=friend_ids))
-
-    users_qs = pool
+    # candidate users
+    qs = User.objects.exclude(id=request.user.id)
     if q:
-        users_qs = users_qs.filter(Q(username__icontains=q) | Q(email__icontains=q)).annotate(
-            priority=Case(
-                When(Q(username__iexact=q) | Q(email__iexact=q), then=0),
-                When(Q(username__istartswith=q) | Q(email__istartswith=q), then=1),
-                default=2,
-                output_field=IntegerField()
-            )
-        ).order_by('priority', 'username')
-    else:
-        users_qs = users_qs.order_by('username')
+        qs = qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
+    qs = qs.order_by('username')[:50]
 
-    # Build the structure your template expects
     users = []
-    for u in users_qs[:50]:
+    for u in qs:
         if u.id in friend_ids:
-            status = 'friend'
-        elif u.id in pending_sent_ids:
-            status = 'pending_sent'
-        elif u.id in pending_received_ids:
-            status = 'pending_received'
+            status, cancel_req_id = 'friend', None
+        elif u.id in outgoing:
+            status, cancel_req_id = 'pending_sent', outgoing[u.id]   # <-- IMPORTANT
+        elif u.id in incoming_ids:
+            status, cancel_req_id = 'pending_received', None
         else:
-            status = 'none'
-        users.append({'user': u, 'status': status})
+            status, cancel_req_id = 'none', None
+        users.append({'user': u, 'status': status, 'cancel_req_id': cancel_req_id})
 
-    # pass role if needed
-    profile = getattr(request.user, 'profile', None)
-    user_role = getattr(profile, 'role', None)
-
-    return render(request, 'chat/find_friends.html', {
-        'users': users,
-        'query': q,
-        'user_role': user_role,
-    })
+    return render(request, 'chat/find_friends.html', {'users': users, 'query': q})
 
 @login_required
 def send_friend_request(request, user_id):
@@ -161,3 +143,19 @@ def send_friend_request(request, user_id):
     FriendRequest.objects.create(from_user=request.user, to_user=to_user, status='pending')
     messages.success(request, "Friend request sent.")
     return redirect('chat:find_friends')
+
+@login_required
+def cancel_friend_request(request, req_id):
+    if request.method != 'POST':
+        return redirect('friends:friends_list')
+
+    fr = get_object_or_404(
+        FriendRequest,
+        id=req_id,
+        from_user=request.user,   # only the sender can cancel their own pending request
+        status='pending'
+    )
+    fr.delete()
+    messages.info(request, "Friend request canceled.")
+    return redirect('friends:friends_list')
+

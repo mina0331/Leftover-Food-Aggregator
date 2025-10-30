@@ -160,20 +160,25 @@
                 </div>
                 
                 {% if item.status == 'friend' %}
-                    <span class="status-badge badge-friend">✓ Friends</span>
-                    <a href="{% url 'chat:conversation' item.user.id %}" class="action-btn btn-message" style="margin-left: 10px;">
-                        Message
-                    </a>
-                {% elif item.status == 'pending_sent' %}
-                    <span class="status-badge badge-pending">Request Sent</span>
+                <span class="status-badge badge-friend">✓ Friends</span>
+                <a href="{% url 'chat:conversation' item.user.id %}" class="action-btn btn-message" style="margin-left: 10px;">
+                Message
+                </a>
+
                 {% elif item.status == 'pending_received' %}
-                    <a href="{% url 'chat:friend_requests' %}" class="action-btn btn-add">
-                        View Request
-                    </a>
+                <a href="{% url 'friends:friends_list' %}" class="action-btn btn-add">View Request</a>
+
+                {% elif item.status == 'pending_sent' %}
+                    <form method="post" action="{% url 'friends:cancel_friend_request' item.cancel_req_id %}" style="display:inline;">
+                        {% csrf_token %}
+                    <button type="submit" class="action-btn btn-pending">Cancel Request</button>
+                    </form>
+
                 {% else %}
-                    <a href="{% url 'chat:send_friend_request' item.user.id %}" class="action-btn btn-add">
-                        + Add Friend
-                    </a>
+                <form method="post" action="{% url 'friends:send_friend_request' item.user.id %}" style="display:inline;">
+                {% csrf_token %}
+                    <button type="submit" class="action-btn btn-add">+ Add Friend</button>
+                </form>
                 {% endif %}
             </li>
             {% empty %}

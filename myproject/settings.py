@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "profiles.apps.ProfilesConfig",
     "userprivileges",
     "chat",
+    "Friendslist",
 
 ]
 SITE_ID = 1
@@ -108,6 +109,10 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+TEMPLATES[0]['OPTIONS']['context_processors'] += [
+    'chat.context_processors.pending_friend_requests_count',
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"
