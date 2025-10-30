@@ -6,6 +6,7 @@ from .models import Message
 from .models import Friend
 from .models import FriendRequest
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 
 # Create your views here.
@@ -19,13 +20,15 @@ def messages_index(request):
 def conversation_detail(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
 
-    messages = Message.objects.filter(
-        Q(sender=request.user, receiver=other_user) | Q(sender=other_user, receiver=request.user)
-    ).order_by('timestamp')
+    qs = Message.objects.filter(
+        Q(sender=request.user, recipient=other_user) |
+        Q(sender=other_user, recipient=request.user)
+    ).order_by('timestamp')  # ensure your model has `timestamp`
 
+    # mark other_user → me as read
     Message.objects.filter(
-        sender = other_user,
-        recipient = request.user,
+        sender=other_user,
+        recipient=request.user,
         is_read=False
     ).update(is_read=True)
 
@@ -33,46 +36,49 @@ def conversation_detail(request, user_id):
         content = request.POST.get('message', '').strip()
         if content:
             Message.objects.create(
-                sender = request.user,
-                recipient = other_user,
-                content = content
+                sender=request.user,
+                recipient=other_user,
+                content=content
             )
-            return redirect('chat:conversations', user_id=user_id)
+            return redirect('chat:conversation', user_id=other_user.id)
 
-    all_conversations = Message.get_conversations(request.user)
+    all_conversations = Message.get_conversations(request.user)  # be consistent: plural
 
-    return render(request, 'chat/conversation.html',
-                  {'other_user': other_user,
-                'messages' : messages,
-                'all_conversations' : all_conversations})
-
+    return render(request, 'chat/conversation.html', {
+        'other_user': other_user,
+        'messages': qs,
+        'all_conversations': all_conversations,
+    })
 
 @login_required
 def start_conversation(request):
-    users = []
-    query = request.GET.get('q', '').strip()
+    query = (request.GET.get('q') or '').strip()
 
-    # Get all friends of current user
-    friends = Friend.get_friends(request.user)
+    # 1) Base queryset: all friends as Users
+    friends_qs = Friend.get_friends(request.user).select_related('profile').order_by('username')
 
+    # 2) Optional search inside friends
     if query:
-        # Search only within friends
-        users = friends.filter(
-            Q(username__icontains=query) | Q(email__icontains=query)
-        )[:10]
-    else:
-        # Show all friends if no query
-        users = friends
-    profile = getattr(request.user, 'profile', None)
-    user_role = getattr(profile, 'role', None)
+        friends_qs = friends_qs.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query)
+        )
+
+    # 3) Pagination (10 per page by default)
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(friends_qs, 10)
+    page_obj = paginator.get_page(page_number)
+
+    # 4) Role (defensive)
+    role = getattr(getattr(request.user, 'profile', None), 'role', None)
 
     return render(request, 'chat/start_conversation.html', {
-        'users': users,
+        'users': page_obj.object_list,   # iterate as usual
+        'page_obj': page_obj,            # for next/prev links
         'query': query,
-        'has_friends': friends.exists(),
-        'user_role' : user_role,
+        'has_friends': friends_qs.exists(),
+        'user_role': role,
     })
-
 @login_required
 def find_friends(request):
     q = request.GET.get('q', '').strip()

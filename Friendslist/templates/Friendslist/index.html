@@ -25,7 +25,7 @@
             <div class="user-name" style="font-weight:600;color:#10172A;">{{ u.username }}</div>
             <div class="user-email" style="font-size:13px;color:#666;">{{ u.email }}</div>
           </div>
-          <form method="post" action="{% url 'chat:remove_friend' u.id %}">
+          <form method="post" action="{% url 'friends:remove_friend' u.id %}">
             {% csrf_token %}
             <button class="action-btn btn-pending" style="background:#999;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;">
               Remove
@@ -48,11 +48,11 @@
             <div class="user-email" style="font-size:13px;color:#666;">{{ r.from_user.email }}</div>
           </div>
           <div>
-            <form method="post" action="{% url 'chat:accept_friend_request' r.id %}" style="display:inline;">
+            <form method="post" action="{% url 'friends:accept_friend_request' r.id %}" style="display:inline;">
               {% csrf_token %}
               <button class="action-btn btn-add" style="background:#E57200;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;">Accept</button>
             </form>
-            <form method="post" action="{% url 'chat:reject_friend_request' r.id %}" style="display:inline;margin-left:6px;">
+            <form method="post" action="{% url 'friends:reject_friend_request' r.id %}" style="display:inline;margin-left:6px;">
               {% csrf_token %}
               <button class="action-btn btn-message" style="background:#10172A;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;">Reject</button>
             </form>
@@ -73,7 +73,7 @@
             <div class="user-name" style="font-weight:600;color:#10172A;">{{ r.to_user.username }}</div>
             <div class="user-email" style="font-size:13px;color:#666;">{{ r.to_user.email }}</div>
           </div>
-          <form method="post" action="{% url 'chat:cancel_friend_request' r.id %}">
+          <form method="post" action="{% url 'friends:cancel_friend_request' r.id %}">
             {% csrf_token %}
             <button class="action-btn btn-pending" style="background:#999;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;">Cancel</button>
           </form>
