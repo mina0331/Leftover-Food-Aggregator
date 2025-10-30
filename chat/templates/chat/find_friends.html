@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Find Friends - UVA Leftovers{% endblock %}
+
+{% block content %}
+<style>
+    .find-friends-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        color: #10172A;
+        margin-bottom: 10px;
+    }
+    
+    .search-form {
+        margin-bottom: 30px;
+    }
+    
+    .search-form input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .search-form input:focus {
+        outline: none;
+        border-color: #E57200;
+    }
+    
+    .users-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .user-item {
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: #10172A;
+        margin-bottom: 4px;
+    }
+    
+    .user-email {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .action-btn {
+        padding: 8px 20px;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add {
+        background: #E57200;
+    }
+    
+    .btn-add:hover {
+        background: #c76200;
+    }
+    
+    .btn-message {
+        background: #10172A;
+    }
+    
+    .btn-message:hover {
+        background: #0a0f1f;
+    }
+    
+    .btn-pending {
+        background: #999;
+        cursor: not-allowed;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .badge-friend {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .badge-pending {
+        background: #fff3e0;
+        color: #e65100;
+    }
+</style>
+
+<div class="find-friends-container">
+    <div class="page-header">
+        <h1>🔍 Find Friends</h1>
+        <p style="color: #666;">Search by username or email</p>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; 
+                    {% if message.tags == 'error' %}background: #fee; border: 1px solid #fcc;
+                    {% elif message.tags == 'success' %}background: #efe; border: 1px solid #cfc;
+                    {% else %}background: #e3f2fd; border: 1px solid #90caf9;{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="GET" class="search-form">
+        <input 
+            type="text" 
+            name="q" 
+            placeholder="Search for UVA students..." 
+            value="{{ query }}"
+            autofocus
+        >
+    </form>
+    
+    {% if query %}
+        <ul class="users-list">
+            {% for item in users %}
+            <li class="user-item">
+                <div class="user-info">
+                    <div class="user-name">{{ item.user.username }}</div>
+                    <div class="user-email">{{ item.user.email }}</div>
+                </div>
+                
+                {% if item.status == 'friend' %}
+                    <span class="status-badge badge-friend">✓ Friends</span>
+                    <a href="{% url 'chat:conversation' item.user.id %}" class="action-btn btn-message" style="margin-left: 10px;">
+                        Message
+                    </a>
+                {% elif item.status == 'pending_sent' %}
+                    <span class="status-badge badge-pending">Request Sent</span>
+                {% elif item.status == 'pending_received' %}
+                    <a href="{% url 'chat:friend_requests' %}" class="action-btn btn-add">
+                        View Request
+                    </a>
+                {% else %}
+                    <a href="{% url 'chat:send_friend_request' item.user.id %}" class="action-btn btn-add">
+                        + Add Friend
+                    </a>
+                {% endif %}
+            </li>
+            {% empty %}
+            <li style="text-align: center; padding: 40px; color: #999;">
+                No users found matching "{{ query }}"
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div style="text-align: center; padding: 40px; color: #999;">
+            <p>Enter a name or email to search for friends</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
