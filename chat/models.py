@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from profiles.models import Profile
 from django.db.models import Q
+from django.utils import timezone
 # Create your models here.
 
 
@@ -66,3 +67,56 @@ class Message(models.Model):
                                   })
         conversations.sort(key=lambda x: x['last_message_time'] or '', reverse=True)
         return conversations
+class FriendRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    from_user = models.ForeignKey(
+        User, related_name='sent_requests', on_delete=models.CASCADE
+    )
+    to_user = models.ForeignKey(
+        User, related_name='received_requests', on_delete=models.CASCADE
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+        indexes = [
+            models.Index(fields=['from_user', 'to_user']),
+        ]
+
+    def __str__(self):
+        return f"{self.from_user.username} → {self.to_user.username} ({self.status})"
+
+    @classmethod
+    def send_request(cls, from_user, to_user):
+        """Send a friend request if it doesn’t already exist."""
+        if from_user == to_user:
+            return None  # cannot friend yourself
+        # check if any existing pending or accepted request between the pair
+        existing = cls.objects.filter(
+            Q(from_user=from_user, to_user=to_user) |
+            Q(from_user=to_user, to_user=from_user),
+            status__in=['pending', 'accepted']
+        ).first()
+        if existing:
+            return existing
+        return cls.objects.create(from_user=from_user, to_user=to_user, status='pending')
+
+    def accept(self):
+        """Accept the friend request and add to both users’ friend lists."""
+        from .models import Friend  # import here to avoid circular imports
+        self.status = 'accepted'
+        self.save()
+        Friend.make_friends(self.from_user, self.to_user)
+        return self
+
+    def reject(self):
+        """Reject the friend request."""
+        self.status = 'rejected'
+        self.save()
+        return self

@@ -165,7 +165,7 @@
         <h1>Start a Conversation</h1>
         {% if user_role == 'student' %}
         <p style="color: #666;">Message your friends or any organization</p>
-        {% else %}
+        {% elif user_role == 'org' %}
         <p style="color: #666;">Message students who have contacted you</p>
         {% endif %}
     </div>
