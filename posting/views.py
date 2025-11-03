@@ -18,8 +18,7 @@ def index(request):
     page_number = request.GET.get('page')   # e.g. ?page=2
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'posting/posts.html', {'page_obj': page_obj})
-
+    return render(request, 'posting/posts.html', {'page_obj': page_obj, 'posts': page_obj,})
 
 
 @login_required
