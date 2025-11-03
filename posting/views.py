@@ -4,6 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from .forms import PostForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .forms import PostForm
+from django.contrib import messages
 # Create your views here.
 
 
@@ -16,12 +20,13 @@ def index(request):
 
     return render(request, 'posting/posts.html', {'page_obj': page_obj})
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .forms import PostForm
+
 
 @login_required
 def create_post(request):
+    if request.user.profile.role != 'org':
+        messages.warning(request, 'You are not authorized to create posts.')
+        return redirect('posting:post_list')
     if request.method == "POST":
         form = PostForm(request.POST, request.FILES)   # include files
         if form.is_valid():
