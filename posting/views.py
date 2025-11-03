@@ -16,16 +16,24 @@ def index(request):
 
     return render(request, 'posting/posts.html', {'page_obj': page_obj})
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .forms import PostForm
+
 @login_required
 def create_post(request):
     if request.method == "POST":
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)   # include files
         if form.is_valid():
-            form.save()
-            return redirect("index")
-        else:
-            form = PostForm()
-        return render(request, "posting/create_post.html", {"form": form})
+            post = form.save(commit=False)             # set author
+            post.author = request.user
+            post.save()
+            return redirect("posting:post_list")       # or your desired route
+    else:
+        form = PostForm()
+
+    # render on GET or invalid POST
+    return render(request, "posting/create_post.html", {"form": form})
 
 @login_required
 def post_detail(request, post_id):
