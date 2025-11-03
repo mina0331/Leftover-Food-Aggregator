@@ -64,6 +64,18 @@ INSTALLED_APPS = [
     "storages",
 
 ]
+
+#AWS settings
+AWS_ACCESS_KEY_ID = 'AKIAT4WRC67XVTE5SVOC'
+AWS_SECRET_ACCESS_KEY = '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'
+
+AWS_STORAGE_BUCKET_NAME = 'swe-b-27-profile-pics'
+
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_FILE_OVERWRITE = False
+
+
+
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "/post-login/"
 
