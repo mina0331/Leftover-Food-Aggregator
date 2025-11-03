@@ -1,0 +1,75 @@
+{% load static %}
+{% with p=request.path %}
+<nav style="width:100%; background:#232D4B; color:#fff; padding:10px 16px; box-sizing:border-box; position:relative; z-index:1000;">
+  <style>
+    .nav-inner{display:flex; align-items:center; gap:16px;}
+    .nav-left{display:flex; align-items:center; gap:10px;}
+    .nav-center{flex:1; display:flex; justify-content:center;}
+    .nav-right{display:flex; gap:12px; align-items:center; margin-left:auto;}
+    .nav-list{list-style:none; display:flex; gap:18px; margin:0; padding:0; align-items:center; flex-wrap:wrap;}
+    .nav-link, .brand { display:inline-block; text-decoration:none; padding:6px 10px; border-radius:6px; color:#fff; position:relative; transition:transform .2s, opacity .2s, color .2s; }
+    .nav-link:hover, .brand:hover { transform:translateY(-3px); opacity:.9; }
+    .nav-link::after, .brand::after { content:""; position:absolute; left:0; bottom:-2px; height:3px; width:0; background:#E57200; transition:width .25s; }
+    .nav-link:hover::after, .brand:hover::after { width:100%; }
+    .active-link { color:#E57200 !important; font-weight:bold; }
+    .active-link::after { width:100%; }
+    .badge{background:#E57200; color:#fff; border-radius:10px; padding:2px 6px; font-size:12px; margin-left:6px;}
+    @media (max-width: 900px){ .nav-center{justify-content:flex-start;} }
+  </style>
+
+  <div class="nav-inner">
+    <!-- Left -->
+    <div class="nav-left">
+      <a href="/" class="brand {% if p == '/' %}active-link{% endif %}">
+        <img src="{% static 'img/image.png' %}" alt="UVA Leftovers Logo" style="height:28px;width:28px;object-fit:contain;">
+        <strong style="letter-spacing:.3px;">UVA Leftovers</strong>
+      </a>
+    </div>
+
+    <!-- Center -->
+    <div class="nav-center">
+      <ul class="nav-list">
+        <li>
+          <a href="{% url 'profile_redirect' %}" class="nav-link {% if '/profile' in p %}active-link{% endif %}">Profile</a>
+        </li>
+
+        {% if user.is_authenticated %}
+          {% with role=user.profile.role %}
+            {% if role == 'student' %}
+              <li><a href="{% url 'userprivileges:student_home' %}" class="nav-link {% if '/student' in p %}active-link{% endif %}">Food Listings</a></li>
+            {% elif role == 'org' %}
+              <li><a href="{% url 'userprivileges:provider_home' %}" class="nav-link {% if '/provider' in p %}active-link{% endif %}">Post Listings</a></li>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+
+        <li><a href="#" class="nav-link">About</a></li>
+
+        <li>
+          {% url 'chat:index' as chat_url %}
+          <a href="{{ chat_url }}" class="nav-link {% if p|slice:':6' == '/chat/' %}active-link{% endif %}">Chat</a>
+        </li>
+
+        <li>
+          {% url 'friends:friends_list' as friends_url %}
+          <a href="{{ friends_url }}" class="nav-link {% if p|slice:':9' == '/friends/' %}active-link{% endif %}">
+            Friends
+            {% if pending_friend_requests_count %}
+              <span class="badge">{{ pending_friend_requests_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Right -->
+    <div class="nav-right">
+      {% if not user.is_authenticated %}
+        <a href="{% url 'loginpage:login' %}" class="nav-link">Log In</a>
+      {% else %}
+        <a href="{% url 'account_logout' %}" class="nav-link">Log Out</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endwith %}

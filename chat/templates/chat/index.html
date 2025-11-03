@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Messages - UVA Leftovers{% endblock %}
+
+{% block content %}
+<style>
+    .messages-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        height: calc(100vh - 200px);
+    }
+
+    .conversations-sidebar {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        background: linear-gradient(135deg, #10172A 0%, #E57200 100%);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sidebar-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+    .new-message-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.3s ease;
+    }
+
+    .new-message-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .search-box {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #E57200;
+    }
+
+    .conversations-list {
+        flex: 1;
+        overflow-y: auto;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .conversation-item {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .conversation-item:hover {
+        background: #f8f9fa;
+    }
+
+    .conversation-item.active {
+        background: #fff5ed;
+        border-left: 4px solid #E57200;
+    }
+
+    .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .conversation-name {
+        font-weight: 600;
+        color: #10172A;
+    }
+
+    .conversation-time {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .conversation-preview {
+        font-size: 14px;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .unread-badge {
+        background: #E57200;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+
+    .chat-placeholder {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        text-align: center;
+        padding: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .messages-container {
+            grid-template-columns: 1fr;
+        }
+        .chat-placeholder {
+            display: none;
+        }
+    }
+</style>
+
+<div class="messages-container">
+    <!-- Left Sidebar: Conversations List -->
+    <div class="conversations-sidebar">
+        <div class="sidebar-header">
+            <h2>💬 Messages</h2>
+            <a href="{% url 'chat:start_conversation' %}" class="new-message-btn">+ New</a>
+        </div>
+
+        <div class="search-box">
+            <input type="text" placeholder="Search messages..." id="searchInput">
+        </div>
+
+        <ul class="conversations-list">
+            {% for conversation in conversations %}
+            <a href="{% url 'chat:conversation' conversation.other_user.id %}"
+               class="conversation-item {% if conversation.other_user.id == current_conversation_id %}active{% endif %}">
+                <div class="conversation-header">
+                    <span class="conversation-name">{{ conversation.other_user.username }}</span>
+                    <span class="conversation-time">{{ conversation.last_message_time|timesince }} ago</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="conversation-preview">
+                        {{ conversation.last_message|truncatewords:8 }}
+                    </div>
+                    {% if conversation.unread_count > 0 %}
+                    <span class="unread-badge">{{ conversation.unread_count }}</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <p>No conversations yet</p>
+                <p style="font-size: 12px; margin-top: 10px;">Search for a user above to start chatting</p>
+            </div>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- right Side: Placeholder when no conversation selected -->
+    <div class="chat-placeholder">
+        <div>
+            <h3 style="color: #10172A; margin-bottom: 10px;">Select a conversation</h3>
+            <p>Choose a conversation from the left to start messaging</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const conversations = document.querySelectorAll('.conversation-item');
+
+        conversations.forEach(conv => {
+            const name = conv.querySelector('.conversation-name').textContent.toLowerCase();
+            if (name.includes(searchTerm)) {
+                conv.style.display = 'block';
+            } else {
+                conv.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

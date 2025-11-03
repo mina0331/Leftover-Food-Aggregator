@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Friend Requests - UVA Leftovers{% endblock %}
+
+{% block content %}
+<style>
+    .requests-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+    }
+    
+    .section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .section-header {
+        padding-bottom: 15px;
+        border-bottom: 2px solid #E57200;
+        margin-bottom: 20px;
+    }
+    
+    .section-header h2 {
+        color: #10172A;
+        margin: 0;
+    }
+    
+    .request-item {
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .request-info {
+        flex: 1;
+    }
+    
+    .request-name {
+        font-weight: 600;
+        color: #10172A;
+        margin-bottom: 4px;
+    }
+    
+    .request-time {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .request-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-accept {
+        background: #E57200;
+        color: white;
+    }
+    
+    .btn-accept:hover {
+        background: #c76200;
+    }
+    
+    .btn-decline {
+        background: #e0e0e0;
+        color: #333;
+    }
+    
+    .btn-decline:hover {
+        background: #d0d0d0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+</style>
+
+<div class="requests-container">
+    {% if messages %}
+        {% for message in messages %}
+        <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    {% if message.tags == 'success' %}border-left: 4px solid #4caf50;{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="section">
+        <div class="section-header">
+            <h2>📥 Friend Requests ({{ received_requests.count }})</h2>
+        </div>
+        
+        {% if received_requests %}
+            {% for req in received_requests %}
+            <div class="request-item">
+                <div class="request-info">
+                    <div class="request-name">{{ req.from_user.username }}</div>
+                    <div class="request-time">{{ req.created_at|timesince }} ago</div>
+                </div>
+                <div class="request-actions">
+                    <a href="{% url 'chat:accept_friend_request' req.id %}" class="btn btn-accept">Accept</a>
+                    <a href="{% url 'chat:decline_friend_request' req.id %}" class="btn btn-decline">Decline</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No pending friend requests</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="section">
+        <div class="section-header">
+            <h2>📤 Sent Requests ({{ sent_requests.count }})</h2>
+        </div>
+        
+        {% if sent_requests %}
+            {% for req in sent_requests %}
+            <div class="request-item">
+                <div class="request-info">
+                    <div class="request-name">{{ req.to_user.username }}</div>
+                    <div class="request-time">Sent {{ req.created_at|timesince }} ago</div>
+                </div>
+                <span style="color: #999; font-size: 14px;">Pending...</span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No sent requests</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
