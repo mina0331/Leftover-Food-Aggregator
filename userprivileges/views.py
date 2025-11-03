@@ -36,7 +36,7 @@ def student_home(request):
     # Render the "available food" list that Students can see.
     # If you already have a FoodListing model elsewhere, you can import and query it.
     # For now, keep it simple; you can drop data here later.
-    return render(request, "posting/posts.html")
+    return render(request, "userprivileges/student_home.html")
 
 # -------- Food Provider-only page --------
 @login_required
@@ -44,7 +44,7 @@ def provider_home(request):
     if not is_provider(request.user):
         return redirect("userprivileges:student_home")
     # Provider sees a button to post food (wire to your real form later)
-    return render(request, "posting/posts.html")
+    return render(request, "userprivileges/provider_home.html")
 
 # -------- Moderator-only page --------
 @login_required

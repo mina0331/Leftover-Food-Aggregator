@@ -8,17 +8,21 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
+from django.http import HttpResponse, HttpResponseRedirect
 # Create your views here.
 
 
 def index(request):
-    post_list = Post.objects.all().order_by('-created_at')
-    paginator = Paginator(post_list, 5)  # 5 posts per page
-
-    page_number = request.GET.get('page')   # e.g. ?page=2
+    post_list = Post.objects.order_by("-created_at")
+    paginator = Paginator(post_list, 5)
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'posting/posts.html', {'posts': page_obj, 'page_obj': page_obj, })
+    return render(request, "posting/posts.html", {
+        "posts": page_obj,
+        "page_obj": page_obj,
+        "total_posts": post_list.count(),
+    })
 
 @login_required
 def create_post(request):
@@ -61,7 +65,7 @@ def edit_post(request, post_id):
                     post.image.delete(save=False)
                     post.image = None
             form.save()
-            return redirect('post_detail', post_id=post.id)
+            return redirect('posting:post_detail', post_id=post.id)
     else:
         form = PostForm(instance=post)
 

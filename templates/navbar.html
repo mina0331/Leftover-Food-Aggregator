@@ -26,19 +26,19 @@
       </a>
     </div>
 
-    <!-- Center -->
+    <!-- Center -->{% url 'posting:post_list' as posts_url %}
     <div class="nav-center">
       <ul class="nav-list">
         <li>
           <a href="{% url 'profile_redirect' %}" class="nav-link {% if '/profile' in p %}active-link{% endif %}">Profile</a>
         </li>
-
+      {% url 'posting:post_list' as posts_url %}
         {% if user.is_authenticated %}
           {% with role=user.profile.role %}
             {% if role == 'student' %}
-              <li><a href="{% url 'userprivileges:student_home' %}" class="nav-link {% if '/student' in p %}active-link{% endif %}">Food Listings</a></li>
+              <li><a href="{{ posts_url }}" class="nav-link {% if '/student' in p %}active-link{% endif %}">Food Listings</a></li>
             {% elif role == 'org' %}
-              <li><a href="{% url 'userprivileges:provider_home' %}" class="nav-link {% if '/provider' in p %}active-link{% endif %}">Post Listings</a></li>
+              <li><a href="{{ posts_url }}" class="nav-link {% if '/provider' in p %}active-link{% endif %}">Post Listings</a></li>
             {% endif %}
           {% endwith %}
         {% endif %}

@@ -32,10 +32,10 @@
 
     {% if user == post.author %}
       <div style="margin-top:20px;">
-        <a href="{% url 'edit_post' post.id %}" 
+        <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
-        <a href="{% url 'delete_post' post.id %}" 
+        <a href="{% url 'posting:delete_post' post.id %}"
            style="background:#b30000; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none; margin-left:6px;">Delete</a>
       </div>
