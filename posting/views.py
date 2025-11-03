@@ -66,5 +66,5 @@ def delete_post(request, post_id):
         return redirect("posts")  # go back to list
 
         # GET: render a confirmation page
-    return render(request, "delete_post.html", {"post": post})
+    return render(request, "posting/delete_post.html", {"post": post})
 
