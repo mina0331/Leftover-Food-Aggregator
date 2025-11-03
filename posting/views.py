@@ -56,4 +56,15 @@ def edit_post(request, post_id):
 @login_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    if request.user != post.author:
+        return redirect('post_detail', post_id=post_id)
+    if request.method == "POST":
+        # remove image from storage first (S3/local)
+        if post.image:
+            post.image.delete(save=False)
+        post.delete()
+        return redirect("posts")  # go back to list
+
+        # GET: render a confirmation page
+    return render(request, "delete_post.html", {"post": post})
 
