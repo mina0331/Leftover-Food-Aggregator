@@ -9,7 +9,7 @@
         Welcome, {{ profile.display_name|default:request.user.username }}
 
     </h1>
-    <img src="{{ user.profile.profile_pic }}" style="max-width:200px;border:1px solid #ddd">
+    <img src="{{ user.profile.avatar_url }}" style="max-width:200px;border:1px solid #ddd">
 
 
     <p>Email: <strong>{{ request.user.email }}</strong></p>

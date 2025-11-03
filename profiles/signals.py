@@ -24,7 +24,7 @@ def update_profile_from_google(sender, request, user, **kwargs):
         profile.display_name = data["name"]
         profile.email = data["email"]
         pic_url = data["picture"]
-        if pic_url:
+        if pic_url and not profile.profile_pic:
             try:
                 r = requests.get(pic_url, stream=True)
                 r.raise_for_status()
