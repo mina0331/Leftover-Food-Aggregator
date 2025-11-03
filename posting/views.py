@@ -30,7 +30,7 @@ def post_create(request):
 @login_required
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    return render (request, post, "posts/post_detail.html", {"post": post})
+    return render (request,"posting/post_detail.html", {"post": post})
 
 @login_required
 def edit_post(request, post_id):
@@ -51,7 +51,7 @@ def edit_post(request, post_id):
     else:
         form = PostForm(instance=post)
 
-    return render(request, "edit_post.html", {"form": form, "post": post})
+    return render(request, "posting/edit_post.html", {"form": form, "post": post})
 
 @login_required
 def delete_post(request, post_id):
