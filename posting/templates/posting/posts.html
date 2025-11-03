@@ -21,13 +21,11 @@
     </p>
   {% endif %}
 
-  {% if posts %}
     {% for post in posts %}
       <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-        <h2 style="margin:0 0 10px 0;">{{ post.title }}</h2>
-
+        <h2 style="margin:0 0 10px 0;">{{ post.event }}</h2>
         {% if post.image %}
-          <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width:100%; border-radius:8px; margin-bottom:10px;">
+          <img src="{{ post.image.url }}" alt="{{ post.event }}" style="width:100%; border-radius:8px; margin-bottom:10px;">
         {% endif %}
 
         <p style="margin:0; color:#555;">
@@ -35,21 +33,20 @@
           <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
         </p>
 
-        {% if post.description %}
-          <p style="margin-top:10px; color:#333;">{{ post.description|truncatewords:25 }}</p>
+        {% if post.event_description %}
+          <p style="margin-top:10px; color:#333;">{{ post.event_description|truncatewords:25 }}</p>
         {% endif %}
 
         <div style="margin-top:10px;">
-          <a href="{% url 'post_detail' post.id %}"
+          <a href="{% url 'posting:post_detail' post.id %}"
              style="text-decoration:none; color:#232D4B; font-weight:bold;">
              View Details →
           </a>
         </div>
       </div>
-    {% endfor %}
-  {% else %}
+  {% empty %}
     <p style="text-align:center; color:#666;">No posts yet. Be the first to add one!</p>
-  {% endif %}
+ {% endfor %}
 
   {% if page_obj %}
     <div style="text-align:center; margin-top:20px;">

@@ -98,8 +98,6 @@ SITE_ID = 1
 SOCIALACCOUNT_LOGIN_ON_GET = True
 LOGIN_URL = "/accounts/google/login/"
 SOCIALACCOUNT_AUTO_SIGNUP = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 LOGIN_REDIRECT_URL = reverse_lazy("post_login_redirect")
@@ -107,10 +105,13 @@ LOGIN_REDIRECT_URL = reverse_lazy("post_login_redirect")
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy("landingpage")
 
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_UNIQUE_EMAIL = True
 
 SOCIALACCOUNT_ADAPTER = "loginpage.adapters.MySocialAccountAdapter"
 
-ACCOUNT_UNIQUE_EMAIL = True
+
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
