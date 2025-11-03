@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import get_valid_filename
 import os,time
+from django.templatetags.static import static
 # Create your models here.
 
 User = get_user_model()
@@ -32,3 +33,12 @@ class Profile(models.Model):
         if self.profile_pic:
             return self.profile_pic.url  # managed file (S3/local)
         return static("images/default-avatar.png")  # fallback
+
+    def save(self, *args, **kwargs):
+        try:
+            old = Profile.objects.get(pk=self.pk)
+            if old.profile_pic and old.profile_pic != self.profile_pic:
+                old.profile_pic.delete(save=False)
+        except Profile.DoesNotExist:
+            pass
+        super().save(*args, **kwargs)

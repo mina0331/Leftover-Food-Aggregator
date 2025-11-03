@@ -65,3 +65,5 @@ def profile_edit(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, "profilepage/edit_profile.html", {"form": form})
+
+
