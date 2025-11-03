@@ -1,9 +1,17 @@
-from random import choices
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import get_valid_filename
+import time
 
 # Create your models here.
+
+
+def event_image_upload_to(instance, filename):
+    base = get_valid_filename(filename)
+    safe_event = get_valid_filename(instance.event)
+    stamp = int(time.time())
+    return f"events/{safe_event}/{instance.author.id}/{stamp}_{base}"
 
 class Cuisine(models.TextChoices):
     KOREAN = "korean", "Korean"
@@ -29,6 +37,7 @@ class Post(models.Model):
     cuisine = models.CharField(max_length=20, choices=Cuisine.choices, default = Cuisine.OTHER)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -41,4 +50,6 @@ class Post(models.Model):
             self.cuisine = self.cuisine.lower()
             #making the cuisine choice case-insensitive
         super().save(*args, **kwargs)
+
+
 

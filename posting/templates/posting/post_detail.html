@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto;">
+
+  <a href="{% url 'post_list' %}"
+     style="text-decoration:none; color:#232D4B; font-weight:bold;">
+     ← Back to All Posts
+  </a>
+
+  <div style="border:1px solid #ddd; border-radius:12px; padding:24px; margin-top:20px;
+              box-shadow:0 2px 6px rgba(0,0,0,0.05); background:white;">
+
+    <h1 style="margin-top:0; color:#232D4B;">{{ post.event }}</h1>
+
+    <p style="color:#555;">
+      <strong>Created by:</strong> {{ post.author.username }}<br>
+      <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+      <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
+    </p>
+
+    {% if post.image %}
+      <img src="{{ post.image.url }}" alt="{{ post.event }}"
+           style="width:100%; border-radius:12px; margin:20px 0;">
+    {% endif %}
+
+    <h3 style="color:#232D4B;">Event Description</h3>
+    <p style="line-height:1.6; color:#333;">
+      {{ post.event_description|linebreaks }}
+    </p>
+
+    {% if user == post.author %}
+      <div style="margin-top:20px;">
+        <a href="{% url 'edit_post' post.id %}" 
+           style="background:#E57200; color:white; padding:8px 14px;
+                  border-radius:6px; text-decoration:none;">Edit</a>
+        <a href="{% url 'delete_post' post.id %}" 
+           style="background:#b30000; color:white; padding:8px 14px;
+                  border-radius:6px; text-decoration:none; margin-left:6px;">Delete</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
