@@ -1,16 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body Style="font-family: sans-serif; text-align: center">
-    <h2> Select your user type</h2>
-    <form method = "post">
+{% extends "base.html" %}
+
+{% block title %}Select Role | UVA Leftovers{% endblock %}
+
+{% block content %}
+
+<div style="text-align:center; margin-top:48px;">
+
+    <h2 style="margin-bottom:24px;">Select Your User Type</h2>
+
+    <form method="post"
+          style="display:inline-block;
+                 padding:24px 32px;
+                 background:#ffffff;
+                 border-radius:12px;
+                 box-shadow:0 6px 18px rgba(0,0,0,.08);
+                 text-align:left;
+                 min-width:260px;">
+        
         {% csrf_token %}
-        {{form.as_p}}
-        <button type = "submit"> Continue </button>
+        {{ form.as_p }}
+
+        <button type="submit"
+                style="margin-top:12px;
+                       padding:10px 18px;
+                       background:#E57200;
+                       color:white;
+                       border:0;
+                       border-radius:6px;
+                       cursor:pointer;
+                       font-weight:600;
+                       transition:transform .18s ease, box-shadow .18s ease;">
+            Continue
+        </button>
     </form>
 
-</body>
-</html>
+    <br><br>
+    <a href="/" style="color:#E57200; text-decoration:none;">Back to Home</a>
+
+</div>
+
+{% endblock %}

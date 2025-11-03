@@ -1,27 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Profile</title>
-</head>
-<body style="font-family: Arial, sans-serif; text-align: center;">
-    <h1>Welcome, {{ profile.display_name|default:request.user.username }}</h1>
-    <p>Email: {{ request.user.email }}</p>
-    <p>Role: {{ profile.get_role_display }}</p>
+{% extends "base.html" %}
 
-    {% if profile.role == "student" %}
-        <a href="{% url 'userprivileges:student_home' %}">
-            <button type="button">See available food</button>
+{% block title %}My Profile | UVA Leftovers{% endblock %}
+
+{% block content %}
+<div style="text-align:center; margin-top:32px;">
+
+    <h1 style="margin-bottom:10px;">
+        Welcome, {{ profile.display_name|default:request.user.username }}
+
+    </h1>
+    <img src="{{ user.profile.avatar_url }}" style="max-width:200px;border:1px solid #ddd">
+
+
+    <p>Email: <strong>{{ request.user.email }}</strong></p>
+    <p>Role: <strong>{{ profile.get_role_display }}</strong></p>
+    <div style="margin-top:16px;">
+        <a href="{% url 'profile_edit' %}"
+            style="display:inline-block;
+            background:#E57200;
+            color:white;
+            padding:10px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:600;
+            transition:.2s;">
+            Edit Profile
         </a>
-    {% elif profile.role == "org" %}
-        <a href="{% url 'userprivileges:provider_home' %}">
-            <button type="button">Post listings</button>
-        </a>
-    {% endif %}
+    </div>
+    <div style="margin-top:24px;">
+        {% if profile.role == "student" %}
+            <a href="{% url 'userprivileges:student_home' %}"
+               style="background:#E57200; color:white; padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:600; transition:.2s;">
+                See Available Food
+            </a>
+        {% elif profile.role == "org" %}
+            <a href="{% url 'userprivileges:provider_home' %}"
+               style="background:#E57200; color:white; padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:600; transition:.2s;">
+                Post Listings
+            </a>
+        {% endif %}
+    </div>
 
-    <br><br>
-
-    <a href="/"><button type="button">Back to home</button></a>
-    </a>
-</body>
-</html>
+</div>
+{% endblock %}
