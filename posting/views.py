@@ -33,7 +33,10 @@ def create_post(request):
             post = form.save(commit=False)             # set author
             post.author = request.user
             post.save()
-            return redirect("posting:post_list")       # or your desired route
+            messages.success(request, 'Your post has been created.')
+            return redirect("posting:post_list")
+        else:
+            messages.error(request, 'Please fix some errors.')
     else:
         form = PostForm()
 

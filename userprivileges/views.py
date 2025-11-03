@@ -44,7 +44,7 @@ def provider_home(request):
     if not is_provider(request.user):
         return redirect("userprivileges:student_home")
     # Provider sees a button to post food (wire to your real form later)
-    return render(request, "userprivileges/provider_home.html")
+    return render(request, "posting/posts.html")
 
 # -------- Moderator-only page --------
 @login_required
