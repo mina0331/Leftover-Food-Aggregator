@@ -92,7 +92,14 @@ STORAGES = {
 
 
 SITE_ID = 1
-LOGIN_REDIRECT_URL = "/post-login/"
+LOGIN_REDIRECT_URL = "/accounts/google/login/"
+# Start the provider flow on GET instead of showing a button page
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "none"   # or "optional"/"mandatory" if you need it
+
+
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
