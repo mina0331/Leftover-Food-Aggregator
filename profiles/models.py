@@ -17,6 +17,7 @@ class Profile(models.Model):
     class Role(models.TextChoices):
         STUDENT = "student", "Student"
         ORG = "org", "club"
+        MODERATOR = "moderator", "Moderator"
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=20, choices=Role.choices, blank=True, null=True, default=None)

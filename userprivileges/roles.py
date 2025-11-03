@@ -20,3 +20,10 @@ def is_provider(user):
         and has_profile(user)
         and user.profile.role == Profile.Role.ORG      # 'org' (club)
     )
+
+def is_moderator(user):
+    return (
+        user.is_authenticated
+        and has_profile(user)
+        and user.profile.role == Profile.Role.MODERATOR  # 'moderator'
+    )
