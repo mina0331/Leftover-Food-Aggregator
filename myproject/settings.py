@@ -15,6 +15,7 @@ import django_heroku
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -74,6 +75,17 @@ AWS_STORAGE_BUCKET_NAME = 'swe-b-27-profile-pics'
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_FILE_OVERWRITE = False
 
+STORAGES = {
+    #media file (image) management
+    'default': {
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+
+    #CSS and JS file management
+    "staticfiles":{
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+}
 
 
 SITE_ID = 1
@@ -197,7 +209,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Activate Django-Heroku (auto database + static config)
 try:
