@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "userprivileges",
     "chat",
     "Friendslist",
+    "storages",
 
 ]
 SITE_ID = 1
