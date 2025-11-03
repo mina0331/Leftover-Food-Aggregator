@@ -1,10 +1,48 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Create Post | UVA Leftovers{% endblock %}
+
 {% block content %}
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Create Post</button>
-</form>
+<div style="max-width:650px; margin:50px auto; background:#fff; border-radius:12px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08); padding:32px;">
+
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:24px;">
+    🍱 Create a New Food Post
+  </h1>
+
+  <form method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:18px;">
+    {% csrf_token %}
+    
+    {% for field in form %}
+      <div style="display:flex; flex-direction:column;">
+        <label for="{{ field.id_for_label }}" 
+               style="font-weight:bold; color:#232D4B; margin-bottom:6px;">
+          {{ field.label }}
+        </label>
+        {{ field }}
+        {% if field.help_text %}
+          <small style="color:#777;">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <p style="color:#b30000; margin:4px 0;">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" 
+            style="background:#E57200; color:white; border:none; border-radius:8px;
+                   padding:10px 16px; font-size:16px; cursor:pointer;
+                   transition:background .2s ease;">
+      Create Post
+    </button>
+  </form>
+
+  <p style="text-align:center; margin-top:24px;">
+    <a href="{% url 'posting:post_list' %}" 
+       style="color:#232D4B; text-decoration:none; font-weight:bold;">
+       ← Back to Posts
+    </a>
+  </p>
+</div>
 {% endblock %}

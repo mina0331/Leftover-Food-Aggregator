@@ -33,7 +33,7 @@ class Cuisine(models.TextChoices):
 class Post(models.Model):
     event = models.TextField()
     event_description = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
     cuisine = models.CharField(max_length=20, choices=Cuisine.choices, default = Cuisine.OTHER)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
