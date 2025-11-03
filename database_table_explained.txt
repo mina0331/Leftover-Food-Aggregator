@@ -1,0 +1,78 @@
+All SQLite Database Tables Explained
+--------------------------------------------
+Core Django tables (framework infrastructure)
+
+    django_migrations
+        - Records applied database migrations; Django tracks version history here.
+
+    django_content_type
+        - Maps model classes to database table IDs.
+
+    django_session
+        - Temporary session data; sessions are deleted as they expire.
+
+    django_site
+        - Maps “Site ID” to a domain; django-allauth uses it to identify the current site. SITE_ID = 1 here.
+
+Django authentication tables (built-in)
+
+    auth_user*
+        - Stores users (username, email, password).
+        - matthew_vu, thien_vu are in this table.
+
+    auth_group
+        - Groups for permissions (e.g., “Admins”); currently empty.
+    auth_permission
+        - Available permission actions across apps; empty unless assigned.
+    auth_group_permissions
+        - Links groups to permissions; empty.
+    auth_user_groups
+        - Links users to groups; empty.
+    auth_user_user_permissions
+        - Direct user permissions; empty.
+
+
+Django-allauth account management
+
+    account_emailaddress
+        - User email addresses and verification status; includes the Google emails.
+    account_emailconfirmation
+        - Temporary email verification tokens (expires after use); currently empty.
+
+
+Django-allauth social account (OAuth)
+
+    socialaccount_socialapp
+        - Google OAuth app credentials; contains client_id and secret.
+    socialaccount_socialaccount*
+        - Links Google accounts to users: matthew_vu → Google UID 103371549957220364322.
+        - Stores Google profile fields (name, picture, email).
+    socialaccount_socialtoken
+        - Access tokens; currently empty (OAuth not actively used later).
+    socialaccount_socialapp_sites
+        - Allowed sites for a social app (Site restriction); maps Google app to Site 1.
+
+
+Your custom app
+
+    profiles_profile*
+    - Extension model for users (OneToOne with auth_user).
+    - Stores role and display_name.
+
+Admin/audit
+
+    django_admin_log
+        - Admin actions log; empty unless you’ve used the admin.
+
+
+
+
+------------------------------------------------------------------
+Summary by importance
+Most important: auth_user, profiles_profile, socialaccount_socialaccount
+User data: account_emailaddress, account_emailconfirmation
+Required infrastructure: django_migrations, django_content_type, django_session, django_site
+OAuth config: socialaccount_socialapp, socialaccount_socialapp_sites
+Security/permissions: auth_*, django_admin_log
+Token storage: account_emailconfirmation, socialaccount_socialtoken, django_session (temporary)
+Database structure
