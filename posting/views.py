@@ -81,7 +81,7 @@ def delete_post(request, post_id):
         if post.image:
             post.image.delete(save=False)
         post.delete()
-        return redirect("posts")  # go back to list
+        return redirect("posting:post_list")  # go back to list
 
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
