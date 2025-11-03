@@ -14,6 +14,7 @@ import os
 import django_heroku
 
 from pathlib import Path
+from django.urls import reverse_lazy
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -92,14 +93,23 @@ STORAGES = {
 
 
 SITE_ID = 1
-LOGIN_REDIRECT_URL = "/accounts/google/login/"
-# Start the provider flow on GET instead of showing a button page
+# Create accounts automatically from Google data
+SOCIALACCOUNT_LOGIN_ON_GET = True
+LOGIN_URL = "/accounts/google/login/"
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "none"   # or "optional"/"mandatory" if you need it
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
+LOGIN_REDIRECT_URL = reverse_lazy("post_login_redirect")
+
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy("landingpage")
 
 
+SOCIALACCOUNT_ADAPTER = "loginpage.adapters.MySocialAccountAdapter"
+
+ACCOUNT_UNIQUE_EMAIL = True
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",

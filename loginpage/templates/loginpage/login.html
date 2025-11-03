@@ -1,16 +1,14 @@
 {% extends "base.html" %}
-
 {% load socialaccount %}
 
 {% block title %}Log In | UVA Leftovers{% endblock %}
 
 {% block content %}
 <div style="text-align:center; margin-top:40px;">
-    <h1>Sign In</h1>
-    
-    <p>If you do not have an account yet, then please sign up first.</p>
-
-    <a href="{% provider_login_url 'google' %}"
+    <meta http-equiv="refresh" content="1; url={% provider_login_url 'google' process='login' %}">
+    <h1>Redirecting...</h1>
+    <p>If not redirected automatically, click below:</p>
+    <a href="{% provider_login_url 'google' process='login' %}"
        style="display:inline-block;
        padding:12px 20px;
        border-radius:8px;

@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic.base import RedirectView
 
 import Friendslist
 from landingpage.views import home
@@ -23,6 +24,7 @@ from profiles.views import select_role, my_profile, post_login_redirect, profile
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("accounts/login/", RedirectView.as_view(url="/accounts/google/login/", permanent=False)),
     path('login/', include('loginpage.urls')),
     path('accounts/', include('allauth.urls')),
     path("", include("userprivileges.urls")),
@@ -34,6 +36,7 @@ urlpatterns = [
     path('chat/', include("chat.urls")),
     path("friends/", include(("Friendslist.urls", "friends"), namespace="friends")),
     path("edit_profile/", profile_edit, name="profile_edit"),
+
     
 
 ]

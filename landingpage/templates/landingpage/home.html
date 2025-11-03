@@ -209,7 +209,7 @@
           Log In
         </a>
       {% else %}
-        <a href="{% url 'account_logout' %}"
+        <a href="{% url 'account_logout' %}?next={% url 'landingpage' %}"
            class="nav-link"
            style="text-decoration:none; color:#ffffff; padding:6px 10px; border-radius:6px;">
           Log Out
@@ -273,7 +273,7 @@
   <!-- ======= NEW: Footer ======= -->
   <footer class="site-footer" style="margin-top:auto;">
     <div class="container" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-      <span>© {{ now|date:"Y" }} UVA Leftovers</span>
+      <span>© {% now "Y" %} UVA Leftovers</span>
       <span>Built by B-27 • <a href="{% url 'profile_redirect' %}" style="color:#dbe3f6; text-decoration:none;">Your Profile</a></span>
     </div>
   </footer>
