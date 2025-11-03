@@ -36,3 +36,9 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.event} ({self.author})"
 
+    def save(self, *args, **kwargs):
+        if self.cuisine:
+            self.cuisine = self.cuisine.lower()
+            #making the cuisine choice case insensitive
+        super().save(*args, **kwargs)
+
