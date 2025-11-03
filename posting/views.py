@@ -17,7 +17,7 @@ def index(request):
     return render(request, 'posting/posts.html', {'page_obj': page_obj})
 
 @login_required
-def post_create(request):
+def create_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():

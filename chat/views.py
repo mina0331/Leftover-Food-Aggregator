@@ -13,7 +13,10 @@ from django.core.paginator import Paginator
 @login_required
 def messages_index(request):
     conversations = Message.get_conversations(request.user)
-    return render(request, 'chat/index.html', {'conversations': conversations})
+    unread_count = Message.objects.filter(
+        recipient=request.user, is_read=False
+    ).count()
+    return render(request, 'chat/index.html', {'conversations': conversations, "unread_count": unread_count,})
 
 @login_required
 def conversation_detail(request, user_id):

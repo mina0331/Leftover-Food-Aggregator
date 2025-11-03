@@ -10,7 +10,7 @@
 
   {% if user.is_authenticated %}
     <div style="text-align:right; margin-bottom:20px;">
-      <a href="{% url 'create_post' %}"
+      <a href="{% url 'posting:create_post'%}"
          style="background:#E57200; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">
          + Create New Post
       </a>
@@ -31,7 +31,7 @@
         {% endif %}
 
         <p style="margin:0; color:#555;">
-          <strong>Date:</strong> {{ post.created_at|date: "M d, Y" }}<br>
+          <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
           <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
         </p>
 

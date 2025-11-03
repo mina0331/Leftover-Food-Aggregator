@@ -36,7 +36,7 @@ def student_home(request):
     # Render the "available food" list that Students can see.
     # If you already have a FoodListing model elsewhere, you can import and query it.
     # For now, keep it simple; you can drop data here later.
-    return render(request, "userprivileges/student_home.html")
+    return render(request, "posting/posts.html")
 
 # -------- Food Provider-only page --------
 @login_required
