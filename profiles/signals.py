@@ -19,7 +19,7 @@ def update_profile_from_google(sender, request, user, **kwargs):
         data = sa.extra_data
         profile.display_name = data["name"]
         profile.email = data["email"]
-
+        profile.profile_pic = data["picture"]
     profile.save()
 
 @receiver(user_logged_in)
