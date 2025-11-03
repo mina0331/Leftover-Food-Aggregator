@@ -37,3 +37,15 @@ def profile_redirect(request):
         return redirect("my_profile")
     else:
         return redirect("account_login")
+
+@login_required
+def profile_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("my_profile")
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, "profiles/edit_profile.html",{"form": form})

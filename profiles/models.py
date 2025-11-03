@@ -1,8 +1,15 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils.text import get_valid_filename
+import os
 # Create your models here.
 
 User = get_user_model()
+
+def profile_pic_upload_to(instance, filename):
+    base = get_valid_filename(os.path.basename(filename))
+    return f"profile_pics/user_{instance.user.id}/{base}"
+
 
 class Profile(models.Model):
     class Role(models.TextChoices):

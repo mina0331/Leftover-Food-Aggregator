@@ -1,9 +1,13 @@
+from django.core.files.base import ContentFile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from allauth.account.signals import user_logged_in
 from allauth.socialaccount.models import SocialAccount
 from .models import Profile
+import os , mimetypes, requests
+from django.core.files.base import ContentFile
+from django.db import transaction
 
 User = get_user_model()
 @receiver(post_save, sender=User)
@@ -19,7 +23,19 @@ def update_profile_from_google(sender, request, user, **kwargs):
         data = sa.extra_data
         profile.display_name = data["name"]
         profile.email = data["email"]
-        profile.profile_pic = data["picture"]
+        pic_url = data["picture"]
+        if pic_url:
+            try:
+                r = requests.get(pic_url, stream=True)
+                r.raise_for_status()
+                content = r.content
+
+                ext = mimetypes.guess_extension(r.headers.get("Content-Type", "")) or ".jpg"
+                filename = f"google_{user.id}{ext}"
+
+                profile.profile_pic.save(filename, ContentFile(content), save=True)
+            except Exception:
+                pass
     profile.save()
 
 @receiver(user_logged_in)

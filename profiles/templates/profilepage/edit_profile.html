@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile | UVA Leftovers{% endblock %}
+
+{% block content %}
+<div style="text-align:center; margin-top:48px;">
+  <h2 style="margin-bottom:24px;">Edit Profile</h2>
+
+  <form method="post" enctype="multipart/form-data"
+        style="display:inline-block;
+               padding:24px 32px;
+               background:#ffffff;
+               border-radius:12px;
+               box-shadow:0 6px 18px rgba(0,0,0,.08);
+               text-align:left;
+               min-width:320px;">
+
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div style="color:#b91c1c; margin-bottom:10px;">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Current / preview avatar -->
+    <div style="display:flex; gap:16px; align-items:center; margin-bottom:16px;">
+      {% if user.profile.profile_pic %}
+        <img id="avatarPreview" src="{{ user.profile.profile_pic.url }}" alt="Profile photo"
+             style="width:96px; height:96px; border-radius:999px; object-fit:cover; border:1px solid #e5e7eb;">
+      {% else %}
+        <img id="avatarPreview" src="{% static 'images/default-avatar.png' %}" alt="Default avatar"
+             style="width:96px; height:96px; border-radius:999px; object-fit:cover; border:1px solid #e5e7eb;">
+      {% endif %}
+
+      <div>
+        <label for="{{ form.profile_pic.id_for_label }}" style="font-weight:600;">Change profile photo</label><br>
+        {{ form.profile_pic }}
+        {% if form.profile_pic.errors %}
+          <div style="color:#b91c1c;">{{ form.profile_pic.errors }}</div>
+        {% endif %}
+        <div style="font-size:.9rem; color:#6b7280; margin-top:4px;">JPEG/PNG recommended.</div>
+      </div>
+    </div>
+
+    <!-- Display name -->
+    <div style="margin-bottom:12px;">
+      <label for="{{ form.display_name.id_for_label }}" style="font-weight:600;">Display name</label><br>
+      {{ form.display_name }}
+      {% if form.display_name.errors %}
+        <div style="color:#b91c1c;">{{ form.display_name.errors }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Role -->
+    <div style="margin-bottom:16px;">
+      <label for="{{ form.role.id_for_label }}" style="font-weight:600;">Role</label><br>
+      {{ form.role }}  {# Select or radios (your form decides) #}
+      {% if form.role.errors %}
+        <div style="color:#b91c1c;">{{ form.role.errors }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit"
+            style="margin-top:12px;
+                   padding:10px 18px;
+                   background:#E57200;
+                   color:white;
+                   border:0;
+                   border-radius:6px;
+                   cursor:pointer;
+                   font-weight:600;
+                   transition:transform .18s ease, box-shadow .18s ease;">
+      Save
+    </button>
+    <a href="{% url 'profile_detail' %}" style="margin-left:8px; color:#E57200; text-decoration:none;">Cancel</a>
+  </form>
+
+  <br><br>
+  <a href="/" style="color:#E57200; text-decoration:none;">Back to Home</a>
+</div>
+
+<script>
+  // Live preview for image input
+  const input = document.getElementById('{{ form.profile_pic.id_for_label }}');
+  const preview = document.getElementById('avatarPreview');
+  if (input && preview) {
+    input.addEventListener('change', e => {
+      const [file] = e.target.files || [];
+      if (file) preview.src = URL.createObjectURL(file);
+    });
+  }
+</script>
+{% endblock %}
