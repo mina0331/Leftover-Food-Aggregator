@@ -8,6 +8,14 @@ from .models import Profile
 # Create your views here.
 @login_required
 def select_role(request):
+    # Staff/superusers shouldn't see role selection - they're automatically moderators
+    if request.user.is_staff or request.user.is_superuser:
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if profile.role != Profile.Role.MODERATOR:
+            profile.role = Profile.Role.MODERATOR
+            profile.save()
+        return redirect("userprivileges:moderator_home")
+    
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
     if profile.role:
@@ -27,6 +35,15 @@ def my_profile(request):
 
 @login_required
 def post_login_redirect(request):
+    # Staff/superusers should go to moderator dashboard (they have admin access)
+    if request.user.is_staff or request.user.is_superuser:
+        # Ensure they have moderator role in profile for consistency
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if profile.role != Profile.Role.MODERATOR:
+            profile.role = Profile.Role.MODERATOR
+            profile.save()
+        return redirect("userprivileges:moderator_home")
+    
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if not profile.role:
         return redirect("select_role")
@@ -37,3 +54,33 @@ def profile_redirect(request):
         return redirect("my_profile")
     else:
         return redirect("account_login")
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import ProfileForm
+
+@login_required
+def profile_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            remove = request.POST.get("remove_photo") == "1"
+            prof = form.save(commit=False)
+
+            # If remove requested, delete old file and clear field
+            if remove and prof.profile_pic:
+                prof.profile_pic.delete(save=False)
+                prof.profile_pic = None
+
+            prof.save()
+            messages.success(request, "Profile updated.")
+            return redirect("my_profile")
+        else:
+            messages.error(request, f"Fix errors: {form.errors}")
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, "profilepage/edit_profile.html", {"form": form})
+
+

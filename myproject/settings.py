@@ -15,6 +15,7 @@ import django_heroku
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -61,9 +62,35 @@ INSTALLED_APPS = [
     "loginpage",
     "landingpage",
     "profiles.apps.ProfilesConfig",
-    "userprivileges",  
+    "userprivileges",
+    "chat",
+    "Friendslist",
+    "storages",
 
 ]
+
+#AWS settings
+AWS_ACCESS_KEY_ID = 'AKIAT4WRC67XVTE5SVOC'
+AWS_SECRET_ACCESS_KEY = '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'
+
+AWS_STORAGE_BUCKET_NAME = 'swe-b-27-profile-pics'
+
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_FILE_OVERWRITE = False
+
+STORAGES = {
+    #media file (image) management
+    'default': {
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+
+    #CSS and JS file management
+    "staticfiles":{
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+}
+
+
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "/post-login/"
 
@@ -99,7 +126,7 @@ ROOT_URLCONF = "myproject.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"], #add this for templates
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -110,6 +137,10 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+TEMPLATES[0]['OPTIONS']['context_processors'] += [
+    'chat.context_processors.pending_friend_requests_count',
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"
@@ -163,7 +194,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 
 # Default primary key field type
@@ -176,7 +212,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Activate Django-Heroku (auto database + static config)
 try:

@@ -1,23 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body style="text-align: center; font-family: Arial, sans-serif;">
-    <h1>Log In</h1>
+{% extends "base.html" %}
 
-    <!-- "Continue with Google" button -->
-    {% load socialaccount %}
-   <a href="{% provider_login_url 'google' %}"
-      style="display:inline-block;
-      padding:10px 16px;
-      border:0;
-      background:#4285F4;
-      color:#fff;
-      border-radius:6px;
-      text-decoration:none;">
-       Continue with Google
+{% load socialaccount %}
+
+{% block title %}Log In | UVA Leftovers{% endblock %}
+
+{% block content %}
+<div style="text-align:center; margin-top:40px;">
+    <h1>Sign In</h1>
+    
+    <p>If you do not have an account yet, then please sign up first.</p>
+
+    <a href="{% provider_login_url 'google' %}"
+       style="display:inline-block;
+       padding:12px 20px;
+       border-radius:8px;
+       text-decoration:none;
+       font-weight:600;
+       background:#E57200;
+       color:white;
+       transition:0.2s;">
+       Sign in with Google
     </a>
-</body>
-</html>
+</div>
+{% endblock %}
