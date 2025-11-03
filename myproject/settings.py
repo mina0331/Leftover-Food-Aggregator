@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "chat",
     "Friendslist",
     "storages",
+    "posting",
 
 ]
 

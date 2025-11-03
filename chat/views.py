@@ -13,7 +13,6 @@ from django.core.paginator import Paginator
 @login_required
 def messages_index(request):
     conversations = Message.get_conversations(request.user)
-
     return render(request, 'chat/index.html', {'conversations': conversations})
 
 @login_required
