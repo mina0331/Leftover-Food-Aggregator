@@ -7,6 +7,7 @@ class ProfileForm(forms.ModelForm):
         fields = ["role", "profile_pic", "display_name", "preferences"]
         widgets = {
             "role" : forms.RadioSelect(),
+            "preferences": forms.CheckboxSelectMultiple(),
         }
     
     def __init__(self, *args, **kwargs):

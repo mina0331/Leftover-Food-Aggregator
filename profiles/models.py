@@ -24,7 +24,7 @@ class Profile(models.Model):
     role = models.CharField(max_length=20, choices=Role.choices, blank=True, null=True, default=None)
     display_name = models.CharField(max_length=120, blank = True)
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
-    preferences = models.CharField(max_length=20, choices=Cuisine.choices, blank=True, null=True, default=None)
+    preferences = models.ManyToManyField("posting.CuisineTag", blank=True, related_name="profiles")
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"

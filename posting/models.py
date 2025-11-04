@@ -30,6 +30,11 @@ class Cuisine(models.TextChoices):
     DESSERT = "dessert", "Dessert"
     OTHER = "other", "Other"
 
+class CuisineTag(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+    def __str__(self):
+        return self.name
+
 class Post(models.Model):
     event = models.TextField()
     event_description = models.TextField()
