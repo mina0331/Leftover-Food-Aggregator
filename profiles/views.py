@@ -75,6 +75,7 @@ def profile_edit(request):
                 prof.profile_pic = None
 
             prof.save()
+            form.save_m2m()
             messages.success(request, "Profile updated.")
             return redirect("my_profile")
         else:
