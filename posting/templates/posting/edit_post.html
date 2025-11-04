@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width:600px; margin:40px auto;">
+  <h2>Edit Event</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    {% if post.image %}
+      <p>Current image:</p>
+      <img src="{{ post.image.url }}" alt="{{ post.event }}" style="width:100%; border-radius:8px;">
+      <p>
+        <label>
+          <input type="checkbox" name="remove"> Remove this image
+        </label>
+      </p>
+    {% endif %}
+
+    <button type="submit" style="background:#232D4B; color:white; padding:8px 16px; border-radius:6px;">
+      Save Changes
+    </button>
+  </form>
+</div>
+{% endblock %}

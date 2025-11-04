@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto;">
+
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:30px;">
+    All Events
+  </h1>
+
+  {% if user.is_authenticated %}
+    <div style="text-align:right; margin-bottom:20px;">
+      <a href="{% url 'posting:create_post'%}"
+         style="background:#E57200; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">
+         + Create New Post
+      </a>
+    </div>
+  {% else %}
+    <p style="text-align:right;">
+      <a href="{% url 'account_login' %}">Log in</a> to create an event post.
+    </p>
+  {% endif %}
+
+    {% for post in posts %}
+      <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+        <h2 style="margin:0 0 10px 0;">{{ post.event }}</h2>
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.event }}"
+        style="width:50%; max-width:300px; height:auto; border-radius:8px; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;">
+        {% endif %}
+
+        <p style="margin:0; color:#555;">
+          <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+          <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
+        </p>
+
+        {% if post.event_description %}
+          <p style="margin-top:10px; color:#333;">{{ post.event_description|truncatewords:25 }}</p>
+        {% endif %}
+
+        <div style="margin-top:10px;">
+          <a href="{% url 'posting:post_detail' post.id %}"
+             style="text-decoration:none; color:#232D4B; font-weight:bold;">
+             View Details →
+          </a>
+        </div>
+      </div>
+  {% empty %}
+    <p style="text-align:center; color:#666;">No posts yet. Be the first to add one!</p>
+ {% endfor %}
+
+  {% if page_obj %}
+    <div style="text-align:center; margin-top:20px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" style="margin-right:10px;">« Previous</a>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" style="margin-left:10px;">Next »</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% if messages %}
+  <div id="toast-container" style="
+       position: fixed;
+       top: 80px;
+       right: 20px;
+       z-index: 2000;">
+    {% for message in messages %}
+      <div class="toast-message {{ message.tags }}" style="
+          background:
+            {% if message.tags == 'success' %}#d4edda
+            {% elif message.tags == 'warning' %}#fff3cd
+            {% elif message.tags == 'danger' %}#f8d7da
+            {% else %}#e2e3e5{% endif %};
+          color:#000;
+          border-left:5px solid
+            {% if message.tags == 'success' %}#28a745
+            {% elif message.tags == 'warning' %}#ffc107
+            {% elif message.tags == 'danger' %}#dc3545
+            {% else %}#6c757d{% endif %};
+          border-radius:8px;
+          padding:12px 16px;
+          margin-bottom:10px;
+          box-shadow:0 2px 8px rgba(0,0,0,0.1);
+          opacity:1;
+          transition:opacity .5s ease-out;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<script>
+  // make messages fade away automatically
+  setTimeout(() => {
+    const toasts = document.querySelectorAll('#toast-container .toast-message');
+    toasts.forEach(toast => toast.style.opacity = '0');
+    setTimeout(() => document.getElementById('toast-container').innerHTML = '', 800);
+  }, 3000); // disappear after 3s
+</script>
+
+</div>
+{% endblock %}

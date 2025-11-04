@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width:600px; margin:40px auto;">
+  <h2>Delete “{{ post.event }}”?</h2>
+  <p>This action cannot be undone.</p>
+
+  {% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.event }}" style="width:100%; border-radius:8px; margin:12px 0;">
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" style="background:#b30000; color:#fff; padding:8px 14px; border-radius:6px;">
+      Yes, delete
+    </button>
+    <a href="{% url 'posting:post_detail' post.id %}" style="margin-left:8px; text-decoration:none;">
+      Cancel
+    </a>
+  </form>
+</div>
+{% endblock %}
