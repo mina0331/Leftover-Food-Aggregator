@@ -38,7 +38,7 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if self.cuisine:
-            self.cuisine = self.cuisine.lower()
+            self.cuisine.name = self.cuisine.name.lower()
             #making the cuisine choice case-insensitive
         super().save(*args, **kwargs)
 
