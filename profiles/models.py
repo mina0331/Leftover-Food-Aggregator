@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils.text import get_valid_filename
 import os,time
 from django.templatetags.static import static
+from posting.models import Cuisine
 # Create your models here.
 
 User = get_user_model()
@@ -23,7 +24,7 @@ class Profile(models.Model):
     role = models.CharField(max_length=20, choices=Role.choices, blank=True, null=True, default=None)
     display_name = models.CharField(max_length=120, blank = True)
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
-
+    preferences = models.CharField(max_length=20, choices=Cuisine.choices, blank=True, null=True, default=None)
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
 
