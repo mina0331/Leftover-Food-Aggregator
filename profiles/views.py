@@ -27,7 +27,7 @@ def select_role(request):
             return redirect("my_profile")
     else:
         form = ProfileForm(instance=profile)
-    return render(request, "profilepage/select_role.html", {"form": form})
+    return render(request, "profilepage/edit_profile.html", {"form": form})
 
 def my_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -75,6 +75,7 @@ def profile_edit(request):
                 prof.profile_pic = None
 
             prof.save()
+            form.save_m2m()
             messages.success(request, "Profile updated.")
             return redirect("my_profile")
         else:
