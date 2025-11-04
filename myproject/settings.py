@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
-import django_heroku
+try:
+    import django_heroku
+except ImportError:
+    django_heroku = None
 
 from pathlib import Path
 from django.urls import reverse_lazy

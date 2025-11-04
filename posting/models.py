@@ -20,6 +20,13 @@ class Cuisine(models.Model):
         return self.name
 
 
+class Allergen(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 
 class Post(models.Model):
     event = models.TextField()
