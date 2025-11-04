@@ -25,6 +25,7 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=120, blank = True)
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
     preferences = models.ManyToManyField(Cuisine, blank=True, related_name="profiles")
+    has_seen_welcome = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"

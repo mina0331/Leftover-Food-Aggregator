@@ -14,7 +14,7 @@ User = get_user_model()
 @receiver(post_save, sender=User)
 def create_profile_on_user_create(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(user=instance, has_seen_welcome=False)
 
 @receiver(post_save, sender=Profile)
 def update_staff_status_on_role_change(sender, instance, created, **kwargs):
@@ -38,7 +38,10 @@ def update_staff_status_on_role_change(sender, instance, created, **kwargs):
 
 @receiver(user_logged_in)
 def update_profile_from_google(sender, request, user, **kwargs):
-    profile, _ = Profile.objects.get_or_create(user=user)
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={'has_seen_welcome': False}
+    )
     sa = SocialAccount.objects.filter(user=user, provider="google").first()
     if sa:
         data = sa.extra_data
@@ -61,6 +64,9 @@ def update_profile_from_google(sender, request, user, **kwargs):
 
 @receiver(user_logged_in)
 def ensure_user_logged_in(sender, request, user, **kwargs):
-    profile, _ = Profile.objects.get_or_create(user=user)
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={'has_seen_welcome': False}
+    )
     if not profile.role:
         request.session["needs_role_selection"] = True
