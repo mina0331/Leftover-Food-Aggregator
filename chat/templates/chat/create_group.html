@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Create Group Conversation | UVA Leftovers{% endblock %}
+
+{% block content %}
+<style>
+  .group-container {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 32px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    color: #10172A;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: #555;
+    font-size: 14px;
+  }
+
+  .group-name-box {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  .group-name-box:focus {
+    border-color: #E57200;
+    outline: none;
+  }
+
+  .users-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .user-item {
+    padding: 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s ease;
+  }
+  .user-item:hover {
+    border-color: #E57200;
+    transform: translateX(4px);
+  }
+
+  .user-info {
+    flex: 1;
+  }
+  .user-name {
+    font-weight: 600;
+    color: #10172A;
+    margin-bottom: 2px;
+    font-size: 15px;
+  }
+  .user-email {
+    font-size: 13px;
+    color: #666;
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 12px;
+    background: #E57200;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 22px;
+    transition: background 0.2s ease;
+  }
+  .start-btn:hover {
+    background: #c76200;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #E57200;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="group-container">
+
+  <a href="{% url 'chat:index' %}" class="back-link">← Back to Messages</a>
+
+  <div class="header">
+    <h1>Create Group Conversation</h1>
+    <p>Select 2 or more users and choose a group name</p>
+  </div>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <label for="group_name" style="font-weight:600; color:#10172A;">Group Name</label>
+    <input
+      type="text"
+      id="group_name"
+      name="group_name"
+      class="group-name-box"
+      placeholder="Example: KISO Officers Chat, CSO2 Study Group, Movie Night Planning"
+      required
+    >
+
+    <ul class="users-list">
+      {% for u in users %}
+        <li class="user-item">
+          <input type="checkbox" name="participants" value="{{ u.id }}" style="width:18px; height:18px; cursor:pointer;">
+          <div class="user-info">
+            <div class="user-name">{{ u.profile.display_name|default:u.username }}</div>
+            <div class="user-email">{{ u.email }}</div>
+          </div>
+        </li>
+      {% empty %}
+        <li style="text-align:center; padding:40px; color:#777;">
+          No users available to add.
+        </li>
+      {% endfor %}
+    </ul>
+
+    <button type="submit" class="start-btn">
+      Create Group Conversation
+    </button>
+  </form>
+
+</div>
+{% endblock %}
