@@ -7,22 +7,28 @@ from .models import Friend
 from .models import FriendRequest, Conversation
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Max
 
 
 
 # Create your views here.
 @login_required
 def messages_index(request):
-    conversations = Message.get_conversations(request.user)
+    # All conversations the user is part of, with last message time
+    qs = (
+        request.user.conversations
+        .annotate(last_time=Max('messages__timestamp'))
+        .order_by('-last_time')
+    )
 
-    unread_count = Message.objects.filter(
-        recipient=request.user,
-        is_read=False
-    ).count()
+    # If they have at least one conversation, go to the most recent one
+    latest = qs.first()
+    if latest and latest.last_time is not None:
+        return redirect('chat:conversation', convo_id=latest.id)
 
+    # No conversations yet → show a simple placeholder page
     return render(request, 'chat/index.html', {
-        'conversations': conversations,
-        'unread_count': unread_count,
+        'conversations': [],
     })
 @login_required
 def conversation_detail(request, convo_id):
@@ -68,6 +74,7 @@ def conversation_detail(request, convo_id):
 
 @login_required
 def start_conversation(request):
+    # ---------- POST: create DM or group ----------
     if request.method == "POST":
         selected_ids = request.POST.getlist("participants")
         group_name = (request.POST.get("group_name") or "").strip()
@@ -93,42 +100,40 @@ def start_conversation(request):
             convo.participants.add(request.user, *users)
 
         return redirect("chat:conversation", convo_id=convo.id)
-    elif (request.method == "GET"):
-        query = (request.GET.get('q') or '').strip()
 
-        # All friends (so we know who is already a friend)
-        friends_qs = Friend.get_friends(request.user).select_related('profile')
-        friend_ids = list(friends_qs.values_list('id', flat=True))
+    # ---------- GET: show list of users to pick from ----------
+    query = (request.GET.get('q') or '').strip()
 
-        # Base queryset: all users except yourself
-        users_qs = User.objects.select_related('profile').exclude(id=request.user.id)
+    # All friends (so we know who is already a friend)
+    friends_qs = Friend.get_friends(request.user).select_related('profile').order_by('username')
+    friend_ids = list(friends_qs.values_list('id', flat=True))
 
-        # Optional search: display_name OR username OR email
-        if query:
-            users_qs = users_qs.filter(
-                Q(profile__display_name__icontains=query) |
-                Q(username__icontains=query) |
-                Q(email__icontains=query)
-            )
+    # Base queryset: by default, show just friends
+    users_qs = friends_qs
 
-        if not query:
-            users_qs = users_qs.none()
+    # Optional search: filter friends by display_name OR username OR email
+    if query:
+        users_qs = users_qs.filter(
+            Q(profile__display_name__icontains=query) |
+            Q(username__icontains=query) |
+            Q(email__icontains=query)
+        )
 
-        # Pagination
-        page_number = request.GET.get('page', 1)
-        paginator = Paginator(users_qs.order_by('username'), 10)
-        page_obj = paginator.get_page(page_number)
+    # Pagination
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(users_qs, 10)
+    page_obj = paginator.get_page(page_number)
 
-        role = getattr(getattr(request.user, 'profile', None), 'role', None)
+    role = getattr(getattr(request.user, 'profile', None), 'role', None)
 
-        return render(request, 'chat/start_conversation.html', {
-            'users': page_obj.object_list,
-            'page_obj': page_obj,
-            'query': query,
-            'has_friends': friends_qs.exists(),
-            'user_role': role,
-            'friend_ids': friend_ids,
-        })
+    return render(request, 'chat/start_conversation.html', {
+        'users': page_obj.object_list,
+        'page_obj': page_obj,
+        'query': query,
+        'has_friends': friends_qs.exists(),
+        'user_role': role,
+        'friend_ids': friend_ids,
+    })
 
 @login_required
 def create_group_conversation(request):

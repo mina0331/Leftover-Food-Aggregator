@@ -12,21 +12,21 @@
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    
+
     .page-header {
         text-align: center;
         margin-bottom: 30px;
     }
-    
+
     .page-header h1 {
         color: #10172A;
         margin-bottom: 10px;
     }
-    
+
     .search-form {
         margin-bottom: 30px;
     }
-    
+
     .search-form input {
         width: 100%;
         padding: 12px;
@@ -35,18 +35,18 @@
         font-size: 14px;
         box-sizing: border-box;
     }
-    
+
     .search-form input:focus {
         outline: none;
         border-color: #E57200;
     }
-    
+
     .users-list {
         list-style: none;
         padding: 0;
         margin: 0;
     }
-    
+
     .user-item {
         padding: 15px;
         border: 1px solid #e0e0e0;
@@ -56,22 +56,22 @@
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .user-info {
         flex: 1;
     }
-    
+
     .user-name {
         font-weight: 600;
         color: #10172A;
         margin-bottom: 4px;
     }
-    
+
     .user-email {
         font-size: 13px;
         color: #666;
     }
-    
+
     .action-btn {
         padding: 8px 20px;
         color: white;
@@ -83,40 +83,40 @@
         text-decoration: none;
         transition: all 0.3s ease;
     }
-    
+
     .btn-add {
         background: #E57200;
     }
-    
+
     .btn-add:hover {
         background: #c76200;
     }
-    
+
     .btn-message {
         background: #10172A;
     }
-    
+
     .btn-message:hover {
         background: #0a0f1f;
     }
-    
+
     .btn-pending {
         background: #999;
         cursor: not-allowed;
     }
-    
+
     .status-badge {
         padding: 6px 12px;
         border-radius: 6px;
         font-size: 13px;
         font-weight: 600;
     }
-    
+
     .badge-friend {
         background: #e8f5e9;
         color: #2e7d32;
     }
-    
+
     .badge-pending {
         background: #fff3e0;
         color: #e65100;
@@ -129,17 +129,16 @@
         <p style="color: #666;">Search by username or email</p>
     </div>
 
-    
     <form method="GET" class="search-form">
-        <input 
-            type="text" 
-            name="q" 
-            placeholder="Search for UVA students..." 
+        <input
+            type="text"
+            name="q"
+            placeholder="Search for UVA students..."
             value="{{ query }}"
             autofocus
         >
     </form>
-    
+
     {% if query %}
         <ul class="users-list">
             {% for item in users %}
@@ -148,27 +147,39 @@
                     <div class="user-name">{{ item.user.username }}</div>
                     <div class="user-email">{{ item.user.email }}</div>
                 </div>
-                
+
                 {% if item.status == 'friend' %}
-                <span class="status-badge badge-friend">✓ Friends</span>
-                <a href="{% url 'chat:conversation' item.user.id %}" class="action-btn btn-message" style="margin-left: 10px;">
-                Message
-                </a>
+                    <span class="status-badge badge-friend">✓ Friends</span>
+                    <a href="{% url 'chat:dm_with_user' item.user.id %}"
+                       class="action-btn btn-message"
+                       style="margin-left: 10px;">
+                        Message
+                    </a>
 
                 {% elif item.status == 'pending_received' %}
-                <a href="{% url 'friends:friends_list' %}" class="action-btn btn-add">View Request</a>
+                    <a href="{% url 'friends:friends_list' %}" class="action-btn btn-add">
+                        View Request
+                    </a>
 
                 {% elif item.status == 'pending_sent' %}
-                    <form method="post" action="{% url 'friends:cancel_friend_request' item.cancel_req_id %}" style="display:inline;">
+                    <form method="post"
+                          action="{% url 'friends:cancel_friend_request' item.cancel_req_id %}"
+                          style="display:inline;">
                         {% csrf_token %}
-                    <button type="submit" class="action-btn btn-pending">Cancel Request</button>
+                        <button type="submit" class="action-btn btn-pending">
+                            Cancel Request
+                        </button>
                     </form>
 
                 {% else %}
-                <form method="post" action="{% url 'friends:send_friend_request' item.user.id %}" style="display:inline;">
-                {% csrf_token %}
-                    <button type="submit" class="action-btn btn-add">+ Add Friend</button>
-                </form>
+                    <form method="post"
+                          action="{% url 'friends:send_friend_request' item.user.id %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn btn-add">
+                            + Add Friend
+                        </button>
+                    </form>
                 {% endif %}
             </li>
             {% empty %}
