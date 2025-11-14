@@ -66,6 +66,7 @@ def edit_post(request, post_id):
                     post.image.delete(save=False)
                     post.image = None
             form.save()
+            post.read_users.clear()
             return redirect('posting:post_detail', post_id=post.id)
     else:
         form = PostForm(instance=post)

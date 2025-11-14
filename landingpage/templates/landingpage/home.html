@@ -114,6 +114,8 @@
     .card h3{ margin:0 0 6px; color:var(--uva-ink); }
     .card p{ margin:0; color:#3a4157; }
 
+    .badge{background:#E57200; color:#fff; border-radius:10px; padding:2px 6px; font-size:12px; margin-left:6px;}
+
     /* Footer */
     .site-footer{
       background:#10172A; color:#aab3c5; padding:18px 0; margin-top:40px; font-size:14px;
@@ -186,7 +188,7 @@
         {% endif %}
 
         <li>
-        <a href="#" 
+        <a href="#"
             class="nav-link"
             style="text-decoration:none; color:#fff; padding:6px 10px; border-radius:6px;">
             About
@@ -197,7 +199,19 @@
             class="nav-link"
             style="text-decoration:none; color:#fff; padding:6px 10px; border-radius:6px;">
             Chat
+            {% if unread_count %}
+                <span class="badge"> {{ unread_count }} </span>
+            {% endif %}
         </a>
+        </li>
+        <li>
+            {% url 'friends:friends_list' as friends_url %}
+          <a href="{{ friends_url }}" class="nav-link"style="text-decoration:none; color:#fff; padding:6px 10px; border-radius:6px;">
+            Friends
+            {% if pending_friend_requests_count %}
+              <span class="badge">{{ pending_friend_requests_count }}</span>
+            {% endif %}
+          </a>
         </li>
         </ul>
     <!-- Auth -->
