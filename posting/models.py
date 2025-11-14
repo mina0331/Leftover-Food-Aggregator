@@ -27,6 +27,14 @@ class Allergen(models.Model):
         return self.name
 
 
+class Location(models.Model):
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    location_name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.location_name
+
 
 class Post(models.Model):
     event = models.TextField()
@@ -37,6 +45,14 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
     read_users = models.ManyToManyField(User, related_name="read_posts", blank=True)
+    location = models.ForeignKey(
+        Location,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts",
+    )
+
 
     class Meta:
         ordering = ['-created_at']

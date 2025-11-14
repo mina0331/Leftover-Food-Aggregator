@@ -76,6 +76,7 @@ def edit_post(request, post_id):
 @login_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    post_read_users = post.read_users.all()
     if request.user != post.author:
         return redirect('post_detail', post_id=post_id)
     if request.method == "POST":
@@ -83,6 +84,7 @@ def delete_post(request, post_id):
         if post.image:
             post.image.delete(save=False)
         post.delete()
+        post.read_users.clear()
         return redirect("posting:post_list")  # go back to list
 
         # GET: render a confirmation page
