@@ -38,7 +38,9 @@
           {% with role=user.profile.role %}
             {% if role == 'student' %}
               <li><a href="{{ posts_url }}" class="nav-link {% if '/student' in p %}active-link{% endif %}">Food Listings</a></li>
-                {%  %}
+                {% if unread_posts_count %}
+                    <span class="badge"> {{ unread_posts_count }} </span>
+                    {% endif %}
             {% elif role == 'org' %}
               <li><a href="{{ posts_url }}" class="nav-link {% if '/provider' in p %}active-link{% endif %}">Post Listings</a></li>
             {% endif %}
