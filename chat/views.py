@@ -126,47 +126,4 @@ def find_friends(request):
 
     return render(request, 'chat/find_friends.html', {'users': users, 'query': q})
 
-@login_required
-def send_friend_request(request, user_id):
-    if request.method != 'POST':
-        return redirect('chat:find_friends')
-
-    to_user = get_object_or_404(User, id=user_id)
-    if to_user == request.user:
-        messages.error(request, "You can’t add yourself.")
-        return redirect('chat:find_friends')
-
-    # already friends?
-    if Friend.get_friends(request.user).filter(id=to_user.id).exists():
-        messages.info(request, "You’re already friends.")
-        return redirect('chat:find_friends')
-
-    # already pending either direction?
-    exists = FriendRequest.objects.filter(
-        Q(from_user=request.user, to_user=to_user) |
-        Q(from_user=to_user, to_user=request.user),
-        status='pending'
-    ).exists()
-    if exists:
-        messages.info(request, "A request is already pending.")
-        return redirect('chat:find_friends')
-
-    FriendRequest.objects.create(from_user=request.user, to_user=to_user, status='pending')
-    messages.success(request, "Friend request sent.")
-    return redirect('chat:find_friends')
-
-@login_required
-def cancel_friend_request(request, req_id):
-    if request.method != 'POST':
-        return redirect('friends:friends_list')
-
-    fr = get_object_or_404(
-        FriendRequest,
-        id=req_id,
-        from_user=request.user,   # only the sender can cancel their own pending request
-        status='pending'
-    )
-    fr.delete()
-    messages.info(request, "Friend request canceled.")
-    return redirect('friends:friends_list')
 

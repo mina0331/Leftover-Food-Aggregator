@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}View Profile{% endblock %}
+
+{% block content %}
+<style>
+  .profile-card {
+      border-radius: 20px;
+      padding: 30px;
+      background: white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      transition: 0.2s ease-in-out;
+  }
+  .profile-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.12);
+  }
+  .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #f0f0f0;
+      margin-bottom: 15px;
+  }
+  .profile-name {
+      font-size: 1.7rem;
+      font-weight: 600;
+  }
+  .profile-username {
+      color: #6c757d;
+      margin-top: -4px;
+      font-size: 0.95rem;
+  }
+  .profile-section-title {
+      font-size: 1.1rem;
+      margin-top: 20px;
+      font-weight: 600;
+      border-left: 4px solid #007bff;
+      padding-left: 8px;
+  }
+</style>
+
+<div class="container d-flex justify-content-center mt-5">
+  <div class="col-md-5">
+
+    <div class="profile-card text-center">
+
+      {% if profile and profile.avatar_url %}
+        <img src="{{ profile.avatar_url }}" class="profile-avatar">
+      {% else %}
+        <div class="profile-avatar d-flex align-items-center justify-content-center"
+             style="background:#f3f4f6; font-size:2.5rem;">
+          {{ profile.display_name|default:profile_user.username|first|upper }}
+        </div>
+      {% endif %}
+
+      <div class="profile-name">
+        {{ profile.display_name|default:profile_user.username }}
+      </div>
+
+      <div class="profile-username">
+        @{{ profile_user.username }}
+      </div>
+
+      <div class="profile-section-title">Contact</div>
+      <p class="mb-0">{{ profile_user.email }}</p>
+
+      {% if profile.bio %}
+        <div class="profile-section-title">Bio</div>
+        <p>{{ profile.bio }}</p>
+      {% endif %}
+
+      {% if request.user != profile_user %}
+        <form method="POST" action="{% url 'friends:send_friend_request' profile_user.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary w-100 mt-3" style="padding:10px; font-weight:600;">
+            Send Friend Request
+        </button>
+        </form>
+      {% else %}
+        <button class="btn btn-outline-secondary w-100 mt-3" disabled>
+          This is your profile
+        </button>
+      {% endif %}
+
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

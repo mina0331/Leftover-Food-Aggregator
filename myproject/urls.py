@@ -20,7 +20,7 @@ from django.views.generic.base import RedirectView
 
 import Friendslist
 from landingpage.views import home
-from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect, profile_edit, welcome_screen
+from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect, profile_edit, welcome_screen, view_profile
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,6 +38,7 @@ urlpatterns = [
     path("friends/", include(("Friendslist.urls", "friends"), namespace="friends")),
     path("edit_profile/", profile_edit, name="profile_edit"),
     path("", include(("posting.urls", "posting"), namespace="posting")),
+    path("", include("profiles.urls", namespace="profiles")),
 
     
 

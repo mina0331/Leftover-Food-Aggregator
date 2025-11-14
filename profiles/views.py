@@ -1,7 +1,8 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
 from .models import Profile
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User
 
 
 
@@ -124,5 +125,16 @@ def profile_edit(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, "profilepage/edit_profile.html", {"form": form})
+
+@login_required
+def view_profile(request, user_id):
+    profile_user = get_object_or_404(User, pk=user_id)
+    profile = getattr(profile_user, "profile", None)  # assuming OneToOne Profile
+
+    context = {
+        "profile_user": profile_user,
+        "profile": profile,
+    }
+    return render(request, "profilepage/profile_viewable.html", context)
 
 

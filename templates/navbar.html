@@ -17,6 +17,7 @@
     @media (max-width: 900px){ .nav-center{justify-content:flex-start;} }
   </style>
 
+
   <div class="nav-inner">
     <!-- Left -->
     <div class="nav-left">
@@ -72,6 +73,13 @@
       {% if not user.is_authenticated %}
         <a href="{% url 'loginpage:login' %}" class="nav-link">Log In</a>
       {% else %}
+          <figure>
+          <a href = {% url 'profile_redirect'%}> <img src="{{ user.profile.avatar_url }}"
+            alt="Profile photo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"></a>
+          <figcaption style="text-align: center; margin-top: 1px; font-size: 10px; color: #ffffff;">{{ user.profile.display_name }}</figcaption>
+          </figure>
+
+
         <a href="{% url 'account_logout' %}" class="nav-link">Log Out</a>
       {% endif %}
     </div>

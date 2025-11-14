@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "storages",
     "posting",
 
+
 ]
 
 #AWS settings
