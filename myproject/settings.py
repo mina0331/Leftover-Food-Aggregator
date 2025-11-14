@@ -156,15 +156,17 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                'chat.context_processors.unread_messages',
-                "Friendslist.context_processors.pending_friend_requests_count"
+
+
             ],
         },
     },
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'chat.context_processors.pending_friend_requests_count',
+    'chat.context_processors.unread_messages',
+    "Friendslist.context_processors.pending_friend_requests_count"
+
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"

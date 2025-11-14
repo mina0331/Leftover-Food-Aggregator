@@ -6,7 +6,7 @@ def unread_messages(request):
         return {}
 
     unread_count = Message.objects.filter(
-        receiver=request.user,
+        recipient=request.user,
         is_read=False
     ).count()
 
