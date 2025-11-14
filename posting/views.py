@@ -48,6 +48,7 @@ def create_post(request):
 @login_required
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    post.read_users.add(request.user)
     return render (request,"posting/post_detail.html", {"post": post})
 
 @login_required
