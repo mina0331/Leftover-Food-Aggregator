@@ -128,17 +128,7 @@
         <h1>🔍 Find Friends</h1>
         <p style="color: #666;">Search by username or email</p>
     </div>
-    
-    {% if messages %}
-        {% for message in messages %}
-        <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; 
-                    {% if message.tags == 'error' %}background: #fee; border: 1px solid #fcc;
-                    {% elif message.tags == 'success' %}background: #efe; border: 1px solid #cfc;
-                    {% else %}background: #e3f2fd; border: 1px solid #90caf9;{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    {% endif %}
+
     
     <form method="GET" class="search-form">
         <input 

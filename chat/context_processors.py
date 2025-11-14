@@ -1,10 +1,13 @@
-from .models import FriendRequest
 
-def pending_friend_requests_count(request):
+from chat.models import Message
+
+def unread_messages(request):
     if not request.user.is_authenticated:
-        return {'pending_friend_requests_count': 0}
-    return {
-        'pending_friend_requests_count': FriendRequest.objects.filter(
-            to_user=request.user, status='pending'
-        ).count()
-    }
+        return {}
+
+    unread_count = Message.objects.filter(
+        receiver=request.user,
+        is_read=False
+    ).count()
+
+    return {'unread_count': unread_count}

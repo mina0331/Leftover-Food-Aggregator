@@ -47,10 +47,12 @@
 
         <li>
           {% url 'chat:index' as chat_url %}
-          <a href="{{ chat_url }}" class="nav-link {% if p|slice:':6' == '/chat/' %}active-link{% endif %}">Chat</a>
-        {% if unread_count %}
-            <span class="badge"> {{ unread_count }} </span>
-        {% endif %}
+          <a href="{{ chat_url }}" class="nav-link {% if p|slice:':9' == '/chat/' %}active-link{% endif %}">
+              Chat
+            {% if unread_count %}
+                <span class="badge"> {{ unread_count }} </span>
+            {% endif %}
+          </a>
         </li>
 
         <li>

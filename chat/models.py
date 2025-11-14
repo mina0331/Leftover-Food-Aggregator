@@ -97,3 +97,5 @@ class Message(models.Model):
         self.status = 'rejected'
         self.save()
         return self
+
+

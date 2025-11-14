@@ -8,13 +8,7 @@
     {{ counts.friends }} friends • {{ counts.received }} incoming • {{ counts.sent }} outgoing
   </p>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div style="padding:12px;margin:12px 0;border-radius:8px;background:#e3f2fd;border:1px solid #90caf9;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
+
 
   <h3 style="margin-top:24px;">Current Friends</h3>
   {% if friends %}
