@@ -42,6 +42,10 @@ def conversation_detail(request, convo_id):
     # 2) All messages in this conversation
     messages_qs = conversation.messages.select_related("sender").all()
 
+    conversation.messages.filter(
+        is_read=False
+    ).exclude(sender=request.user).update(is_read=True)
+
     # 3) For 1:1 chat, figure out the "other_user"
     other_user = None
     if not conversation.is_group:

@@ -270,6 +270,13 @@
     .new-message-btn:hover {
     background: rgba(255,255,255,0.3);
     }
+    .sent_user {
+        font-size: 12px;
+        font-weight: 600;
+        color: #4f6b95;       /* muted blue-gray */
+        margin-bottom: 4px;   /* space between name and message */
+    }
+
 
     @media (max-width: 768px) {
         .messages-container {
@@ -346,7 +353,9 @@
         {% if conversation.is_group %}
           <h2>{{ conversation.name }}</h2>
           <div class="user-status">
-            {{ conversation.participants.count }} participants
+              {% for user in conversation.participants.all %}
+                  {{ user.profile.display_name }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
           </div>
         {% else %}
           <a href="{% url 'profiles:view_profile' other_user.id %}">
@@ -354,7 +363,7 @@
                  alt="Profile photo"
                  style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
           </a>
-          <h2>{{ other_user.profile.display_name|default:other_user.username }}</h2>
+          <h2>{{ other_user.profile.display_name }}</h2>
           <div class="user-status">{{ other_user.email }}</div>
         {% endif %}
       </div>
@@ -364,6 +373,7 @@
       {% for message in messages %}
         <div class="message-wrapper {% if message.sender == request.user %}own{% endif %}">
           <div class="message">
+              <div class="sent_user"> {{ message.sender.profile.display_name }} </div>
             <div class="message-content">{{ message.content }}</div>
             <div class="message-time">{{ message.timestamp|date:"M d, g:i A" }}</div>
           </div>
