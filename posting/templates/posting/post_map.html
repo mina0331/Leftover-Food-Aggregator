@@ -20,6 +20,22 @@
 
 </div>
 
+<style>
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #232D4B;  /* UVA navy color */
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  }
+
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
 
 <link
   rel="stylesheet"
@@ -35,9 +51,20 @@
   crossorigin="">
 </script>
 
+    <script>
+        const userPhotoUrl = "{{ request.user.profile.avatar_url}}";
+    </script>
+
 <script>
   // posts from Django
   const posts = JSON.parse('{{ posts_json|escapejs }}');
+
+  const userIcon = L.divIcon({
+  html: `<div class="user-avatar"><img src="${userPhotoUrl}" /></div>`,
+  className: '',  // empty so Leaflet doesn't add default styles
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],  // center the icon
+});
 
   // UVA center
   const UVA_LAT = 38.0336;
@@ -64,16 +91,15 @@
 
   if ("geolocation" in navigator) {
   navigator.geolocation.getCurrentPosition(pos => {
-    const userLat = pos.coords.latitude;
-    const userLng = pos.coords.longitude;
+  const userLat = pos.coords.latitude;
+  const userLng = pos.coords.longitude;
 
-    const userMarker = L.circleMarker([userLat, userLng], {
-      radius: 6
-    }).addTo(map);
-    userMarker.bindPopup("You are here");
+  L.marker([userLat, userLng], { icon: userIcon })
+    .addTo(map)
+    .bindPopup("You are here");
 
-    // If you want the map to center on the user:
-    // map.setView([userLat, userLng], 16);
+
+    map.setView([userLat, userLng], 16);
   });
 }
 </script>
