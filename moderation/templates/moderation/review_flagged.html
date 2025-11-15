@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Review Flagged Content - Moderator Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    .review-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-card.pending {
+        border-left: 4px solid #f39c12;
+    }
+    
+    .stat-card.approved {
+        border-left: 4px solid #27ae60;
+    }
+    
+    .stat-card.deleted {
+        border-left: 4px solid #e74c3c;
+    }
+    
+    .stat-card.dismissed {
+        border-left: 4px solid #95a5a6;
+    }
+    
+    .stat-number {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .flags-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .flag-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #fafafa;
+    }
+    
+    .flag-item.pending {
+        border-left: 4px solid #f39c12;
+        background: #fffbf0;
+    }
+    
+    .flag-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .flag-meta {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .flag-status {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .flag-status.pending {
+        background: #f39c12;
+        color: white;
+    }
+    
+    .flag-status.approved {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .flag-status.deleted {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .flag-status.dismissed {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .content-preview {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .content-preview h4 {
+        margin-top: 0;
+        color: #232D4B;
+    }
+    
+    .flag-reason {
+        background: #fff3cd;
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 3px solid #ffc107;
+        margin: 15px 0;
+    }
+    
+    .flag-reason strong {
+        color: #856404;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-approve {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-approve:hover {
+        background: #229954;
+    }
+    
+    .btn-dismiss {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn-dismiss:hover {
+        background: #7f8c8d;
+    }
+    
+    .btn-delete {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c0392b;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+    }
+    
+    .modal-header {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .modal textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 100px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+</style>
+
+<div class="review-container">
+    <h1 style="color: #232D4B; margin-bottom: 30px;">🚩 Review Flagged Content</h1>
+    
+    <!-- Statistics -->
+    <div class="stats-section">
+        <div class="stat-card pending">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-number">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-card approved">
+            <div class="stat-label">Approved</div>
+            <div class="stat-number">{{ stats.approved }}</div>
+        </div>
+        <div class="stat-card deleted">
+            <div class="stat-label">Deleted</div>
+            <div class="stat-number">{{ stats.deleted }}</div>
+        </div>
+        <div class="stat-card dismissed">
+            <div class="stat-label">Dismissed</div>
+            <div class="stat-number">{{ stats.dismissed }}</div>
+        </div>
+    </div>
+    
+    <!-- Pending Flags -->
+    <div class="flags-section">
+        <h2 style="color: #232D4B; margin-bottom: 20px;">⏳ Pending Review ({{ pending_flags.count }})</h2>
+        
+        {% for flag in pending_flags %}
+        <div class="flag-item pending">
+            <div class="flag-header">
+                <div>
+                    <strong>Flag #{{ flag.id }}</strong> - {{ flag.get_content_type_name }}
+                    <div class="flag-meta">
+                        Flagged by <strong>{{ flag.flagged_by.username }}</strong> on {{ flag.flagged_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+                <span class="flag-status pending">{{ flag.get_status_display }}</span>
+            </div>
+            
+            <div class="content-preview">
+                <h4>Content:</h4>
+                {% if flag.content_object %}
+                    <p>{{ flag.content_object|truncatewords:50 }}</p>
+                {% else %}
+                    <p style="color: #999; font-style: italic;">Content has been deleted</p>
+                {% endif %}
+            </div>
+            
+            <div class="flag-reason">
+                <strong>Reason for flagging:</strong><br>
+                {{ flag.reason }}
+            </div>
+            
+            {% if flag.content_object %}
+            <div class="action-buttons">
+                <form method="POST" action="{% url 'moderation:approve_flag' flag.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-approve" onclick="openModal('approve', {{ flag.id }})">
+                        ✅ Approve (Keep Content)
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'moderation:dismiss_flag' flag.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-dismiss" onclick="openModal('dismiss', {{ flag.id }})">
+                        ❌ Dismiss Flag
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'moderation:delete_flagged' flag.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-delete" onclick="openModal('delete', {{ flag.id }})">
+                        🗑️ Delete Content
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <p style="color: #999; font-style: italic;">Content already deleted - no action needed</p>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #666; padding: 40px;">🎉 No pending flags! All clear.</p>
+        {% endfor %}
+    </div>
+    
+    <!-- Recently Reviewed -->
+    {% if reviewed_flags %}
+    <div class="flags-section">
+        <h2 style="color: #232D4B; margin-bottom: 20px;">📋 Recently Reviewed</h2>
+        
+        {% for flag in reviewed_flags %}
+        <div class="flag-item">
+            <div class="flag-header">
+                <div>
+                    <strong>Flag #{{ flag.id }}</strong> - {{ flag.get_content_type_name }}
+                    <div class="flag-meta">
+                        Flagged by <strong>{{ flag.flagged_by.username }}</strong> on {{ flag.flagged_at|date:"M d, Y g:i A" }}
+                        {% if flag.reviewed_by %}
+                            | Reviewed by <strong>{{ flag.reviewed_by.username }}</strong> on {{ flag.reviewed_at|date:"M d, Y g:i A" }}
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="flag-status {{ flag.status }}">{{ flag.get_status_display }}</span>
+            </div>
+            
+            {% if flag.moderator_notes %}
+            <div style="background: #e8f4f8; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <strong>Moderator Notes:</strong> {{ flag.moderator_notes }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal for action confirmation -->
+<div id="actionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="modalTitle"></div>
+        <form id="actionForm" method="POST">
+            {% csrf_token %}
+            <textarea name="notes" placeholder="Optional: Add notes about this action..."></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeModal()" style="background: #95a5a6;">Cancel</button>
+                <button type="submit" class="btn" id="modalSubmit"></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(action, flagId) {
+        const modal = document.getElementById('actionModal');
+        const form = document.getElementById('actionForm');
+        const title = document.getElementById('modalTitle');
+        const submit = document.getElementById('modalSubmit');
+        
+        let actionUrl, actionText, submitText, submitClass;
+        
+        if (action === 'approve') {
+            actionUrl = "{% url 'moderation:approve_flag' 0 %}".replace('0', flagId);
+            actionText = 'Approve Flag';
+            submitText = '✅ Approve';
+            submitClass = 'btn-approve';
+        } else if (action === 'dismiss') {
+            actionUrl = "{% url 'moderation:dismiss_flag' 0 %}".replace('0', flagId);
+            actionText = 'Dismiss Flag';
+            submitText = '❌ Dismiss';
+            submitClass = 'btn-dismiss';
+        } else if (action === 'delete') {
+            actionUrl = "{% url 'moderation:delete_flagged' 0 %}".replace('0', flagId);
+            actionText = 'Delete Content';
+            submitText = '🗑️ Delete';
+            submitClass = 'btn-delete';
+        }
+        
+        form.action = actionUrl;
+        title.textContent = actionText;
+        submit.textContent = submitText;
+        submit.className = 'btn ' + submitClass;
+        modal.style.display = 'block';
+    }
+    
+    function closeModal() {
+        document.getElementById('actionModal').style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+        const modal = document.getElementById('actionModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{% url 'userprivileges:moderator_home' %}" class="btn" style="background: #3498db; color: white;">← Back to Moderator Dashboard</a>
+</div>
+
+{% endblock %}
+
+

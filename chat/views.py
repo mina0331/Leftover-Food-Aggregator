@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Case, When, IntegerField
+from django.contrib.contenttypes.models import ContentType
 from .models import Message
 from .models import Friend
 from .models import FriendRequest
@@ -48,11 +49,15 @@ def conversation_detail(request, user_id):
 
     # sidebar list (if you have this helper)
     all_conversations = Message.get_conversations(request.user)
+    
+    # Get content type for Message model (for flagging)
+    message_content_type = ContentType.objects.get_for_model(Message)
 
     return render(request, 'chat/conversation.html', {
         'other_user': other_user,
         'messages': thread_qs,
         'all_conversations': all_conversations,
+        'message_content_type_id': message_content_type.id,
     })
 
 @login_required
