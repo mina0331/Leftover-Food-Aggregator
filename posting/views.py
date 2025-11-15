@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
-import requests
-from django.conf import settings
+import json
+from django.urls import reverse
 
 # Create your views here.
 
@@ -88,41 +88,31 @@ def delete_post(request, post_id):
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
 
-@login_required
-def create_location(request):
-    if request.method == "POST":
-        form = LocationForm(request.POST)
-        if form.is_valid():
-            location = form.save(commit=False)
-            search_text = location.location_name
 
-            url = "https://api.mapbox.com/search/geocode/v6/forward"
-            params = {
-                "q": search_text,
-                "access_token": settings.MAPBOX_API_KEY
-            }
+def post_map(request):
+    # Only posts that actually have a location with coordinates
+    posts = (
+        Post.objects
+        .select_related("location")
+        .filter(
+            location__isnull=False,
+            location__latitude__isnull=False,
+            location__longitude__isnull=False,
+        )
+    )
 
-            response = requests.get(url, params=params)
-            data = response.json()
+    posts_data = []
+    for p in posts:
+        posts_data.append({
+            "id": p.id,
+            "event": p.event,  # use p.title if your field is named differently
+            "building": p.location.building_name,
+            "lat": p.location.latitude,
+            "lng": p.location.longitude,
+            "detail_url": reverse("posting:post_detail", args=[p.id]),
+        })
 
-            # Extract coordinates
-            try:
-                feature = data["features"][0]
-                coords = feature["geometry"]["coordinates"]
-                lng, lat = coords[0], coords[1]
-
-                location.latitude = lat
-                location.longitude = lng
-
-            except (KeyError, IndexError):
-                # handle no result found
-                location.latitude = None
-                location.longitude = None
-
-            location.save()
-            return redirect("posts:list")
-    else:
-        form = LocationForm()
-
-    return render(request, "locations/create.html", {"form": form})
-
+    context = {
+        "posts_json": json.dumps(posts_data),
+    }
+    return render(request, "posting/post_map.html", context)

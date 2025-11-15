@@ -8,7 +8,6 @@ class PostForm(forms.ModelForm):
         widgets = {
             "cuisines": forms.CheckboxSelectMultiple(),
         }
-        # IMPORTANT: don't exclude "location" anymore
         exclude = ("author", "created_at", "updated_at", "read_users")
 
     def __init__(self, *args, **kwargs):

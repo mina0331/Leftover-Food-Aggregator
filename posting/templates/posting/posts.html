@@ -9,6 +9,10 @@
   </h1>
 
   {% if user.is_authenticated %}
+      <a href="{% url 'posting:post_map' %}"
+         style="background:#232D4B; color:white; padding:8px 16px; border-radius:8px; text-decoration:none; margin-right:10px;">
+          🗺 View posts on map
+      </a>
     <div style="text-align:right; margin-bottom:20px;">
       <a href="{% url 'posting:create_post'%}"
          style="background:#E57200; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">

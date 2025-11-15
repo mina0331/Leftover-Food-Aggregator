@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 40px auto;">
+
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:20px;">
+    Events Map
+  </h1>
+
+  <div style="text-align:center; margin-bottom:15px;">
+    <a href="{% url 'posting:post_list' %}"
+       style="text-decoration:none; color:#232D4B;">
+       ← Back to all events
+    </a>
+  </div>
+
+  <!-- Map container -->
+  <div id="map" style="height: 550px; width: 100%; border-radius:12px; overflow:hidden;"></div>
+
+</div>
+
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin="">
+</script>
+
+<script>
+  // posts from Django
+  const posts = JSON.parse('{{ posts_json|escapejs }}');
+
+  // UVA center
+  const UVA_LAT = 38.0336;
+  const UVA_LNG = -78.5080;
+
+  // create map
+  const map = L.map('map').setView([UVA_LAT, UVA_LNG], 15);
+
+  // base tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // markers for posts
+  posts.forEach(p => {
+    const marker = L.marker([p.lat, p.lng]).addTo(map);
+    marker.bindPopup(`
+      <b>${p.event}</b><br/>
+      ${p.building}<br/>
+      <a href="${p.detail_url}">View details →</a>
+    `);
+  });
+
+  if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const userLat = pos.coords.latitude;
+    const userLng = pos.coords.longitude;
+
+    const userMarker = L.circleMarker([userLat, userLng], {
+      radius: 6
+    }).addTo(map);
+    userMarker.bindPopup("You are here");
+
+    // If you want the map to center on the user:
+    // map.setView([userLat, userLng], 16);
+  });
+}
+</script>
+{% endblock %}
