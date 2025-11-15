@@ -25,6 +25,21 @@ def index(request):
         "total_posts": post_list.count(),
     })
 
+def event_history(request):
+    #Read-only list of past leftover food posts, newest first.
+    #For now, 'history' just means all posts ordered by created_at.
+
+    post_list = Post.objects.order_by("-created_at")
+    paginator = Paginator(post_list, 10)   # 10 per page, adjust if you want
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "posting/event_history.html", {
+        "posts": page_obj,
+        "page_obj": page_obj,
+        "total_posts": post_list.count(),
+    })
+
 @login_required
 def create_post(request):
     if request.user.profile.role != 'org':
