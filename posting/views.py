@@ -1,16 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from .models import Cuisine, Post, Location
 from django.core.paginator import Paginator
-from .forms import PostForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
-# Create your views here.
+import requests
+from django.conf import settings
 
+# Create your views here.
 
 def index(request):
     post_list = Post.objects.order_by("-created_at")
@@ -29,11 +27,13 @@ def create_post(request):
     if request.user.profile.role != 'org':
         messages.warning(request, 'You are not authorized to create posts.')
         return redirect('posting:post_list')
+
     if request.method == "POST":
-        form = PostForm(request.POST, request.FILES)   # include files
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)             # set author
+            post = form.save(commit=False)
             post.author = request.user
+            # post.location is already set from the form's dropdown
             post.save()
             messages.success(request, 'Your post has been created.')
             return redirect("posting:post_list")
@@ -42,9 +42,7 @@ def create_post(request):
     else:
         form = PostForm()
 
-    # render on GET or invalid POST
     return render(request, "posting/create_post.html", {"form": form})
-
 @login_required
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -89,4 +87,42 @@ def delete_post(request, post_id):
 
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
+
+@login_required
+def create_location(request):
+    if request.method == "POST":
+        form = LocationForm(request.POST)
+        if form.is_valid():
+            location = form.save(commit=False)
+            search_text = location.location_name
+
+            url = "https://api.mapbox.com/search/geocode/v6/forward"
+            params = {
+                "q": search_text,
+                "access_token": settings.MAPBOX_API_KEY
+            }
+
+            response = requests.get(url, params=params)
+            data = response.json()
+
+            # Extract coordinates
+            try:
+                feature = data["features"][0]
+                coords = feature["geometry"]["coordinates"]
+                lng, lat = coords[0], coords[1]
+
+                location.latitude = lat
+                location.longitude = lng
+
+            except (KeyError, IndexError):
+                # handle no result found
+                location.latitude = None
+                location.longitude = None
+
+            location.save()
+            return redirect("posts:list")
+    else:
+        form = LocationForm()
+
+    return render(request, "locations/create.html", {"form": form})
 

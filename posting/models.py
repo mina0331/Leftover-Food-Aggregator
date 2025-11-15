@@ -30,10 +30,10 @@ class Allergen(models.Model):
 class Location(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    location_name = models.CharField(max_length=30)
+    building_name = models.CharField(max_length=30)
 
     def __str__(self):
-        return self.location_name
+        return self.building_name
 
 
 class Post(models.Model):

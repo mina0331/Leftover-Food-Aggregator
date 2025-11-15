@@ -1,14 +1,18 @@
+# forms.py
 from django import forms
 from .models import Post, Location
 
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        widgets = {"cuisines": forms.CheckboxSelectMultiple()}
-        exclude = ("author", "created_at", "updated_at", "read_users")  # author not shown
+        widgets = {
+            "cuisines": forms.CheckboxSelectMultiple(),
+        }
+        # IMPORTANT: don't exclude "location" anymore
+        exclude = ("author", "created_at", "updated_at", "read_users")
 
-
-class LocationForm(forms.ModelForm):
-    class Meta:
-        model = Location
-        fields = ["location_name"]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # nice label and ordering
+        self.fields["location"].label = "UVA Building"
+        self.fields["location"].queryset = Location.objects.order_by("building_name")
