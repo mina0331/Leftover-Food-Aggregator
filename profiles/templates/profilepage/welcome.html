@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome | UVA Leftovers{% endblock %}
+
+{% block content %}
+<div style="text-align:center; margin-top:60px; padding: 20px;">
+    
+    <div style="max-width:600px; margin:0 auto;">
+        <h1 style="font-size:36px; margin-bottom:40px; color:#10172A;">
+            Welcome to UVA Leftovers
+        </h1>
+        
+        <!-- Community Guidelines -->
+        <div style="padding:40px; margin:30px 0; text-align:left;">
+            <h2 style="color:#E57200; margin:0 0 20px 0; font-size:24px;">Community Guidelines</h2>
+            
+            <p style="font-size:16px; line-height:1.8; color:#333; margin-bottom:20px;">
+                To maintain a safe and respectful community for all UVA students, please note:
+            </p>
+            
+            <ul style="font-size:16px; line-height:1.8; color:#333; margin:0 0 20px 20px; padding-left:20px;">
+                <li style="margin-bottom:12px;"><strong>No profanity or abusive content</strong> - Keep all posts and messages respectful</li>
+                <li style="margin-bottom:12px;"><strong>No harassment or bullying</strong> - Treat all community members with respect</li>
+                <li style="margin-bottom:12px;"><strong>Moderators are actively monitoring</strong> - Violations may result in account suspension</li>
+                <li style="margin-bottom:12px;"><strong>Be honest and accurate</strong> - Only post legitimate food availability</li>
+            </ul>
+            
+            <p style="font-size:16px; line-height:1.8; color:#333; margin-bottom:0;">
+                By continuing, you agree to follow these community guidelines and understand that violations will be reviewed by our moderation team.
+            </p>
+        </div>
+        
+        <!-- Acknowledgment Form -->
+        <form method="post" id="guidelinesForm" style="margin-top:30px;">
+            {% csrf_token %}
+            
+            <div style="padding:20px; margin-bottom:20px; text-align:left;">
+                <label style="display:flex; align-items:center; cursor:pointer; font-size:16px; color:#333;">
+                    <input type="checkbox" 
+                           name="acknowledge" 
+                           required 
+                           style="width:20px; height:20px; margin-right:12px; cursor:pointer;">
+                    <span>I acknowledge that I have read and agree to follow the community guidelines</span>
+                </label>
+            </div>
+            
+            <button type="submit" 
+                    style="background:#E57200; 
+                           color:white; 
+                           padding:14px 32px; 
+                           border:none; 
+                           border-radius:8px; 
+                           font-size:18px; 
+                           font-weight:600; 
+                           cursor:pointer; 
+                           transition:all 0.3s;"
+                    onmouseover="this.style.background='#c56200';"
+                    onmouseout="this.style.background='#E57200';">
+                Continue
+            </button>
+        </form>
+        
+    </div>
+    
+</div>
+{% endblock %}
+
