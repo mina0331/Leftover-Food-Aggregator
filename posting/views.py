@@ -10,6 +10,9 @@ from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
+import csv
+from django.db.models import Count
+from django.contrib.admin.views.decorators import staff_member_required
 # Create your views here.
 
 
@@ -106,4 +109,36 @@ def delete_post(request, post_id):
 
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
+
+@staff_member_required
+def export_data(request):
+    #Export anonymized data about posts as a CSV file.
+    #Admin-only (staff).
+
+    # Tell browser we are returning a CSV file
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="uva_leftovers_data.csv"'
+
+    writer = csv.writer(response)
+
+    # ---- Overall metrics ----
+    total_posts = Post.objects.count()
+
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Total posts", total_posts])
+    writer.writerow([])
+
+    # ---- Posts by cuisine (anonymized: no user info) ----
+    writer.writerow(["Cuisine", "Post count"])
+
+    cuisine_counts = (
+        Post.objects.values("cuisine__name")
+        .annotate(count=Count("id"))
+        .order_by("cuisine__name")
+    )
+
+    for row in cuisine_counts:
+        writer.writerow([row["cuisine__name"], row["count"]])
+
+    return response
 

@@ -6,7 +6,7 @@
       display:flex;
       align-items:center;
       gap:16px;
-      position:relative; /* REQUIRED for absolute positioning of center */
+      position:relative; /* for absolute center */
     }
 
     .nav-left{
@@ -15,7 +15,7 @@
       gap:10px;
     }
 
-    /* ★ Center tabs centered relative to full navbar */
+    /* Center tabs centered relative to full navbar */
     .nav-center{
       position:absolute;
       left:50%;
@@ -42,7 +42,7 @@
       flex-wrap:wrap;
     }
 
-    /* ★ Brand aligned correctly with other tabs */
+    /* Brand */
     .brand{
       display:inline-flex;
       align-items:center;
@@ -126,26 +126,21 @@
     <div class="nav-center">
       <ul class="nav-list">
 
-        <li>
-          <a href="{% url 'profile_redirect' %}"
-             class="nav-link {% if '/profile' in p %}active-link{% endif %}">
-             Profile
-          </a>
-        </li>
+        {# NOTE: Profile moved to nav-right #}
 
         {% if user.is_authenticated %}
         {% with role=user.profile.role %}
           {% if role == 'student' %}
             <li>
               <a href="{{ posts_url }}"
-                class="nav-link {% if p == posts_url %}active-link{% endif %}">
+                 class="nav-link {% if p == posts_url %}active-link{% endif %}">
                 Food Listings
               </a>
             </li>
           {% elif role == 'org' %}
             <li>
               <a href="{{ posts_url }}"
-                class="nav-link {% if p == posts_url %}active-link{% endif %}">
+                 class="nav-link {% if p == posts_url %}active-link{% endif %}">
                 Post Listings
               </a>
             </li>
@@ -188,12 +183,25 @@
       </ul>
     </div>
 
-    <!-- RIGHT: Login/Logout -->
+    <!-- RIGHT: Export (admin), Profile, Login/Logout -->
     <div class="nav-right">
-      {% if not user.is_authenticated %}
-        <a href="{% url 'loginpage:login' %}" class="nav-link">Log In</a>
-      {% else %}
+      {% if user.is_authenticated %}
+
+        {% if user.is_staff %}
+          <a href="{% url 'posting:export_data' %}" class="nav-link">
+            Export Data
+          </a>
+        {% endif %}
+
+        <a href="{% url 'profile_redirect' %}"
+           class="nav-link {% if '/profile' in p %}active-link{% endif %}">
+           Profile
+        </a>
+
         <a href="{% url 'account_logout' %}" class="nav-link">Log Out</a>
+
+      {% else %}
+        <a href="{% url 'loginpage:login' %}" class="nav-link">Log In</a>
       {% endif %}
     </div>
 
