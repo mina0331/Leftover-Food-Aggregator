@@ -119,26 +119,33 @@
       </div>
 
       {% if user.is_authenticated %}
-        <a href="{% url 'posting:create_post'%}"
-           style="
-             background:#E57200;
-             color:white;
-             padding:8px 18px;
-             border-radius:999px;
-             text-decoration:none;
-             font-size:0.9rem;
-             white-space:nowrap;
-             font-weight:500;
-           ">
-           + Create New Post
-        </a>
-      {% else %}
-        <span style="font-size:0.9rem;">
-          <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
-            Log in
-          </a> to create an event post.
-        </span>
-      {% endif %}
+    {% with role=user.profile.role %}
+        {% if role == 'org' %}
+            <a href="{% url 'posting:create_post' %}"
+                style="
+                background:#E57200;
+                color:white;
+                padding:8px 18px;
+                border-radius:999px;
+                text-decoration:none;
+                font-size:0.9rem;
+                white-space:nowrap;
+                font-weight:500;
+                ">
+                + Create New Post
+            </a>
+        {% else %}
+            <span style="font-size:0.9rem;">
+              <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
+                Log in
+              </a> to create an event post.
+            </span>
+        {% endif %}
+    {% endwith %}
+{% endif %}
+
+
+
     </div>
   </div>
 
