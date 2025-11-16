@@ -36,6 +36,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
