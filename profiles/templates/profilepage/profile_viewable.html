@@ -66,9 +66,41 @@
       <div class="profile-section-title">Contact</div>
       <p class="mb-0">{{ profile_user.email }}</p>
 
+        {% if profile.major %}
+        <div class="profile-section-title">Major</div>
+        <p>{{ profile.major }}</p>
+        {% endif %}
+
       {% if profile.bio %}
         <div class="profile-section-title">Bio</div>
         <p>{{ profile.bio }}</p>
+      {% endif %}
+
+    {% if profile.role %}
+        <div class="profile-section-title">Role</div>
+        <p>{{ profile.get_role_display }}</p>
+      {% endif %}
+
+      {% if profile.preferences.all %}
+        <div class="profile-section-title">Favorite cuisines</div>
+        <p>
+          {% for cuisine in profile.preferences.all %}
+            <span class="badge bg-primary" style="margin:2px;">{{ cuisine.name }}</span>
+          {% empty %}
+            <span style="color:#6c757d;">No preferences set.</span>
+          {% endfor %}
+        </p>
+      {% endif %}
+
+      {% if profile.allergens.all %}
+        <div class="profile-section-title">Allergens</div>
+        <p>
+          {% for allergen in profile.allergens.all %}
+            <span class="badge bg-danger" style="margin:2px;">{{ allergen.name }}</span>
+          {% empty %}
+            <span style="color:#6c757d;">No allergens listed.</span>
+          {% endfor %}
+        </p>
       {% endif %}
 
       {% if request.user != profile_user %}

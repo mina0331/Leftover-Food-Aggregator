@@ -354,7 +354,7 @@
           <h2>{{ conversation.name }}</h2>
           <div class="user-status">
               {% for user in conversation.participants.all %}
-                  {{ user.profile.display_name }}{% if not forloop.last %}, {% endif %}
+                  {{ user.profile.display_name|default:"Deleted User" }}{% if not forloop.last %}, {% endif %}
               {% endfor %}
           </div>
         {% else %}
@@ -363,7 +363,7 @@
                  alt="Profile photo"
                  style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
           </a>
-          <h2>{{ other_user.profile.display_name }}</h2>
+          <h2>{{ other_user.profile.display_name|default:"Deleted User" }}</h2>
           <div class="user-status">{{ other_user.email }}</div>
         {% endif %}
       </div>
@@ -373,7 +373,7 @@
       {% for message in messages %}
         <div class="message-wrapper {% if message.sender == request.user %}own{% endif %}">
           <div class="message">
-              <div class="sent_user"> {{ message.sender.profile.display_name }} </div>
+              <div class="sent_user"> {{ message.sender.profile.display_name|default:"Deleted User" }} </div>
             <div class="message-content">{{ message.content }}</div>
             <div class="message-time">{{ message.timestamp|date:"M d, g:i A" }}</div>
           </div>

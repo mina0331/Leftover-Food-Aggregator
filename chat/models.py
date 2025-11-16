@@ -40,7 +40,7 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sent_messages',null=True)
     recipient = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
