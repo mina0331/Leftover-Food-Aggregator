@@ -35,8 +35,16 @@ def create_post(request):
         if form.is_valid():
             post = form.save(commit=False)             # set author
             post.author = request.user
+            
+            # Set status based on whether publish_at is provided
+            if post.publish_at:
+                post.status = Post.Status.SCHEDULED
+                messages.success(request, f'Your post has been scheduled for {post.publish_at.strftime("%B %d, %Y at %I:%M %p")}.')
+            else:
+                post.status = Post.Status.PUBLISHED
+                messages.success(request, 'Your post has been created.')
+            
             post.save()
-            messages.success(request, 'Your post has been created.')
             return redirect("posting:post_list")
         else:
             messages.error(request, 'Please fix some errors.')

@@ -29,10 +29,17 @@ class Allergen(models.Model):
 
 
 class Post(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        SCHEDULED = "scheduled", "Scheduled"
+        PUBLISHED = "published", "Published"
+
     event = models.TextField()
     event_description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
     cuisine = models.ForeignKey(Cuisine, on_delete=models.PROTECT)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PUBLISHED)
+    publish_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
