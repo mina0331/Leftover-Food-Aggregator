@@ -17,7 +17,7 @@
     <p style="color:#555;">
       <strong>Created by:</strong> {{ post.author.username }}<br>
       <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-      <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
+      <strong>Cuisine:</strong> {{ post.cuisine }}
     </p>
 
     {% if post.image %}

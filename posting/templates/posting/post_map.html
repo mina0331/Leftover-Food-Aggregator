@@ -89,18 +89,40 @@
     `);
   });
 
-  if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(pos => {
-  const userLat = pos.coords.latitude;
-  const userLng = pos.coords.longitude;
+  let userMarker = null;
+let firstFix = true;
 
-  L.marker([userLat, userLng], { icon: userIcon })
-    .addTo(map)
-    .bindPopup("You are here");
+if ("geolocation" in navigator) {
+  navigator.geolocation.watchPosition(
+    pos => {
+      const userLat = pos.coords.latitude;
+      const userLng = pos.coords.longitude;
 
+      if (!userMarker) {
+        // First update → create the marker once
+        userMarker = L.marker([userLat, userLng], { icon: userIcon })
+          .addTo(map)
+          .bindPopup("You are here");
 
-    map.setView([userLat, userLng], 16);
-  });
+        // Center map only the first time
+        if (firstFix) {
+          map.setView([userLat, userLng], 16);
+          firstFix = false;
+        }
+      } else {
+        // Later updates → just move the marker
+        userMarker.setLatLng([userLat, userLng]);
+      }
+    },
+    err => {
+      console.warn("Geo error:", err);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 10000,
+    }
+  );
 }
 </script>
 {% endblock %}

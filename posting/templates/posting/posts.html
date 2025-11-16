@@ -2,107 +2,252 @@
 {% load static %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 40px auto;">
+<div class="container" style="max-width: 900px; margin: 40px auto;">
 
-  <h1 style="text-align:center; color:#232D4B; margin-bottom:30px;">
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:24px;">
     All Events
   </h1>
 
   {% if user.is_authenticated %}
-      <a href="{% url 'posting:post_map' %}"
-         style="background:#232D4B; color:white; padding:8px 16px; border-radius:8px; text-decoration:none; margin-right:10px;">
-          🗺 View posts on map
+    <!-- Top actions bar -->
+      <div style="margin-bottom: 18px;">
+    <div style="margin-bottom:6px; font-size:0.9rem; color:#444; font-weight:500;">
+      Filter by cuisine:
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+
+      <!-- "All" button -->
+      <a href="{% url 'posting:post_list' %}{% if sort %}?sort={{ sort }}{% endif %}"
+         style="
+           padding:6px 12px;
+           border-radius:999px;
+           font-size:0.85rem;
+           text-decoration:none;
+           border:1px solid #ccc;
+           {% if not selected_cuisine_id %}
+             background:#232D4B;
+             color:white;
+           {% else %}
+             background:white;
+             color:#232D4B;
+           {% endif %}
+         ">
+        All
       </a>
-    <div style="text-align:right; margin-bottom:20px;">
+
+
+
+      {% for c in cuisine_list %}
+        <a href="?cuisine={{ c.id }}{% if sort %}&sort={{ sort }}{% endif %}"
+           style="
+             padding:6px 12px;
+             border-radius:999px;
+             font-size:0.85rem;
+             text-decoration:none;
+             border:1px solid #ccc;
+             {% if selected_cuisine_id == c.id|stringformat:'s' %}
+               background:#232D4B;
+               color:white;
+             {% else %}
+               background:white;
+               color:#232D4B;
+             {% endif %}
+           ">
+          {{ c.name|title }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px; flex-wrap:wrap;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="{% url 'posting:post_map' %}"
+           style="background:#232D4B; color:white; padding:8px 16px; border-radius:999px; text-decoration:none; font-size:0.95rem;">
+           View posts on map
+        </a>
+
+        {% comment %} Distance sort button {% endcomment %}
+        <button id="sort-distance-btn"
+                style="
+                  padding:8px 16px;
+                  border-radius:999px;
+                  border:none;
+                  cursor:pointer;
+                  font-size:0.95rem;
+                  {% if sort == 'distance' %}
+                    background:#155724;
+                    color:white;
+                  {% else %}
+                    background:#E57200;
+                    color:white;
+                  {% endif %}
+                ">
+          {% if sort == 'distance' %}
+            Sorted by distance
+          {% else %}
+            Sort by distance
+          {% endif %}
+        </button>
+      </div>
+
       <a href="{% url 'posting:create_post'%}"
-         style="background:#E57200; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">
+         style="background:#E57200; color:white; padding:8px 16px; border-radius:999px; text-decoration:none; font-size:0.95rem; white-space:nowrap;">
          + Create New Post
       </a>
     </div>
   {% else %}
-    <p style="text-align:right;">
-      <a href="{% url 'account_login' %}">Log in</a> to create an event post.
+    <p style="text-align:right; margin-bottom:24px;">
+      <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
+        Log in
+      </a> to create an event post.
     </p>
   {% endif %}
 
-    {% for post in posts %}
-      <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-        <h2 style="margin:0 0 10px 0;">{{ post.event }}</h2>
-        {% if post.image %}
-        <img src="{{ post.image.url }}" alt="{{ post.event }}"
-        style="width:50%; max-width:300px; height:auto; border-radius:8px; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;">
-        {% endif %}
+  {% for post in posts %}
+    <div style="
+        border:1px solid #eee;
+        border-radius:16px;
+        padding:18px 20px;
+        margin-bottom:18px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.04);
+        display:flex;
+        gap:16px;
+        flex-wrap:wrap;
+      ">
 
-        <p style="margin:0; color:#555;">
+      {% if post.image %}
+        <div style="flex:0 0 180px; max-width:180px; margin:auto;">
+          <img src="{{ post.image.url }}" alt="{{ post.event }}"
+               style="width:100%; height:auto; border-radius:12px; display:block;">
+        </div>
+      {% endif %}
+
+      <div style="flex:1 1 250px; min-width:230px;">
+        <h2 style="margin:0 0 6px 0; font-size:1.25rem; color:#232D4B;">
+          {{ post.event }}
+        </h2>
+
+        <p style="margin:0 0 6px 0; color:#555; font-size:0.9rem;">
           <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-          <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
+          <strong>Cuisine:</strong> {{ post.get_cuisine_display|default:post.cuisine }}<br>
+          {% if post.location %}
+            <strong>Location:</strong> {{ post.location.building_name }}<br>
+          {% endif %}
+          {% if post.distance_km %}
+            <strong>Distance:</strong> {{ post.distance_km|floatformat:2 }} km
+          {% endif %}
         </p>
 
         {% if post.event_description %}
-          <p style="margin-top:10px; color:#333;">{{ post.event_description|truncatewords:25 }}</p>
+          <p style="margin-top:8px; margin-bottom:10px; color:#333; font-size:0.95rem;">
+            {{ post.event_description|truncatewords:25 }}
+          </p>
         {% endif %}
 
-        <div style="margin-top:10px;">
+        <div style="margin-top:6px;">
           <a href="{% url 'posting:post_detail' post.id %}"
-             style="text-decoration:none; color:#232D4B; font-weight:bold;">
+             style="text-decoration:none; color:#232D4B; font-weight:bold; font-size:0.95rem;">
              View Details →
           </a>
         </div>
       </div>
+    </div>
   {% empty %}
-    <p style="text-align:center; color:#666;">No posts yet. Be the first to add one!</p>
- {% endfor %}
+    <p style="text-align:center; color:#666; margin-top:40px;">
+      No posts yet. Be the first to add one!
+    </p>
+  {% endfor %}
 
   {% if page_obj %}
-    <div style="text-align:center; margin-top:20px;">
+    <div style="text-align:center; margin-top:20px; font-size:0.9rem;">
       {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" style="margin-right:10px;">« Previous</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if sort %}&sort={{ sort }}{% endif %}"
+           style="margin-right:10px; text-decoration:none; color:#232D4B;">
+           « Previous
+        </a>
       {% endif %}
       <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
       {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" style="margin-left:10px;">Next »</a>
+        <a href="?page={{ page_obj.next_page_number }}{% if sort %}&sort={{ sort }}{% endif %}"
+           style="margin-left:10px; text-decoration:none; color:#232D4B;">
+           Next »
+        </a>
       {% endif %}
     </div>
   {% endif %}
-{% if messages %}
-  <div id="toast-container" style="
-       position: fixed;
-       top: 80px;
-       right: 20px;
-       z-index: 2000;">
-    {% for message in messages %}
-      <div class="toast-message {{ message.tags }}" style="
-          background:
-            {% if message.tags == 'success' %}#d4edda
-            {% elif message.tags == 'warning' %}#fff3cd
-            {% elif message.tags == 'danger' %}#f8d7da
-            {% else %}#e2e3e5{% endif %};
-          color:#000;
-          border-left:5px solid
-            {% if message.tags == 'success' %}#28a745
-            {% elif message.tags == 'warning' %}#ffc107
-            {% elif message.tags == 'danger' %}#dc3545
-            {% else %}#6c757d{% endif %};
-          border-radius:8px;
-          padding:12px 16px;
-          margin-bottom:10px;
-          box-shadow:0 2px 8px rgba(0,0,0,0.1);
-          opacity:1;
-          transition:opacity .5s ease-out;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
+
+  {% if messages %}
+    <div id="toast-container" style="
+         position: fixed;
+         top: 80px;
+         right: 20px;
+         z-index: 2000;">
+      {% for message in messages %}
+        <div class="toast-message {{ message.tags }}" style="
+            background:
+              {% if message.tags == 'success' %}#d4edda
+              {% elif message.tags == 'warning' %}#fff3cd
+              {% elif message.tags == 'danger' %}#f8d7da
+              {% else %}#e2e3e5{% endif %};
+            color:#000;
+            border-left:5px solid
+              {% if message.tags == 'success' %}#28a745
+              {% elif message.tags == 'warning' %}#ffc107
+              {% elif message.tags == 'danger' %}#dc3545
+              {% else %}#6c757d{% endif %};
+            border-radius:8px;
+            padding:12px 16px;
+            margin-bottom:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.1);
+            opacity:1;
+            transition:opacity .5s ease-out;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
 
 <script>
-  // make messages fade away automatically
+  // auto-fade messages
   setTimeout(() => {
     const toasts = document.querySelectorAll('#toast-container .toast-message');
     toasts.forEach(toast => toast.style.opacity = '0');
-    setTimeout(() => document.getElementById('toast-container').innerHTML = '', 800);
-  }, 3000); // disappear after 3s
+    setTimeout(() => {
+      const container = document.getElementById('toast-container');
+      if (container) container.innerHTML = '';
+    }, 800);
+  }, 3000);
 </script>
 
-</div>
+<script>
+  const sortBtn = document.getElementById("sort-distance-btn");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", () => {
+      if (!("geolocation" in navigator)) {
+        alert("Geolocation is not supported in this browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const url = new URL(window.location.href);
+          url.searchParams.set("sort", "distance");
+          url.searchParams.set("lat", lat);
+          url.searchParams.set("lng", lng);
+          url.searchParams.delete("page");  // reset pagination
+
+          window.location.href = url.toString();
+        },
+        err => {
+          console.error("Geolocation error:", err);
+          alert("Could not get your location. Please allow location access.");
+        }
+      );
+    });
+  }
+</script>
 {% endblock %}
