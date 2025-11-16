@@ -14,7 +14,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 
 def index(request):
-    post_list = Post.objects.filter(status=Post.Status.PUBLISHED).order_by("-created_at")
+    post_list = Post.objects.filter(status=Post.Status.PUBLISHED).select_related('cuisine', 'author').order_by("-created_at")
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -60,7 +60,7 @@ def create_post(request):
 
 @login_required
 def post_detail(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(Post.objects.select_related('cuisine', 'author'), id=post_id)
     # Get content type for Post model (for flagging)
     post_content_type = ContentType.objects.get_for_model(Post)
     return render(request, "posting/post_detail.html", {
@@ -70,7 +70,7 @@ def post_detail(request, post_id):
 
 @login_required
 def edit_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(Post.objects.select_related('cuisine', 'author'), id=post_id)
     if request.user != post.author:
         return redirect('post_detail', post_id=post_id)
     if request.method == "POST":
