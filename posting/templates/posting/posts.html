@@ -134,12 +134,6 @@
                 ">
                 + Create New Post
             </a>
-        {% else %}
-            <span style="font-size:0.9rem;">
-              <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
-                Log in
-              </a> to create an event post.
-            </span>
         {% endif %}
     {% endwith %}
 {% endif %}
@@ -177,7 +171,7 @@
           </h2>
 
           <p style="margin:0 0 6px 0; color:#555; font-size:0.9rem; line-height:1.4;">
-            <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+           <strong>Date:</strong> {{ post.created_at|date:"M d, Y, g:i A" }}
             <strong>Cuisine:</strong> {{ post.cuisine.name|title }}<br>
             {% if post.location %}
               <strong>Location:</strong> {{ post.location.building_name }}<br>
