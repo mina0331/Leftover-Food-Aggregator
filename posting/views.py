@@ -14,7 +14,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 
 def index(request):
-    post_list = Post.objects.order_by("-created_at")
+    post_list = Post.objects.filter(status=Post.Status.PUBLISHED).order_by("-created_at")
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -47,6 +47,10 @@ def create_post(request):
             post.save()
             return redirect("posting:post_list")
         else:
+            # Debug: show form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
             messages.error(request, 'Please fix some errors.')
     else:
         form = PostForm()
