@@ -4,48 +4,34 @@
 {% block content %}
 <div class="container" style="max-width: 900px; margin: 40px auto;">
 
-  <h1 style="text-align:center; color:#232D4B; margin-bottom:24px;">
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:16px;">
     All Events
   </h1>
 
-  {% if user.is_authenticated %}
-    <!-- Top actions bar -->
-      <div style="margin-bottom: 18px;">
-    <div style="margin-bottom:6px; font-size:0.9rem; color:#444; font-weight:500;">
-      Filter by cuisine:
-    </div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+  {# ======= TOP FILTER + ACTION BAR ======= #}
+  <div style="
+        background:#f8f9fb;
+        border-radius:16px;
+        padding:14px 18px 12px 18px;
+        margin-bottom:24px;
+        box-shadow:0 1px 4px rgba(0,0,0,0.03);
+      ">
+    {# Cuisine filters (visible for everyone) #}
+    <div style="margin-bottom:10px;">
+      <div style="margin-bottom:4px; font-size:0.9rem; color:#444; font-weight:500;">
+        Filter by cuisine
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
 
-      <!-- "All" button -->
-      <a href="{% url 'posting:post_list' %}{% if sort %}?sort={{ sort }}{% endif %}"
-         style="
-           padding:6px 12px;
-           border-radius:999px;
-           font-size:0.85rem;
-           text-decoration:none;
-           border:1px solid #ccc;
-           {% if not selected_cuisine_id %}
-             background:#232D4B;
-             color:white;
-           {% else %}
-             background:white;
-             color:#232D4B;
-           {% endif %}
-         ">
-        All
-      </a>
-
-
-
-      {% for c in cuisine_list %}
-        <a href="?cuisine={{ c.id }}{% if sort %}&sort={{ sort }}{% endif %}"
+        <!-- All cuisines -->
+        <a href="{% url 'posting:post_list' %}{% if sort %}?sort={{ sort }}{% endif %}"
            style="
-             padding:6px 12px;
+             padding:6px 14px;
              border-radius:999px;
              font-size:0.85rem;
              text-decoration:none;
              border:1px solid #ccc;
-             {% if selected_cuisine_id == c.id|stringformat:'s' %}
+             {% if not selected_cuisine_id %}
                background:#232D4B;
                color:white;
              {% else %}
@@ -53,101 +39,159 @@
                color:#232D4B;
              {% endif %}
            ">
-          {{ c.name|title }}
+          All
         </a>
-      {% endfor %}
+
+        {% for c in cuisine_list %}
+          <a href="?cuisine={{ c.id }}{% if sort %}&sort={{ sort }}{% endif %}"
+             style="
+               padding:6px 14px;
+               border-radius:999px;
+               font-size:0.85rem;
+               text-decoration:none;
+               border:1px solid #ccc;
+               {% if selected_cuisine_id == c.id|stringformat:'s' %}
+                 background:#232D4B;
+                 color:white;
+               {% else %}
+                 background:white;
+                 color:#232D4B;
+               {% endif %}
+             ">
+            {{ c.name|title }}
+          </a>
+        {% endfor %}
+      </div>
     </div>
-  </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px; flex-wrap:wrap;">
+
+    {# Actions row (map / sort / create) #}
+    <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          flex-wrap:wrap;
+          border-top:1px solid #e1e3ea;
+          padding-top:10px;
+        ">
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <a href="{% url 'posting:post_map' %}"
-           style="background:#232D4B; color:white; padding:8px 16px; border-radius:999px; text-decoration:none; font-size:0.95rem;">
-           View posts on map
+           style="
+             background:#232D4B;
+             color:white;
+             padding:8px 16px;
+             border-radius:999px;
+             text-decoration:none;
+             font-size:0.9rem;
+             display:inline-flex;
+             align-items:center;
+             gap:6px;
+           ">
+           <span>🗺</span> <span>View posts on map</span>
         </a>
 
-        {% comment %} Distance sort button {% endcomment %}
-        <button id="sort-distance-btn"
-                style="
-                  padding:8px 16px;
-                  border-radius:999px;
-                  border:none;
-                  cursor:pointer;
-                  font-size:0.95rem;
-                  {% if sort == 'distance' %}
-                    background:#155724;
-                    color:white;
-                  {% else %}
-                    background:#E57200;
-                    color:white;
-                  {% endif %}
-                ">
-          {% if sort == 'distance' %}
-            Sorted by distance
-          {% else %}
-            Sort by distance
-          {% endif %}
-        </button>
+        {% if user.is_authenticated %}
+          <button id="sort-distance-btn"
+                  style="
+                    padding:8px 16px;
+                    border-radius:999px;
+                    border:none;
+                    cursor:pointer;
+                    font-size:0.9rem;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:6px;
+                    {% if sort == 'distance' %}
+                      background:#155724;
+                      color:white;
+                    {% else %}
+                      background:#E57200;
+                      color:white;
+                    {% endif %}
+                  ">
+            {% if sort == 'distance' %}
+              <span>✅</span><span>Sorted by distance</span>
+            {% else %}
+              <span>📍</span><span>Sort by distance</span>
+            {% endif %}
+          </button>
+        {% endif %}
       </div>
 
-      <a href="{% url 'posting:create_post'%}"
-         style="background:#E57200; color:white; padding:8px 16px; border-radius:999px; text-decoration:none; font-size:0.95rem; white-space:nowrap;">
-         + Create New Post
-      </a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'posting:create_post'%}"
+           style="
+             background:#E57200;
+             color:white;
+             padding:8px 18px;
+             border-radius:999px;
+             text-decoration:none;
+             font-size:0.9rem;
+             white-space:nowrap;
+             font-weight:500;
+           ">
+           + Create New Post
+        </a>
+      {% else %}
+        <span style="font-size:0.9rem;">
+          <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
+            Log in
+          </a> to create an event post.
+        </span>
+      {% endif %}
     </div>
-  {% else %}
-    <p style="text-align:right; margin-bottom:24px;">
-      <a href="{% url 'account_login' %}" style="color:#232D4B; text-decoration:none; font-weight:500;">
-        Log in
-      </a> to create an event post.
-    </p>
-  {% endif %}
+  </div>
 
+  {# ======= POSTS LIST ======= #}
   {% for post in posts %}
     <div style="
         border:1px solid #eee;
         border-radius:16px;
-        padding:18px 20px;
+        padding:18px 20px 16px 20px;
         margin-bottom:18px;
-        box-shadow:0 2px 6px rgba(0,0,0,0.04);
-        display:flex;
-        gap:16px;
-        flex-wrap:wrap;
+        box-shadow:0 2px 8px rgba(0,0,0,0.04);
+        background:white;
+        max-width:720px;
+        margin-left:auto;
+        margin-right:auto;
       ">
 
-      {% if post.image %}
-        <div style="flex:0 0 180px; max-width:180px; margin:auto;">
-          <img src="{{ post.image.url }}" alt="{{ post.event }}"
-               style="width:100%; height:auto; border-radius:12px; display:block;">
-        </div>
-      {% endif %}
-
-      <div style="flex:1 1 250px; min-width:230px;">
-        <h2 style="margin:0 0 6px 0; font-size:1.25rem; color:#232D4B;">
-          {{ post.event }}
-        </h2>
-
-        <p style="margin:0 0 6px 0; color:#555; font-size:0.9rem;">
-          <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-          <strong>Cuisine:</strong> {{ post.get_cuisine_display|default:post.cuisine }}<br>
-          {% if post.location %}
-            <strong>Location:</strong> {{ post.location.building_name }}<br>
-          {% endif %}
-          {% if post.distance_km %}
-            <strong>Distance:</strong> {{ post.distance_km|floatformat:2 }} km
-          {% endif %}
-        </p>
-
-        {% if post.event_description %}
-          <p style="margin-top:8px; margin-bottom:10px; color:#333; font-size:0.95rem;">
-            {{ post.event_description|truncatewords:25 }}
-          </p>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+        {% if post.image %}
+          <div style="width:100%; max-width:360px;">
+            <img src="{{ post.image.url }}" alt="{{ post.event }}"
+                 style="width:100%; height:auto; border-radius:12px; display:block; margin:0 auto;">
+          </div>
         {% endif %}
 
-        <div style="margin-top:6px;">
-          <a href="{% url 'posting:post_detail' post.id %}"
-             style="text-decoration:none; color:#232D4B; font-weight:bold; font-size:0.95rem;">
-             View Details →
-          </a>
+        <div style="width:100%; text-align:center;">
+          <h2 style="margin:0 0 6px 0; font-size:1.25rem; color:#232D4B;">
+            {{ post.event }}
+          </h2>
+
+          <p style="margin:0 0 6px 0; color:#555; font-size:0.9rem; line-height:1.4;">
+            <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+            <strong>Cuisine:</strong> {{ post.cuisine.name|title }}<br>
+            {% if post.location %}
+              <strong>Location:</strong> {{ post.location.building_name }}<br>
+            {% endif %}
+            {% if post.distance_km %}
+              <strong>Distance:</strong> {{ post.distance_km|floatformat:2 }} km
+            {% endif %}
+          </p>
+
+          {% if post.event_description %}
+            <p style="margin-top:8px; margin-bottom:10px; color:#333; font-size:0.95rem;">
+              {{ post.event_description|truncatewords:25 }}
+            </p>
+          {% endif %}
+
+          <div style="margin-top:4px;">
+            <a href="{% url 'posting:post_detail' post.id %}"
+               style="text-decoration:none; color:#232D4B; font-weight:bold; font-size:0.95rem;">
+               View Details →
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -157,17 +201,18 @@
     </p>
   {% endfor %}
 
+  {# ======= PAGINATION ======= #}
   {% if page_obj %}
     <div style="text-align:center; margin-top:20px; font-size:0.9rem;">
       {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% if sort %}&sort={{ sort }}{% endif %}"
+        <a href="?page={{ page_obj.previous_page_number }}{% if sort %}&sort={{ sort }}{% endif %}{% if selected_cuisine_id %}&cuisine={{ selected_cuisine_id }}{% endif %}"
            style="margin-right:10px; text-decoration:none; color:#232D4B;">
            « Previous
         </a>
       {% endif %}
       <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
       {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if sort %}&sort={{ sort }}{% endif %}"
+        <a href="?page={{ page_obj.next_page_number }}{% if sort %}&sort={{ sort }}{% endif %}{% if selected_cuisine_id %}&cuisine={{ selected_cuisine_id }}{% endif %}"
            style="margin-left:10px; text-decoration:none; color:#232D4B;">
            Next »
         </a>
@@ -175,6 +220,7 @@
     </div>
   {% endif %}
 
+  {# ======= TOAST MESSAGES ======= #}
   {% if messages %}
     <div id="toast-container" style="
          position: fixed;
