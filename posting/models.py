@@ -49,5 +49,28 @@ class Post(models.Model):
             #making the cuisine choice case-insensitive
         super().save(*args, **kwargs)
 
+class Report(models.Model):
+    class Reason(models.TextChoices):
+        SPOILED = "spoiled", "Spoiled / Rotten"
+        EXPIRED = "expired", "Expired"
+        ALLERGEN = "allergen", "Incorrect allergen info"
+        HAZARD = "hazard", "Food safety hazard"
+        OTHER = "other", "Other"
+    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="reports")
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reports_made")
+    reason = models.CharField(max_length=30, choices=Reason.choices)
+    description = models.TextField(blank=True)  # optional freeform
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved = models.BooleanField(default=False)
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="reports_resolved")
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Report #{self.id} on {self.post} by {self.reporter}"
+
+
 
 
