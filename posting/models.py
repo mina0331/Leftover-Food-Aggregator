@@ -24,6 +24,7 @@ class Cuisine(models.Model):
 
     def __str__(self):
         return self.name
+    
 
 
 class Allergen(models.Model):
@@ -32,6 +33,14 @@ class Allergen(models.Model):
     def __str__(self):
         return self.name
 
+
+class Location(models.Model):
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    building_name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.building_name
 
 
 class Post(models.Model):
@@ -42,6 +51,14 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
+    read_users = models.ManyToManyField(User, related_name="read_posts", blank=True)
+    location = models.ForeignKey(
+        Location,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts",
+    )
     qr_code_image = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 

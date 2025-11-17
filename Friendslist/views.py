@@ -76,44 +76,50 @@ def cancel_friend_request(request, req_id):
     fr = get_object_or_404(FriendRequest, id=req_id, from_user=request.user, status='pending')
     fr.delete()
     messages.info(request, "Friend request canceled.")
-    return redirect('friends:friends_list')                    # <-- fixed namespace
+    return redirect('friends:friends_list')
 
 
 @login_required
 def remove_friend(request, user_id):
     if request.method != 'POST':
-        return redirect('friends:friends_list')                # <-- fixed namespace
+        return redirect('friends:friends_list')
 
     other = get_object_or_404(User, id=user_id)
-    Friend.break_friends(request.user, other)
-    messages.warning(request, f"Removed {other.username} from your friends.")
-    return redirect('friends:friends_list')                    # <-- fixed namespace
 
+    # 1) Remove friendship
+    Friend.break_friends(request.user, other)
+
+    # 2) Remove any friend requests between these two (both directions)
+    FriendRequest.objects.filter(
+        Q(from_user=request.user, to_user=other) |
+        Q(from_user=other, to_user=request.user)
+    ).delete()
+
+    messages.warning(request, f"Removed {other.username} from your friends.")
+
+    return redirect('friends:friends_list')
 
 @login_required
 def send_friend_request(request, user_id):
-    if request.method != 'POST':
-        return redirect('friends:friends_list')
-
     to_user = get_object_or_404(User, id=user_id)
 
     if to_user == request.user:
-        messages.error(request, "You can’t add yourself.")
-        return redirect('friends:friends_list')
+        messages.error(request, "You cannot send a friend request to yourself.")
+        return redirect('view_profile', user_id=user_id)
 
-    if Friend.get_friends(request.user).filter(id=to_user.id).exists():
-        messages.info(request, "You’re already friends.")
-        return redirect('friends:friends_list')
 
-    pending_exists = FriendRequest.objects.filter(
-        Q(from_user=request.user, to_user=to_user) |
-        Q(from_user=to_user, to_user=request.user),
-        status='pending'
-    ).exists()
-    if pending_exists:
-        messages.info(request, "A request is already pending.")
-        return redirect('friends:friends_list')
+    friend_request, created = FriendRequest.objects.get_or_create(
+        from_user=request.user,
+        to_user=to_user,
+        defaults={"status": "pending"},
+    )
 
-    FriendRequest.objects.create(from_user=request.user, to_user=to_user, status='pending')
-    messages.success(request, f"Friend request sent to {to_user.username}.")
-    return redirect('friends:friends_list')
+    if created:
+        messages.success(request, "Friend request sent!")
+    else:
+        # row already exists — decide what you want:
+        # you can either show a message:
+        messages.info(request, "You already sent a friend request to this user.")
+
+
+    return redirect('profiles:view_profile', user_id=user_id)

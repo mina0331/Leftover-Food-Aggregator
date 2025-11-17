@@ -24,7 +24,7 @@
     }
 
     .search-form {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
 
     .search-form input {
@@ -65,6 +65,7 @@
 
     .user-info {
         flex: 1;
+        margin-left: 10px;
     }
 
     .user-name {
@@ -76,43 +77,9 @@
         gap: 8px;
     }
 
-    .user-badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 600;
-    }
-
-    .badge-org {
-        background: #e3f2fd;
-        color: #1565c0;
-    }
-
-    .badge-friend {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
-
     .user-email {
         font-size: 13px;
         color: #666;
-    }
-
-    .message-btn {
-        padding: 8px 20px;
-        background: #E57200;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: background 0.3s ease;
-    }
-
-    .message-btn:hover {
-        background: #c76200;
     }
 
     .back-link {
@@ -156,6 +123,44 @@
     .action-link:hover {
         background: #c76200;
     }
+
+    .start-btn {
+        width: 100%;
+        padding: 10px 16px;
+        background: #E57200;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 16px;
+        transition: background 0.2s ease;
+    }
+
+    .start-btn:hover {
+        background: #c76200;
+    }
+
+    .group-name-input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        font-size: 14px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+    }
+
+    .group-name-input:focus {
+        outline: none;
+        border-color: #E57200;
+    }
+
+    .checkbox-col {
+        display: flex;
+        align-items: center;
+    }
 </style>
 
 <div class="start-conversation-container">
@@ -164,19 +169,19 @@
   <div class="page-header">
     <h1>Start a Conversation</h1>
     {% if user_role == 'student' %}
-      <p style="color:#666;">Message your friends or any organization</p>
+      <p style="color:#666;">Select one friend for a DM or multiple for a group chat.</p>
     {% elif user_role == 'org' %}
-      <p style="color:#666;">Message students who have contacted you</p>
+      <p style="color:#666;">Start a conversation with students who have contacted you.</p>
     {% endif %}
   </div>
 
-  {# FIX: use has_friends, not has_contacts #}
   {% if not has_friends and user_role == 'org' %}
     <div class="no-contacts-state">
       <h2>No conversations yet</h2>
-      <p>Students will appear here once they message you</p>
+      <p>Students will appear here once they message you.</p>
     </div>
   {% else %}
+    {# Search (GET) #}
     <form method="GET" class="search-form">
       <input
         type="text"
@@ -187,36 +192,53 @@
       >
     </form>
 
-    <ul class="users-list">
+    {# Conversation creation (POST) #}
+    <form method="POST">
+      {% csrf_token %}
 
-      {% for u in users %}
-        <li class="user-item">
-          <div class="user-info">
-            <div class="user-name">
-              {{ u.username }}
+      <input
+        type="text"
+        name="group_name"
+        class="group-name-input"
+        placeholder="Group name (used if 2+ people are selected, e.g. KISO Officers, Study Group...)"
+      >
+
+      <ul class="users-list">
+        {% for u in users %}
+          <li class="user-item">
+            <div class="checkbox-col">
+              <input type="checkbox" name="participants" value="{{ u.id }}">
             </div>
-            <div class="user-email">{{ u.email }}</div>
-          </div>
-          <a href="{% url 'chat:conversation' u.id %}" class="message-btn">Message</a>
-        </li>
-      {% empty %}
-        <li style="text-align:center; padding:40px; color:#999;">
-          {% if query %}
-            No users found matching "{{ query }}"
-          {% else %}
-            {% if user_role == 'student' %}
-              <div class="no-contacts-state">
-                <h2>Get Started!</h2>
-                <p>Add friends to start messaging other students</p>
-                <a href="{% url 'chat:find_friends' %}" class="action-link">Find Friends</a>
+            <div class="user-info">
+              <div class="user-name">
+                {{ u.profile.display_name|default:u.username }}
               </div>
+              <div class="user-email">{{ u.email }}</div>
+            </div>
+          </li>
+        {% empty %}
+          <li style="text-align:center; padding:40px; color:#999;">
+            {% if query %}
+              No users found matching "{{ query }}"
             {% else %}
-              No conversations yet
+              {% if user_role == 'student' %}
+                <div class="no-contacts-state">
+                  <h2>Get Started!</h2>
+                  <p>Add friends to start messaging other students.</p>
+                  <a href="{% url 'chat:find_friends' %}" class="action-link">Find Friends</a>
+                </div>
+              {% else %}
+                No conversations yet.
+              {% endif %}
             {% endif %}
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <button type="submit" class="start-btn">
+        Start Conversation
+      </button>
+    </form>
   {% endif %}
 </div>
 {% endblock %}

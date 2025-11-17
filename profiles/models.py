@@ -26,6 +26,8 @@ class Profile(models.Model):
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
     preferences = models.ManyToManyField(Cuisine, blank=True, related_name="profiles")
     allergens = models.ManyToManyField(Allergen, blank=True, related_name="profiles")
+    bio = models.TextField(blank = True, null = True)
+    major = models.TextField(blank = True, null = True)
     has_seen_welcome = models.BooleanField(default=False)
 
     def __str__(self):

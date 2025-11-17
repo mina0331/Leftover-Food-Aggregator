@@ -2,23 +2,152 @@
 {% load static %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 40px auto;">
+<style>
+  .post-container {
+    max-width: 800px;
+    margin: 40px auto;
+  }
 
-  <a href="{% url 'posting:post_list' %}"
-     style="text-decoration:none; color:#232D4B; font-weight:bold;">
+  .post-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    background: white;
+  }
+
+  .post-title {
+    margin-top: 0;
+    color: #232D4B;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  .back-link {
+    text-decoration: none;
+    color: #232D4B;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+
+  .author-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 4px 0;
+  }
+
+  .author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .author-text-main {
+    font-size: 0.95rem;
+    color: #555;
+  }
+
+  .author-name-link {
+    text-decoration: none;
+    color: #232D4B;
+    font-weight: 600;
+  }
+
+  .post-meta {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 6px;
+  }
+
+  .post-meta strong {
+    color: #333;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+
+  .section-title {
+    color: #232D4B;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .post-description {
+    line-height: 1.6;
+    color: #333;
+    font-size: 0.98rem;
+  }
+
+  .post-actions {
+    margin-top: 20px;
+  }
+
+  .btn-edit {
+    background: #E57200;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .btn-delete {
+    background: #b30000;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-left: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container post-container">
+
+  <a href="{% url 'posting:post_list' %}" class="back-link">
      ← Back to All Posts
   </a>
 
-  <div style="border:1px solid #ddd; border-radius:12px; padding:24px; margin-top:20px;
-              box-shadow:0 2px 6px rgba(0,0,0,0.05); background:white;">
+  <div class="post-card">
 
-    <h1 style="margin-top:0; color:#232D4B;">{{ post.event }}</h1>
+    <h1 class="post-title">{{ post.event }}</h1>
 
-    <p style="color:#555;">
-      <strong>Created by:</strong> {{ post.author.username }}<br>
-      <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-      <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
-    </p>
+    <!-- Author Profile -->
+    <div class="author-row">
+      <a href="{% url 'profiles:view_profile' post.author.id %}">
+        {% if post.author.profile.profile_pic %}
+          <img src="{{ post.author.profile.avatar_url }}"
+               alt="Profile photo"
+               class="author-avatar">
+        {% else %}
+          <img src="{% static 'images/default-avatar.jpg' %}"
+               alt="Default avatar"
+               class="author-avatar">
+        {% endif %}
+      </a>
+      <div class="author-text-main">
+        <strong>Created by:</strong>
+        <a href="{% url 'profiles:view_profile' post.author.id %}" class="author-name-link">
+          {{ post.author.profile.display_name|default:post.author.username }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Meta info -->
+    <div class="post-meta">
+      <strong>Date:</strong> {{ post.created_at|date:"M d, Y, g:i A" }}<br>
+      <strong>Cuisine:</strong> {{ post.cuisine }}
+    </div>
 
     <!-- Thanks Section -->
     <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
@@ -36,12 +165,11 @@
     </div>
 
     {% if post.image %}
-      <img src="{{ post.image.url }}" alt="{{ post.event }}"
-           style="width:100%; border-radius:12px; margin:20px 0;">
+      <img src="{{ post.image.url }}" alt="{{ post.event }}" class="post-image">
     {% endif %}
 
-    <h3 style="color:#232D4B;">Event Description</h3>
-    <p style="line-height:1.6; color:#333;">
+    <h3 class="section-title">Event Description</h3>
+    <p class="post-description">
       {{ post.event_description|linebreaks }}
     </p>
 
@@ -80,6 +208,7 @@
              style="max-width:200px; border-radius:8px;">
       </div>
     {% endif %}
+
   </div>
 
 </div>

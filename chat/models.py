@@ -2,16 +2,52 @@ from django.db import models
 from django.contrib.auth.models import User
 from profiles.models import Profile
 from django.db.models import Q
-from django.utils import timezone
+from django.db.models import Count
 from Friendslist.models import Friend, FriendRequest
 from datetime import datetime
 # Create your models here.
 
+class Conversation(models.Model):
+    name = models.CharField(max_length=255, blank=True)  # for group name
+    is_group = models.BooleanField(default=False)
+    participants = models.ManyToManyField(User, related_name='conversations')
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        if self.is_group and self.name:
+            return self.name
+        return f"Conversation {self.id}"
+
+    @classmethod
+    def get_or_create_dm(cls, user1, user2):
+        from django.db.models import Count
+
+        qs = cls.objects.filter(
+            is_group=False,
+            participants=user1,
+        ).annotate(num_participants=Count('participants')).filter(
+            num_participants=2,
+            participants__in=[user2],
+        )
+
+        convo = qs.first()
+        if convo:
+            return convo
+
+        convo = cls.objects.create(is_group=False)
+        convo.participants.add(user1, user2)
+        return convo
 
 class Message(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='sent_messages',null=True)
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="received_messages",
+    )
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
@@ -97,3 +133,5 @@ class Message(models.Model):
         self.status = 'rejected'
         self.save()
         return self
+
+

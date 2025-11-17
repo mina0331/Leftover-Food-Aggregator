@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "posting",
     "moderation",
 
+
 ]
 
 #AWS settings
@@ -167,7 +168,9 @@ TEMPLATES = [
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'chat.context_processors.pending_friend_requests_count',
+    'chat.context_processors.unread_messages',
+    "Friendslist.context_processors.pending_friend_requests_count",
+    "posting.context_processors.unread_posts_count",
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"
@@ -211,7 +214,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 

@@ -1,22 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post, OrganizerThank, Report
+from .models import Cuisine, Post, Location, OrganizerThank, Report
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
-from .forms import PostForm
+from .forms import PostForm, ReportForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db import IntegrityError
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-from .forms import ReportForm
 import csv
 from django.db.models import Count
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
-# Create your views here.
-
+import json
+from django.urls import reverse
+import math
 
 def index(request):
     # search text
@@ -94,11 +94,13 @@ def create_post(request):
     if request.user.profile.role != 'org':
         messages.warning(request, 'You are not authorized to create posts.')
         return redirect('posting:post_list')
+
     if request.method == "POST":
-        form = PostForm(request.POST, request.FILES)   # include files
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)             # set author
+            post = form.save(commit=False)
             post.author = request.user
+            # post.location is already set from the form's dropdown
             post.save()
             messages.success(request, 'Your post has been created.')
             return redirect("posting:post_list")
@@ -107,9 +109,7 @@ def create_post(request):
     else:
         form = PostForm()
 
-    # render on GET or invalid POST
     return render(request, "posting/create_post.html", {"form": form})
-
 @login_required
 def post_detail(request, post_id):
     try:
@@ -135,6 +135,10 @@ def post_detail(request, post_id):
     if post.is_deleted:
         messages.info(request, 'This post has been deleted.')
         return redirect('posting:post_list')
+    
+    # Track read users (from HEAD)
+    if request.user.is_authenticated:
+        post.read_users.add(request.user)
     
     # Get content type for Post model (for flagging)
     post_content_type = ContentType.objects.get_for_model(Post)
@@ -169,6 +173,7 @@ def edit_post(request, post_id):
                     post.image.delete(save=False)
                     post.image = None
             form.save()
+            post.read_users.clear()
             return redirect('posting:post_detail', post_id=post.id)
     else:
         form = PostForm(instance=post)
@@ -191,10 +196,103 @@ def delete_post(request, post_id):
         # SOFT DELETE — marking it deleted instead of removing from DB
         post.is_deleted = True
         post.save()
+        # Clear read users when post is deleted
+        post.read_users.clear()
         messages.success(request, 'Your post has been deleted.')
         return redirect("posting:post_list")
 
     return render(request, "posting/delete_post.html", {"post": post})
+
+def post_map(request):
+    # Only posts that actually have a location with coordinates
+    posts = (
+        Post.objects
+        .select_related("location")
+        .filter(
+            location__isnull=False,
+            location__latitude__isnull=False,
+            location__longitude__isnull=False,
+            is_deleted=False
+        )
+    )
+
+    posts_data = []
+    for p in posts:
+        posts_data.append({
+            "id": p.id,
+            "event": p.event,
+            "building": p.location.building_name,
+            "lat": p.location.latitude,
+            "lng": p.location.longitude,
+            "detail_url": reverse("posting:post_detail", args=[p.id]),
+        })
+
+    context = {
+        "posts_json": json.dumps(posts_data),
+    }
+    return render(request, "posting/post_map.html", context)
+
+def haversine_distance_km(lat1, lon1, lat2, lon2):
+    R = 6371
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat/2)**2 +
+         math.cos(math.radians(lat1)) *
+         math.cos(math.radians(lat2)) *
+         math.sin(dlon/2)**2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
+def post_list(request):
+    qs = (
+        Post.objects
+        .select_related("location", "cuisine")
+        .filter(is_deleted=False)
+        .order_by("-created_at")
+    )
+
+    sort = request.GET.get("sort")
+    user_lat = request.GET.get("lat")
+    user_lng = request.GET.get("lng")
+    selected_cuisine_id = request.GET.get("cuisine")
+
+    # Filter by cuisine, if selected
+    if selected_cuisine_id:
+        qs = qs.filter(cuisine_id=selected_cuisine_id)
+
+    posts = list(qs)
+
+    # Optional distance sorting
+    if sort == "distance" and user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+
+            for p in posts:
+                loc = p.location
+                if loc and loc.latitude is not None and loc.longitude is not None:
+                    p.distance_km = haversine_distance_km(
+                        user_lat, user_lng, loc.latitude, loc.longitude
+                    )
+                else:
+                    p.distance_km = None
+
+            posts.sort(key=lambda p: p.distance_km if p.distance_km is not None else 1e9)
+        except ValueError:
+            pass
+
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "posts": page_obj.object_list,
+        "page_obj": page_obj,
+        "sort": sort,
+        "selected_cuisine_id": selected_cuisine_id,
+        "cuisine_list": Cuisine.objects.all().order_by("name"),
+    }
+    return render(request, "posting/posts.html", context)
 
 @login_required
 @require_POST

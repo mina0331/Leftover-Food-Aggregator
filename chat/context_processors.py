@@ -1,10 +1,20 @@
-from .models import FriendRequest
+from django.db.models import Count, Q
+from .models import Conversation
 
-def pending_friend_requests_count(request):
+from chat.models import Message
+
+def unread_messages(request):
     if not request.user.is_authenticated:
-        return {'pending_friend_requests_count': 0}
-    return {
-        'pending_friend_requests_count': FriendRequest.objects.filter(
-            to_user=request.user, status='pending'
-        ).count()
-    }
+        return {}
+
+    unread_count = (
+        Message.objects
+        .filter(
+            conversation__participants=request.user,  # I'm in the convo
+            is_read=False                             # message not read yet
+        )
+        .exclude(sender=request.user)                 # don’t count my own msgs
+        .count()
+    )
+
+    return {"unread_count": unread_count}

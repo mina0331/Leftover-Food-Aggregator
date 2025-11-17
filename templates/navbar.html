@@ -110,6 +110,7 @@
     }
   </style>
 
+
   <div class="nav-inner">
 
     <!-- LEFT: Brand -->
@@ -129,23 +130,26 @@
         {# NOTE: Profile moved to nav-right #}
 
         {% if user.is_authenticated %}
-        {% with role=user.profile.role %}
-          {% if role == 'student' %}
-            <li>
-              <a href="{{ posts_url }}"
-                 class="nav-link {% if p == posts_url %}active-link{% endif %}">
-                Food Listings
-              </a>
-            </li>
-          {% elif role == 'org' %}
-            <li>
-              <a href="{{ posts_url }}"
-                 class="nav-link {% if p == posts_url %}active-link{% endif %}">
-                Post Listings
-              </a>
-            </li>
-          {% endif %}
-        {% endwith %}
+          {% with role=user.profile.role %}
+            {% if role == 'student' %}
+              <li>
+                <a href="{{ posts_url }}"
+                   class="nav-link {% if p == posts_url or '/student' in p %}active-link{% endif %}">
+                  Food Listings
+                </a>
+                {% if unread_posts_count %}
+                  <span class="badge">{{ unread_posts_count }}</span>
+                {% endif %}
+              </li>
+            {% elif role == 'org' %}
+              <li>
+                <a href="{{ posts_url }}"
+                   class="nav-link {% if p == posts_url or '/provider' in p %}active-link{% endif %}">
+                  Post Listings
+                </a>
+              </li>
+            {% endif %}
+          {% endwith %}
         {% endif %}
 
         {% url 'posting:event_history' as history_url %}
@@ -159,7 +163,7 @@
         <li>
           {% url 'chat:index' as chat_url %}
           <a href="{{ chat_url }}"
-             class="nav-link {% if p|slice:':6' == '/chat/' %}active-link{% endif %}">
+             class="nav-link {% if p|slice:':6' == '/chat/' or p|slice:':9' == '/chat/' %}active-link{% endif %}">
              Chat
           </a>
           {% if unread_count %}
@@ -192,6 +196,14 @@
             Export Data
           </a>
         {% endif %}
+
+        <figure>
+          <a href="{% url 'profile_redirect' %}">
+            <img src="{{ user.profile.avatar_url }}"
+                 alt="Profile photo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+          </a>
+          <figcaption style="text-align: center; margin-top: 1px; font-size: 10px; color: #ffffff;">{{ user.profile.display_name }}</figcaption>
+        </figure>
 
         <a href="{% url 'profile_redirect' %}"
            class="nav-link {% if '/profile' in p %}active-link{% endif %}">

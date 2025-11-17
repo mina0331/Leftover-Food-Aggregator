@@ -8,13 +8,7 @@
     {{ counts.friends }} friends • {{ counts.received }} incoming • {{ counts.sent }} outgoing
   </p>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div style="padding:12px;margin:12px 0;border-radius:8px;background:#e3f2fd;border:1px solid #90caf9;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
+
 
   <h3 style="margin-top:24px;">Current Friends</h3>
   {% if friends %}
@@ -22,7 +16,12 @@
       {% for u in friends %}
         <li class="user-item" style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e0e0e0;border-radius:8px;padding:14px;margin:10px 0;">
           <div>
-            <div class="user-name" style="font-weight:600;color:#10172A;">{{ u.username }}</div>
+              <a href="{% url 'profiles:view_profile' u.id %}">
+            <img src="{{ u.profile.avatar_url }}"
+                 alt="Profile photo"
+                 style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+            </a>
+              <div class="user-name" style="font-weight:600;color:#10172A;">{{ u.profile.display_name }}</div>
             <div class="user-email" style="font-size:13px;color:#666;">{{ u.email }}</div>
           </div>
           <form method="post" action="{% url 'friends:remove_friend' u.id %}">

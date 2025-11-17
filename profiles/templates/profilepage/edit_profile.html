@@ -4,91 +4,261 @@
 {% block title %}Edit Profile | UVA Leftovers{% endblock %}
 
 {% block content %}
-<div style="text-align:center; margin-top:48px;">
-  <h2 style="margin-bottom:24px;">Edit Profile</h2>
+<style>
+  .profile-edit-wrapper {
+    text-align: center;
+    margin-top: 48px;
+  }
 
-  <form method="post" enctype="multipart/form-data"
-        style="display:inline-block;
-               padding:24px 32px;
-               background:#ffffff;
-               border-radius:12px;
-               box-shadow:0 6px 18px rgba(0,0,0,.08);
-               text-align:left;
-               min-width:320px;">
+  .profile-edit-card {
+    display: inline-block;
+    padding: 24px 32px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    text-align: left;
+    min-width: 320px;
+    max-width: 520px;
+  }
+
+  .profile-edit-title {
+    margin-bottom: 24px;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #232D4B;
+  }
+
+  .form-row {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .hint-text {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .error-text {
+    color: #b91c1c;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
+  .avatar-wrapper {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .avatar-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+  }
+
+  .primary-button {
+    margin-top: 12px;
+    padding: 10px 18px;
+    background: #E57200;
+    color: white;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+
+  .primary-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+    background: #cf6500;
+  }
+
+  .link-button {
+    margin-left: 8px;
+    color: #E57200;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .danger-zone {
+    margin-top: 24px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+  }
+
+  .danger-title {
+    font-weight: 600;
+    color: #b91c1c;
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+  }
+
+  .danger-text {
+    font-size: 0.85rem;
+    color: #7f1d1d;
+    margin-bottom: 10px;
+  }
+
+  .danger-button {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #b91c1c;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 0;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  }
+
+  .danger-button:hover {
+    background: #991b1b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(185,28,28,0.35);
+  }
+</style>
+
+<div class="profile-edit-wrapper">
+  <h2 class="profile-edit-title">Edit Profile</h2>
+
+  <form method="post" enctype="multipart/form-data" class="profile-edit-card">
 
     {% csrf_token %}
 
     {% if form.non_field_errors %}
-      <div style="color:#b91c1c; margin-bottom:10px;">{{ form.non_field_errors }}</div>
+      <div class="error-text" style="margin-bottom:10px;">{{ form.non_field_errors }}</div>
     {% endif %}
 
     <!-- Current / preview avatar -->
-    <div style="display:flex; gap:16px; align-items:center; margin-bottom:16px;">
+    <div class="avatar-wrapper">
       {% if user.profile.profile_pic %}
-        <img id="avatarPreview" src="{{ user.profile.avatar_url }}" alt="Profile photo"
-             style="width:96px; height:96px; border-radius:999px; object-fit:cover; border:1px solid #e5e7eb;">
+        <img id="avatarPreview" src="{{ user.profile.avatar_url }}" alt="Profile photo" class="avatar-preview">
       {% else %}
-        <img id="avatarPreview" src="{% static 'images/default-avatar.png' %}" alt="Default avatar"
-             style="width:96px; height:96px; border-radius:999px; object-fit:cover; border:1px solid #e5e7eb;">
+        <img id="avatarPreview" src="{% static 'images/default-avatar.png' %}" alt="Default avatar" class="avatar-preview">
       {% endif %}
 
       <div>
-        <label for="{{ form.profile_pic.id_for_label }}" style="font-weight:600;">Change profile photo</label><br>
+        <label for="{{ form.profile_pic.id_for_label }}" class="form-label">Change profile photo</label><br>
         {{ form.profile_pic }}
         {% if form.profile_pic.errors %}
-          <div style="color:#b91c1c;">{{ form.profile_pic.errors }}</div>
+          <div class="error-text">{{ form.profile_pic.errors }}</div>
         {% endif %}
-        <div style="font-size:.9rem; color:#6b7280; margin-top:4px;">JPEG/PNG recommended.</div>
+        <div class="hint-text">JPEG/PNG recommended.</div>
       </div>
     </div>
 
     <!-- Display name -->
-    <div style="margin-bottom:12px;">
-      <label for="{{ form.display_name.id_for_label }}" style="font-weight:600;">Display name</label><br>
+    <div class="form-row">
+      <label for="{{ form.display_name.id_for_label }}" class="form-label">Display name</label><br>
       {{ form.display_name }}
       {% if form.display_name.errors %}
-        <div style="color:#b91c1c;">{{ form.display_name.errors }}</div>
+        <div class="error-text">{{ form.display_name.errors }}</div>
       {% endif %}
     </div>
 
     <!-- Role -->
-    <div style="margin-bottom:16px;">
-      <label for="{{ form.role.id_for_label }}" style="font-weight:600;">Role</label><br>
+    <div class="form-row">
+      <label for "{{ form.role.id_for_label }}" class="form-label">Role</label><br>
       {{ form.role }}  {# Select or radios (your form decides) #}
       {% if form.role.errors %}
-        <div style="color:#b91c1c;">{{ form.role.errors }}</div>
+        <div class="error-text">{{ form.role.errors }}</div>
       {% endif %}
     </div>
 
-    <div style="margin-bottom:16px;">
-        <label for="{{ form.preferences.id_for_label }}" style="font-weight:600;"> Preferences </label>
-        {{ form.preferences }}
-        {% if form.preferences.errors %}
-        <div style="color:#b91c1c;"> {{ form.preferences.errors }} </div>
-        {% endif %}
-    </div>
+    {% with role=user.profile.role %}
+      {% if role == 'student' %}
 
-    <div style="margin-bottom:16px;">
-        <label for="{{ form.allergens.id_for_label }}" style="font-weight:600;"> Allergens </label>
-        {{ form.allergens }}
-        {% if form.allergens.errors %}
-        <div style="color:#b91c1c;"> {{ form.allergens.errors }} </div>
-        {% endif %}
-    </div>
+        <div class="form-row">
+          <label for="{{ form.preferences.id_for_label }}" class="form-label">Preferences</label>
+          {{ form.preferences }}
+          {% if form.preferences.errors %}
+            <div class="error-text">{{ form.preferences.errors }}</div>
+          {% endif %}
+        </div>
 
-    <button type="submit"
-            style="margin-top:12px;
-                   padding:10px 18px;
-                   background:#E57200;
-                   color:white;
-                   border:0;
-                   border-radius:6px;
-                   cursor:pointer;
-                   font-weight:600;
-                   transition:transform .18s ease, box-shadow .18s ease;">
+        <div class="form-row">
+          <label for="{{ form.allergens.id_for_label }}" class="form-label">Allergens</label>
+          {{ form.allergens }}
+          {% if form.allergens.errors %}
+            <div class="error-text">{{ form.allergens.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Major -->
+        <div class="form-row">
+          <label for="{{ form.major.id_for_label }}" class="form-label">Major</label><br>
+          {{ form.major }}
+          {% if form.major.errors %}
+            <div class="error-text">{{ form.major.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Bio -->
+        <div class="form-row">
+          <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label><br>
+          {{ form.bio }}
+          {% if form.bio.errors %}
+            <div class="error-text">{{ form.bio.errors }}</div>
+          {% endif %}
+          <div class="hint-text">
+            Share a bit about yourself (major, interests, pronouns, etc.).
+          </div>
+        </div>
+
+      {% elif role == 'org' %}
+
+        <div class="form-row">
+          <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label><br>
+          {{ form.bio }}
+          {% if form.bio.errors %}
+            <div class="error-text">{{ form.bio.errors }}</div>
+          {% endif %}
+          <div class="hint-text">
+            Share a bit about your organization / club.
+          </div>
+        </div>
+
+      {% endif %}
+    {% endwith %}
+
+    <!-- Save / Cancel -->
+    <button type="submit" class="primary-button">
       Save
     </button>
-    <a href="{% url 'my_profile' %}" style="margin-left:8px; color:#E57200; text-decoration:none;">Cancel</a>
+    <a href="{% url 'my_profile' %}" class="link-button">Cancel</a>
+
+    <!-- Danger zone / delete account -->
+    <div class="danger-zone">
+      <div class="danger-title">
+        Danger zone
+      </div>
+      <p class="danger-text">
+        Deleting your account is permanent and cannot be undone.
+      </p>
+      <a href="{% url 'profiles:delete_account' user.id %}"
+         onclick="return confirm('Are you sure you want to delete your account? This cannot be undone.');"
+         class="danger-button">
+        Delete my account
+      </a>
+    </div>
+
   </form>
 
   <br><br>

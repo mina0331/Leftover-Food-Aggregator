@@ -137,6 +137,23 @@
         color: #999;
     }
 
+    .empty-cta-btn {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 10px 20px;
+        background: #E57200;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s ease;
+    }
+
+    .empty-cta-btn:hover {
+        background: #c76200;
+    }
+
     .chat-placeholder {
         background: white;
         border-radius: 8px;
@@ -147,6 +164,8 @@
         color: #999;
         text-align: center;
         padding: 40px;
+        flex-direction: column;
+        gap: 10px;
     }
 
     @media (max-width: 768px) {
@@ -159,50 +178,66 @@
     }
 </style>
 
-<div class="messages-container">
-    <!-- Left Sidebar: Conversations List -->
-    <div class="conversations-sidebar">
-        <div class="sidebar-header">
-            <h2>💬 Messages</h2>
-            <a href="{% url 'chat:start_conversation' %}" class="new-message-btn">+ New</a>
-        </div>
-
-        <div class="search-box">
-            <input type="text" placeholder="Search messages..." id="searchInput">
-        </div>
-
-        <ul class="conversations-list">
-            {% for conversation in conversations %}
-            <a href="{% url 'chat:conversation' conversation.other_user.id %}"
-               class="conversation-item {% if conversation.other_user.id == current_conversation_id %}active{% endif %}">
-                <div class="conversation-header">
-                    <span class="conversation-name">{{ conversation.other_user.username }}</span>
-                    <span class="conversation-time">{{ conversation.last_message_time|timesince }} ago</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="conversation-preview">
-                        {{ conversation.last_message|truncatewords:8 }}
-                    </div>
-                    {% if conversation.unread_count > 0 %}
-                    <span class="unread-badge">{{ conversation.unread_count }}</span>
-                    {% endif %}
-                </div>
-            </a>
-            {% empty %}
-            <div class="empty-state">
-                <p>No conversations yet</p>
-                <p style="font-size: 12px; margin-top: 10px;">Search for a user above to start chatting</p>
-            </div>
-            {% endfor %}
-        </ul>
+    <div class="messages-container">
+  <!-- Left Sidebar: Conversations List -->
+  <div class="conversations-sidebar">
+    <div class="sidebar-header">
+      <h2>💬 Messages</h2>
+      <a href="{% url 'chat:start_conversation' %}" class="new-message-btn">+ New</a>
     </div>
 
-    <!-- right Side: Placeholder when no conversation selected -->
+    <div class="search-box">
+      <input type="text" placeholder="Search messages..." id="searchInput">
+    </div>
+
+    <ul class="conversations-list">
+      {% for conv in all_conversations %}
+        <a href="{% url 'chat:conversation' conv.id %}"
+           class="conversation-item {% if conv.id == conversation.id %}active{% endif %}">
+          <div class="conversation-header">
+            <span class="conversation-name">
+              {% if conv.is_group %}
+                {{ conv.name }}
+              {% else %}
+                {# show the "other" participant #}
+                {% for p in conv.participants.all %}
+                  {% if p != request.user %}
+                    {{ p.profile.display_name|default:p.username }}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            </span>
+            {% if conv.messages.last %}
+              <span class="conversation-time">
+                {{ conv.messages.last.timestamp|timesince }} ago
+              </span>
+            {% endif %}
+          </div>
+          <div class="conversation-preview">
+            {% if conv.messages.last %}
+              {{ conv.messages.last.content|truncatewords:8 }}
+            {% else %}
+              No messages yet
+            {% endif %}
+          </div>
+        </a>
+      {% empty %}
+        <div style="padding: 20px; text-align: center; color: #999;">
+          <p>No conversations yet</p>
+        </div>
+      {% endfor %}
+    </ul>
+  </div>
+
+    <!-- Right Side: Placeholder when no conversation selected -->
     <div class="chat-placeholder">
         <div>
             <h3 style="color: #10172A; margin-bottom: 10px;">Select a conversation</h3>
-            <p>Choose a conversation from the left to start messaging</p>
+            <p>Choose a conversation from the left, or start a new one.</p>
         </div>
+        <a href="{% url 'chat:start_conversation' %}" class="empty-cta-btn">
+            Start a Conversation
+        </a>
     </div>
 </div>
 
