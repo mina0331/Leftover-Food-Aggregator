@@ -72,7 +72,6 @@ INSTALLED_APPS = [
     "storages",
     "posting",
     "moderation",
-    'qr_code',
 
 
 ]
