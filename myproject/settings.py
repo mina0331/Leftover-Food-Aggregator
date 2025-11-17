@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "posting",
     "moderation",
 
+
 ]
 
 #AWS settings
@@ -95,6 +96,9 @@ STORAGES = {
         "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
     },
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 SITE_ID = 1
@@ -138,6 +142,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "moderation.middleware.SuspensionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -157,15 +162,15 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                'chat.context_processors.unread_messages',
-                "Friendslist.context_processors.pending_friend_requests_count"
             ],
         },
     },
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'chat.context_processors.pending_friend_requests_count',
+    'chat.context_processors.unread_messages',
+    "Friendslist.context_processors.pending_friend_requests_count",
+    "posting.context_processors.unread_posts_count",
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"
@@ -209,7 +214,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 

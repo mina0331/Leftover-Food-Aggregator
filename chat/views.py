@@ -5,90 +5,171 @@ from django.db.models import Q, Case, When, IntegerField
 from django.contrib.contenttypes.models import ContentType
 from .models import Message
 from .models import Friend
-from .models import FriendRequest
+from .models import FriendRequest, Conversation
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Max
+
 
 
 # Create your views here.
 @login_required
 def messages_index(request):
-    conversations = Message.get_conversations(request.user)
-    unread_count = Message.objects.filter(
-        recipient=request.user, is_read=False
-    ).count()
-    return render(request, 'chat/index.html', {'conversations': conversations, "unread_count": unread_count,})
+    # All conversations the user is part of, with last message time
+    qs = (
+        request.user.conversations
+        .annotate(last_time=Max('messages__timestamp'))
+        .order_by('-last_time')
+    )
 
+    # If they have at least one conversation, go to the most recent one
+    latest = qs.first()
+    if latest and latest.last_time is not None:
+        return redirect('chat:conversation', convo_id=latest.id)
+
+    # No conversations yet → show a simple placeholder page
+    return render(request, 'chat/index.html', {
+        'conversations': [],
+    })
 @login_required
-def conversation_detail(request, user_id):
-    other_user = get_object_or_404(User, id=user_id)
+def conversation_detail(request, convo_id):
+    # 1) Get the conversation the user is part of
+    conversation = get_object_or_404(
+        Conversation,
+        id=convo_id,
+        participants=request.user
+    )
 
-    # fetch the thread
-    thread_qs = Message.objects.filter(
-        Q(sender=request.user, recipient=other_user) |
-        Q(sender=other_user, recipient=request.user)
-    ).order_by('timestamp')
+    # 2) All messages in this conversation
+    messages_qs = conversation.messages.select_related("sender").all()
 
-    # mark incoming as read
-    Message.objects.filter(
-        sender=other_user,
-        recipient=request.user,
+    conversation.messages.filter(
         is_read=False
-    ).update(is_read=True)
+    ).exclude(sender=request.user).update(is_read=True)
 
-    # send a new message
-    if request.method == 'POST':
-        content = (request.POST.get('message') or '').strip()
+    # 3) For 1:1 chat, figure out the "other_user"
+    other_user = None
+    if not conversation.is_group:
+        other_user = conversation.participants.exclude(id=request.user.id).select_related("profile").first()
+
+    # 4) Handle sending a new message
+    if request.method == "POST":
+        content = (request.POST.get("message") or "").strip()
         if content:
             Message.objects.create(
+                conversation=conversation,
                 sender=request.user,
-                recipient=other_user,
-                content=content
+                content=content,
             )
-        return redirect('chat:conversation', user_id=other_user.id)
+        return redirect("chat:conversation", convo_id=conversation.id)
 
-    # sidebar list (if you have this helper)
-    all_conversations = Message.get_conversations(request.user)
+    # Sidebar conversations list (all conversations this user is in)
+    all_conversations = (
+        request.user.conversations
+        .all()
+        .prefetch_related("participants", "messages")
+    )
     
     # Get content type for Message model (for flagging)
+    from django.contrib.contenttypes.models import ContentType
     message_content_type = ContentType.objects.get_for_model(Message)
 
-    return render(request, 'chat/conversation.html', {
-        'other_user': other_user,
-        'messages': thread_qs,
-        'all_conversations': all_conversations,
-        'message_content_type_id': message_content_type.id,
+    return render(request, "chat/conversation.html", {
+        "conversation": conversation,
+        "other_user": other_user,          # None for groups
+        "messages": messages_qs,
+        "all_conversations": all_conversations,
+        "message_content_type_id": message_content_type.id,
     })
 
 @login_required
 def start_conversation(request):
+    # ---------- POST: create DM or group ----------
+    if request.method == "POST":
+        selected_ids = request.POST.getlist("participants")
+        group_name = (request.POST.get("group_name") or "").strip()
+
+        if not selected_ids:
+            messages.error(request, "Please select at least one user.")
+            return redirect("chat:start_conversation")
+
+        users = list(User.objects.filter(id__in=selected_ids))
+
+        if len(users) == 1:
+            # DM
+            other = users[0]
+            convo = Conversation.get_or_create_dm(request.user, other)
+        else:
+            # Group
+            if not group_name:
+                group_name = "Group chat"
+            convo = Conversation.objects.create(
+                name=group_name,
+                is_group=True,
+            )
+            convo.participants.add(request.user, *users)
+
+        return redirect("chat:conversation", convo_id=convo.id)
+
+    # ---------- GET: show list of users to pick from ----------
     query = (request.GET.get('q') or '').strip()
 
-    # 1) Base queryset: all friends as Users
+    # All friends (so we know who is already a friend)
     friends_qs = Friend.get_friends(request.user).select_related('profile').order_by('username')
+    friend_ids = list(friends_qs.values_list('id', flat=True))
 
-    # 2) Optional search inside friends
+    # Base queryset: by default, show just friends
+    users_qs = friends_qs
+
+    # Optional search: filter friends by display_name OR username OR email
     if query:
-        friends_qs = friends_qs.filter(
+        users_qs = users_qs.filter(
+            Q(profile__display_name__icontains=query) |
             Q(username__icontains=query) |
             Q(email__icontains=query)
         )
 
-    # 3) Pagination (10 per page by default)
+    # Pagination
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(friends_qs, 10)
+    paginator = Paginator(users_qs, 10)
     page_obj = paginator.get_page(page_number)
 
-    # 4) Role (defensive)
     role = getattr(getattr(request.user, 'profile', None), 'role', None)
 
     return render(request, 'chat/start_conversation.html', {
-        'users': page_obj.object_list,   # iterate as usual
-        'page_obj': page_obj,            # for next/prev links
+        'users': page_obj.object_list,
+        'page_obj': page_obj,
         'query': query,
         'has_friends': friends_qs.exists(),
         'user_role': role,
+        'friend_ids': friend_ids,
     })
+
+@login_required
+def create_group_conversation(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        user_ids = request.POST.getlist("participants")  # list of user IDs from form
+
+        convo = Conversation.objects.create(
+            name=name,
+            is_group=True,
+        )
+        convo.participants.add(request.user)          # creator
+        convo.participants.add(*User.objects.filter(id__in=user_ids))  # others
+
+        return redirect("chat:conversation_detail", convo_id=convo.id)
+
+    users = User.objects.exclude(id=request.user.id)
+    return render(request, "chat/create_group.html", {"users": users})
+
+@login_required
+def dm_with_user(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+
+    convo = Conversation.get_or_create_dm(request.user, other_user)
+    return redirect('chat:conversation', convo_id=convo.id)
+
 @login_required
 def find_friends(request):
     q = request.GET.get('q', '').strip()
@@ -131,47 +212,4 @@ def find_friends(request):
 
     return render(request, 'chat/find_friends.html', {'users': users, 'query': q})
 
-@login_required
-def send_friend_request(request, user_id):
-    if request.method != 'POST':
-        return redirect('chat:find_friends')
-
-    to_user = get_object_or_404(User, id=user_id)
-    if to_user == request.user:
-        messages.error(request, "You can’t add yourself.")
-        return redirect('chat:find_friends')
-
-    # already friends?
-    if Friend.get_friends(request.user).filter(id=to_user.id).exists():
-        messages.info(request, "You’re already friends.")
-        return redirect('chat:find_friends')
-
-    # already pending either direction?
-    exists = FriendRequest.objects.filter(
-        Q(from_user=request.user, to_user=to_user) |
-        Q(from_user=to_user, to_user=request.user),
-        status='pending'
-    ).exists()
-    if exists:
-        messages.info(request, "A request is already pending.")
-        return redirect('chat:find_friends')
-
-    FriendRequest.objects.create(from_user=request.user, to_user=to_user, status='pending')
-    messages.success(request, "Friend request sent.")
-    return redirect('chat:find_friends')
-
-@login_required
-def cancel_friend_request(request, req_id):
-    if request.method != 'POST':
-        return redirect('friends:friends_list')
-
-    fr = get_object_or_404(
-        FriendRequest,
-        id=req_id,
-        from_user=request.user,   # only the sender can cancel their own pending request
-        status='pending'
-    )
-    fr.delete()
-    messages.info(request, "Friend request canceled.")
-    return redirect('friends:friends_list')
 

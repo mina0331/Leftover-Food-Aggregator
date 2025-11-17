@@ -1,0 +1,399 @@
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Manage User Suspensions - Moderator{% endblock %}
+
+{% block content %}
+<style>
+    .suspensions-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-card.active {
+        border-left: 4px solid #e74c3c;
+    }
+    
+    .stat-card.reinstated {
+        border-left: 4px solid #27ae60;
+    }
+    
+    .stat-card.permanent {
+        border-left: 4px solid #c0392b;
+    }
+    
+    .stat-card.temporary {
+        border-left: 4px solid #f39c12;
+    }
+    
+    .stat-number {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .suspensions-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .suspension-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        background: #fafafa;
+    }
+    
+    .suspension-item.active {
+        border-left: 4px solid #e74c3c;
+        background: #fff5f5;
+    }
+    
+    .suspension-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .suspension-meta {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .suspension-status {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .suspension-status.active {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .suspension-status.reinstated {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .suspension-reason {
+        background: #fff3cd;
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 3px solid #ffc107;
+        margin: 15px 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-reinstate {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-reinstate:hover {
+        background: #229954;
+    }
+    
+    .btn-view-history {
+        background: #3498db;
+        color: white;
+    }
+    
+    .btn-view-history:hover {
+        background: #2980b9;
+    }
+    
+    .btn-suspend {
+        background: #e74c3c;
+        color: white;
+        font-size: 16px;
+        padding: 12px 24px;
+    }
+    
+    .btn-suspend:hover {
+        background: #c0392b;
+    }
+</style>
+
+<div class="suspensions-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="color: #232D4B; margin: 0;">🚫 User Suspension Management</h1>
+        <a href="{% url 'userprivileges:moderator_home' %}" class="btn" style="background: #95a5a6; color: white;">← Back to Dashboard</a>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-section">
+        <div class="stat-card active">
+            <div class="stat-label">Active Suspensions</div>
+            <div class="stat-number">{{ stats.active }}</div>
+        </div>
+        <div class="stat-card reinstated">
+            <div class="stat-label">Reinstated</div>
+            <div class="stat-number">{{ stats.reinstated }}</div>
+        </div>
+        <div class="stat-card permanent">
+            <div class="stat-label">Permanent</div>
+            <div class="stat-number">{{ stats.permanent }}</div>
+        </div>
+        <div class="stat-card temporary">
+            <div class="stat-label">Temporary</div>
+            <div class="stat-number">{{ stats.temporary }}</div>
+        </div>
+    </div>
+    
+    <!-- User Search -->
+    <div class="suspensions-section" style="background: #e3f2fd; border-left: 5px solid #2196f3;">
+        <h2 style="color: #232D4B; margin-top: 0;">🔍 Search Users to Suspend</h2>
+        <p style="color: #666;">Search for users by username or email address</p>
+        <form method="GET" style="margin-top: 15px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input 
+                    type="text" 
+                    name="q" 
+                    value="{{ search_query }}" 
+                    placeholder="Enter username or email..." 
+                    style="flex: 1; padding: 12px; border: 2px solid #2196f3; border-radius: 6px; font-size: 16px;"
+                    autofocus
+                >
+                <button type="submit" class="btn" style="background: #2196f3; color: white; padding: 12px 24px; font-size: 16px;">
+                    🔍 Search
+                </button>
+                {% if search_query %}
+                <a href="{% url 'moderation:manage_suspensions' %}" class="btn" style="background: #95a5a6; color: white; padding: 12px 24px;">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    
+    <!-- Search Results -->
+    {% if search_query %}
+    <div class="suspensions-section">
+        <h2 style="color: #232D4B; margin-bottom: 20px;">
+            📋 Search Results{% if search_results %} ({{ search_results|length }}){% endif %}
+        </h2>
+        
+        {% if search_results %}
+            {% for result in search_results %}
+            <div class="suspension-item" style="{% if result.is_suspended %}border-left: 4px solid #e74c3c; background: #fff5f5;{% else %}border-left: 4px solid #3498db;{% endif %}">
+                <div class="suspension-header">
+                    <div>
+                        <strong style="font-size: 18px;">{{ result.user.username }}</strong>
+                        <div style="color: #666; margin-top: 5px;">
+                            <strong>Email:</strong> {{ result.user.email }}<br>
+                            <strong>Role:</strong> {{ result.user.profile.get_role_display|default:"Student" }}
+                        </div>
+                    </div>
+                    {% if result.is_suspended %}
+                    <span class="suspension-status active">🚫 Suspended</span>
+                    {% else %}
+                    <span style="padding: 5px 12px; border-radius: 4px; background: #27ae60; color: white; font-size: 12px; font-weight: bold;">✓ Active</span>
+                    {% endif %}
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                    <div style="background: #fff3cd; padding: 12px; border-radius: 6px; border-left: 3px solid #ffc107;">
+                        <strong>⚠️ Violations:</strong> {{ result.violation_count }} flagged content item(s)
+                    </div>
+                    {% if result.active_suspension %}
+                    <div style="background: #f8d7da; padding: 12px; border-radius: 6px; border-left: 3px solid #dc3545;">
+                        <strong>🚫 Suspended:</strong> {{ result.active_suspension.get_duration_display }}<br>
+                        <small style="color: #666;">Since {{ result.active_suspension.suspended_at|date:"M d, Y" }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="action-buttons">
+                    {% if result.is_suspended %}
+                        <a href="{% url 'moderation:user_suspension_history' result.user.id %}" class="btn btn-view-history">
+                            📋 View Suspension History
+                        </a>
+                        {% if result.active_suspension %}
+                        <form method="POST" action="{% url 'moderation:reinstate_user' result.active_suspension.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-reinstate" onclick="openReinstateModal({{ result.active_suspension.id }})">
+                                ✅ Reinstate User
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'moderation:suspend_user' result.user.id %}" class="btn btn-suspend">
+                            🚫 Suspend User
+                        </a>
+                        {% if result.violation_count > 0 %}
+                        <a href="{% url 'moderation:review_flagged' %}?user={{ result.user.id }}" class="btn btn-view-history">
+                            🚩 View Violations
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <p style="font-size: 18px;">🔍 No users found matching "{{ search_query }}"</p>
+                <p style="margin-top: 10px;">Try searching by username or email address</p>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Quick Actions -->
+    <div class="suspensions-section" style="background: #f0f0f0; border-left: 5px solid #95a5a6;">
+        <h2 style="color: #232D4B; margin-top: 0;">Quick Actions</h2>
+        <p style="color: #666;">Additional options for user management</p>
+        <div class="action-buttons">
+            <a href="/admin/auth/user/" target="_blank" class="btn" style="background: #95a5a6; color: white;">👥 View All Users (Admin)</a>
+        </div>
+    </div>
+    
+    <!-- Active Suspensions -->
+    <div class="suspensions-section">
+        <h2 style="color: #232D4B; margin-bottom: 20px;">⏳ Active Suspensions ({{ active_suspensions.count }})</h2>
+        
+        {% for suspension in active_suspensions %}
+        <div class="suspension-item active">
+            <div class="suspension-header">
+                <div>
+                    <strong>{{ suspension.user.username }}</strong> ({{ suspension.user.email }})
+                    <div class="suspension-meta">
+                        Suspended by <strong>{{ suspension.suspended_by.username }}</strong> on {{ suspension.suspended_at|date:"M d, Y g:i A" }}
+                        | Duration: {{ suspension.get_duration_display }}
+                    </div>
+                </div>
+                <span class="suspension-status active">Active</span>
+            </div>
+            
+            <div class="suspension-reason">
+                <strong>Reason:</strong><br>
+                {{ suspension.reason }}
+            </div>
+            
+            <div class="action-buttons">
+                <form method="POST" action="{% url 'moderation:reinstate_user' suspension.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-reinstate" onclick="openReinstateModal({{ suspension.id }})">
+                        ✅ Reinstate User
+                    </button>
+                </form>
+                <a href="{% url 'moderation:user_suspension_history' suspension.user.id %}" class="btn btn-view-history">
+                    📋 View History
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #666; padding: 40px;">🎉 No active suspensions! All clear.</p>
+        {% endfor %}
+    </div>
+    
+    <!-- Recently Reinstated -->
+    {% if reinstated_suspensions %}
+    <div class="suspensions-section">
+        <h2 style="color: #232D4B; margin-bottom: 20px;">📋 Recently Reinstated</h2>
+        
+        {% for suspension in reinstated_suspensions %}
+        <div class="suspension-item">
+            <div class="suspension-header">
+                <div>
+                    <strong>{{ suspension.user.username }}</strong>
+                    <div class="suspension-meta">
+                        Suspended: {{ suspension.suspended_at|date:"M d, Y" }}
+                        | Reinstated by <strong>{{ suspension.reinstated_by.username }}</strong> on {{ suspension.reinstated_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+                <span class="suspension-status reinstated">Reinstated</span>
+            </div>
+            
+            {% if suspension.reinstatement_notes %}
+            <div style="background: #d4edda; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <strong>Reinstatement Notes:</strong> {{ suspension.reinstatement_notes }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Reinstate Modal -->
+<div id="reinstateModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px;">
+        <div class="modal-header" style="font-size: 20px; font-weight: bold; margin-bottom: 15px;">Reinstate User</div>
+        <form id="reinstateForm" method="POST">
+            {% csrf_token %}
+            <textarea name="notes" placeholder="Optional: Add notes about why this user is being reinstated..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; margin-bottom: 15px; box-sizing: border-box;"></textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeReinstateModal()" style="background: #95a5a6; color: white;">Cancel</button>
+                <button type="submit" class="btn btn-reinstate">✅ Reinstate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openReinstateModal(suspensionId) {
+    const modal = document.getElementById('reinstateModal');
+    const form = document.getElementById('reinstateForm');
+    form.action = "{% url 'moderation:reinstate_user' 0 %}".replace('0', suspensionId);
+    modal.style.display = 'block';
+}
+
+function closeReinstateModal() {
+    document.getElementById('reinstateModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('reinstateModal');
+    if (event.target == modal) {
+        closeReinstateModal();
+    }
+}
+</script>
+
+{% endblock %}
+

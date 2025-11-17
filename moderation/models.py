@@ -14,6 +14,7 @@ class FlaggedContent(models.Model):
         APPROVED = "approved", "Approved (No Action)"
         DELETED = "deleted", "Content Deleted"
         DISMISSED = "dismissed", "Dismissed"
+        EDITED = "edited", "Content Edited"
     
     # Generic foreign key to link to any model (Message, Post, etc.)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -76,10 +77,79 @@ class FlaggedContent(models.Model):
     
     def delete_content(self, moderator, notes=""):
         """Delete the flagged content"""
-        if self.content_object:
-            self.content_object.delete()
+        # Save flag status first, then delete content
         self.status = self.Status.DELETED
         self.reviewed_by = moderator
         self.reviewed_at = timezone.now()
         self.moderator_notes = notes
+        # Save with update_fields to avoid GenericForeignKey issues
+        self.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'moderator_notes'])
+        
+        # Delete the content object after saving flag status
+        if self.content_object:
+            self.content_object.delete()
+    
+    def edit_content(self, moderator, notes=""):
+        """Mark the flagged content as edited"""
+        self.status = self.Status.EDITED
+        self.reviewed_by = moderator
+        self.reviewed_at = timezone.now()
+        self.moderator_notes = notes
         self.save()
+
+
+class UserSuspension(models.Model):
+    """
+    Track user suspensions for repeated violations
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='suspensions')
+    suspended_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='suspensions_issued')
+    reason = models.TextField(help_text="Reason for suspending this user")
+    suspended_at = models.DateTimeField(auto_now_add=True)
+    suspended_until = models.DateTimeField(null=True, blank=True, help_text="Leave empty for permanent suspension")
+    is_active = models.BooleanField(default=True, help_text="Whether this suspension is currently active")
+    reinstated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='suspensions_reinstated'
+    )
+    reinstated_at = models.DateTimeField(null=True, blank=True)
+    reinstatement_notes = models.TextField(blank=True, help_text="Notes about why user was reinstated")
+    
+    class Meta:
+        ordering = ['-suspended_at']
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['is_active', '-suspended_at']),
+        ]
+        verbose_name = "User Suspension"
+        verbose_name_plural = "User Suspensions"
+    
+    def __str__(self):
+        duration = f"until {self.suspended_until.date()}" if self.suspended_until else "permanently"
+        status = "Active" if self.is_active else "Reinstated"
+        return f"{self.user.username} - {status} ({duration})"
+    
+    def is_expired(self):
+        """Check if temporary suspension has expired"""
+        if not self.suspended_until:
+            return False  # Permanent suspension never expires
+        return timezone.now() > self.suspended_until
+    
+    def reinstate(self, moderator, notes=""):
+        """Reinstate the user (mark suspension as inactive)"""
+        self.is_active = False
+        self.reinstated_by = moderator
+        self.reinstated_at = timezone.now()
+        self.reinstatement_notes = notes
+        self.save()
+    
+    def get_duration_display(self):
+        """Get human-readable duration"""
+        if not self.suspended_until:
+            return "Permanent"
+        if self.is_expired():
+            return f"Expired (was until {self.suspended_until.date()})"
+        return f"Until {self.suspended_until.date()}"

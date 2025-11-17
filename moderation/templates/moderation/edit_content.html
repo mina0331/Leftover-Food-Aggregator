@@ -1,0 +1,231 @@
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Edit Flagged Content - Moderator{% endblock %}
+
+{% block content %}
+<style>
+    .edit-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .edit-header {
+        background: #3498db;
+        color: white;
+        padding: 20px;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 0;
+    }
+    
+    .edit-form-container {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 0 0 8px 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .flag-info {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .flag-info strong {
+        color: #856404;
+    }
+    
+    .content-preview {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #232D4B;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-save {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .btn-save:hover {
+        background: #229954;
+    }
+    
+    .btn-cancel {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        background: #7f8c8d;
+    }
+    
+    .current-image {
+        margin: 15px 0;
+    }
+    
+    .current-image img {
+        max-width: 100%;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="edit-container">
+    <div class="edit-header">
+        <h1 style="margin: 0;">✏️ Edit Flagged Content</h1>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Moderator Content Editing</p>
+    </div>
+    
+    <div class="edit-form-container">
+        <div class="flag-info">
+            <strong>Flag Information:</strong><br>
+            Flag #{{ flag.id }} - {{ content_type_name }}<br>
+            Flagged by: <strong>{{ flag.flagged_by.username }}</strong> on {{ flag.flagged_at|date:"M d, Y g:i A" }}<br>
+            Reason: {{ flag.reason }}
+        </div>
+        
+        <div class="content-preview">
+            <h4 style="margin-top: 0;">Current Content Preview:</h4>
+            {% if flag.content_type.model == 'post' %}
+                <p><strong>Event:</strong> {{ content_object.event }}</p>
+                <p><strong>Description:</strong> {{ content_object.event_description|truncatewords:20 }}</p>
+                <p><strong>Cuisine:</strong> {{ content_object.cuisine.name|title }}</p>
+            {% elif flag.content_type.model == 'message' %}
+                <p><strong>Message:</strong> {{ content_object.content|truncatewords:30 }}</p>
+                <p><strong>From:</strong> {{ content_object.sender.username }} <strong>To:</strong> {{ content_object.recipient.username }}</p>
+            {% endif %}
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if flag.content_type.model == 'post' %}
+                <div class="form-group">
+                    <label for="{{ form.event.id_for_label }}">Event Title *</label>
+                    {{ form.event }}
+                    {% if form.event.errors %}
+                        <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.event.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.event_description.id_for_label }}">Event Description *</label>
+                    {{ form.event_description }}
+                    {% if form.event_description.errors %}
+                        <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.event_description.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.cuisine.id_for_label }}">Cuisine *</label>
+                    {{ form.cuisine }}
+                    {% if form.cuisine.errors %}
+                        <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.cuisine.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.image.id_for_label }}">Event Image</label>
+                    {% if content_object.image %}
+                        <div class="current-image">
+                            <p><strong>Current Image:</strong></p>
+                            <img src="{{ content_object.image.url }}" alt="{{ content_object.event }}">
+                            <p>
+                                <label style="font-weight: normal;">
+                                    <input type="checkbox" name="remove_image" value="1">
+                                    Remove current image
+                                </label>
+                            </p>
+                        </div>
+                    {% endif %}
+                    {{ form.image }}
+                    <div class="help-text">Leave empty to keep current image</div>
+                    {% if form.image.errors %}
+                        <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.image.errors }}</div>
+                    {% endif %}
+                </div>
+            {% elif flag.content_type.model == 'message' %}
+                <div class="form-group">
+                    <label for="{{ form.content.id_for_label }}">Message Content *</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.content.errors }}</div>
+                    {% endif %}
+                    <div class="help-text">Edit the message content to remove inappropriate language or content</div>
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="moderator_notes">Moderator Notes (Optional)</label>
+                <textarea name="moderator_notes" rows="3" placeholder="Add notes explaining why this content was edited..."></textarea>
+                <div class="help-text">These notes will be saved with the flag record for audit purposes</div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-save">💾 Save Changes</button>
+                <a href="{% url 'moderation:review_flagged' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+

@@ -2,36 +2,179 @@
 {% load static %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 40px auto;">
+<style>
+  .post-container {
+    max-width: 800px;
+    margin: 40px auto;
+  }
 
-  <a href="{% url 'posting:post_list' %}"
-     style="text-decoration:none; color:#232D4B; font-weight:bold;">
+  .post-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    background: white;
+  }
+
+  .post-title {
+    margin-top: 0;
+    color: #232D4B;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  .back-link {
+    text-decoration: none;
+    color: #232D4B;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+
+  .author-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 4px 0;
+  }
+
+  .author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .author-text-main {
+    font-size: 0.95rem;
+    color: #555;
+  }
+
+  .author-name-link {
+    text-decoration: none;
+    color: #232D4B;
+    font-weight: 600;
+  }
+
+  .post-meta {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 6px;
+  }
+
+  .post-meta strong {
+    color: #333;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+
+  .section-title {
+    color: #232D4B;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .post-description {
+    line-height: 1.6;
+    color: #333;
+    font-size: 0.98rem;
+  }
+
+  .post-actions {
+    margin-top: 20px;
+  }
+
+  .btn-edit {
+    background: #E57200;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .btn-delete {
+    background: #b30000;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-left: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container post-container">
+
+  <a href="{% url 'posting:post_list' %}" class="back-link">
      ← Back to All Posts
   </a>
 
-  <div style="border:1px solid #ddd; border-radius:12px; padding:24px; margin-top:20px;
-              box-shadow:0 2px 6px rgba(0,0,0,0.05); background:white;">
+  <div class="post-card">
 
-    <h1 style="margin-top:0; color:#232D4B;">{{ post.event }}</h1>
+    <h1 class="post-title">{{ post.event }}</h1>
 
-    <p style="color:#555;">
-      <strong>Created by:</strong> {{ post.author.username }}<br>
-      <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-      <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
-    </p>
+    <!-- Author Profile -->
+    <div class="author-row">
+      <a href="{% url 'profiles:view_profile' post.author.id %}">
+        {% if post.author.profile.profile_pic %}
+          <img src="{{ post.author.profile.avatar_url }}"
+               alt="Profile photo"
+               class="author-avatar">
+        {% else %}
+          <img src="{% static 'images/default-avatar.jpg' %}"
+               alt="Default avatar"
+               class="author-avatar">
+        {% endif %}
+      </a>
+      <div class="author-text-main">
+        <strong>Created by:</strong>
+        <a href="{% url 'profiles:view_profile' post.author.id %}" class="author-name-link">
+          {{ post.author.profile.display_name|default:post.author.username }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Meta info -->
+    <div class="post-meta">
+      <strong>Date:</strong> {{ post.created_at|date:"M d, Y, g:i A" }}<br>
+      <strong>Cuisine:</strong> {{ post.cuisine }}
+    </div>
+
+    <!-- Thanks Section -->
+    <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+      <p style="margin:0 0 10px 0; color:#555;">
+        <strong>👍 Thanks:</strong> <span id="thanks-count">{{ post.author.thanks_received.count }}</span>
+      </p>
+      {% if user.is_authenticated and user != post.author %}
+        <button id="thank-button" onclick="thankOrganizer()"
+                style="background:#28a745; color:white; border:none; padding:8px 16px;
+                       border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
+          Thank Organizer
+        </button>
+        <span id="thank-message" style="display:none; color:#28a745; margin-left:10px; font-weight:600;"></span>
+      {% endif %}
+    </div>
 
     {% if post.image %}
-      <img src="{{ post.image.url }}" alt="{{ post.event }}"
-           style="width:100%; border-radius:12px; margin:20px 0;">
+      <img src="{{ post.image.url }}" alt="{{ post.event }}" class="post-image">
     {% endif %}
 
-    <h3 style="color:#232D4B;">Event Description</h3>
-    <p style="line-height:1.6; color:#333;">
+    <h3 class="section-title">Event Description</h3>
+    <p class="post-description">
       {{ post.event_description|linebreaks }}
     </p>
 
     <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
-      {% if user == post.author %}
+    {% if user == post.author %}
         <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
@@ -39,14 +182,33 @@
            style="background:#b30000; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Delete</a>
       {% endif %}
-      {% if user.is_authenticated and user != post.author %}
-        <button onclick="openFlagModal({{ post.id }})" 
-                style="background:#e74c3c; color:white; border:none; padding:8px 14px;
-                       border-radius:6px; cursor:pointer; font-size:14px;">
-          🚩 Flag Post
-        </button>
-      {% endif %}
+      <div style="display:flex; gap:10px; align-items:center;">
+        {% if user.is_authenticated and user != post.author %}
+          <button onclick="openFlagModal({{ post.id }})"
+                  style="background:#e74c3c; color:white; border:none; padding:8px 14px;
+                         border-radius:6px; cursor:pointer; font-size:14px;"
+                  title="Flag this post for moderator review" aria-label="Flag post">
+            🚩 Flag Post
+          </button>
+      
+          <a href="{% url 'posting:report_post' post.id %}"
+             style="background:#E57200; color:white; padding:8px 14px;
+                    border-radius:6px; text-decoration:none; font-size:14px;"
+             title="Report a food safety issue" aria-label="Report food issue">
+            ⚠️ Report Food Issue
+          </a>
+        {% endif %}
+      </div>
     </div>
+
+    {% if post.qr_code_image %}
+      <div style="margin-top:20px;">
+        <h3 style="color:#232D4B;">QR Code</h3>
+        <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}"
+             style="max-width:200px; border-radius:8px;">
+      </div>
+    {% endif %}
+
   </div>
 
 </div>
@@ -86,6 +248,61 @@ function openFlagModal(postId) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function thankOrganizer() {
+    const button = document.getElementById('thank-button');
+    const thanksCount = document.getElementById('thanks-count');
+    const message = document.getElementById('thank-message');
+    
+    // Disable button to prevent double-clicking
+    button.disabled = true;
+    button.style.opacity = '0.6';
+    button.style.cursor = 'not-allowed';
+    button.textContent = 'Sending...';
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('organizer_id', '{{ post.author.id }}');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Send AJAX POST request
+    fetch('{% url "posting:thank_organizer" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the thanks count
+            thanksCount.textContent = data.thanks_count;
+            
+            // Show success message
+            button.textContent = 'Thanked!';
+            button.style.background = '#6c757d';
+            message.textContent = '✓ Thank you!';
+            message.style.display = 'inline';
+        } else if (data.status === 'already_thanked') {
+            // User already thanked this organizer
+            button.textContent = 'Already Thanked';
+            button.style.background = '#6c757d';
+            message.textContent = 'You already thanked this organizer';
+            message.style.display = 'inline';
+            message.style.color = '#dc3545';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Re-enable button on error
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        button.textContent = 'Thank Organizer';
+        alert('An error occurred. Please try again.');
+    });
 }
 </script>
 {% endblock %}
