@@ -149,6 +149,21 @@
       <strong>Cuisine:</strong> {{ post.cuisine }}
     </div>
 
+    <!-- Thanks Section -->
+    <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+      <p style="margin:0 0 10px 0; color:#555;">
+        <strong>👍 Thanks:</strong> <span id="thanks-count">{{ post.author.thanks_received.count }}</span>
+      </p>
+      {% if user.is_authenticated and user != post.author %}
+        <button id="thank-button" onclick="thankOrganizer()"
+                style="background:#28a745; color:white; border:none; padding:8px 16px;
+                       border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
+          Thank Organizer
+        </button>
+        <span id="thank-message" style="display:none; color:#28a745; margin-left:10px; font-weight:600;"></span>
+      {% endif %}
+    </div>
+
     {% if post.image %}
       <img src="{{ post.image.url }}" alt="{{ post.event }}" class="post-image">
     {% endif %}
@@ -158,14 +173,136 @@
       {{ post.event_description|linebreaks }}
     </p>
 
+    <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
     {% if user == post.author %}
-      <div class="post-actions">
-        <a href="{% url 'posting:edit_post' post.id %}" class="btn-edit">Edit</a>
-        <a href="{% url 'posting:delete_post' post.id %}" class="btn-delete">Delete</a>
+        <a href="{% url 'posting:edit_post' post.id %}"
+           style="background:#E57200; color:white; padding:8px 14px;
+                  border-radius:6px; text-decoration:none;">Edit</a>
+        <a href="{% url 'posting:delete_post' post.id %}"
+           style="background:#b30000; color:white; padding:8px 14px;
+                  border-radius:6px; text-decoration:none;">Delete</a>
+      {% endif %}
+      <div style="display:flex; gap:10px; align-items:center;">
+        {% if user.is_authenticated and user != post.author %}
+          <button onclick="openFlagModal({{ post.id }})"
+                  style="background:#e74c3c; color:white; border:none; padding:8px 14px;
+                         border-radius:6px; cursor:pointer; font-size:14px;"
+                  title="Flag this post for moderator review" aria-label="Flag post">
+            🚩 Flag Post
+          </button>
+      
+          <a href="{% url 'posting:report_post' post.id %}"
+             style="background:#E57200; color:white; padding:8px 14px;
+                    border-radius:6px; text-decoration:none; font-size:14px;"
+             title="Report a food safety issue" aria-label="Report food issue">
+            ⚠️ Report Food Issue
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if post.qr_code_image %}
+      <div style="margin-top:20px;">
+        <h3 style="color:#232D4B;">QR Code</h3>
+        <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}"
+             style="max-width:200px; border-radius:8px;">
       </div>
     {% endif %}
 
   </div>
 
 </div>
+
+<script>
+function openFlagModal(postId) {
+    const reason = prompt('Please provide a reason for flagging this post:');
+    if (reason && reason.trim()) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "moderation:flag_content" %}';
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        form.appendChild(csrf);
+        
+        const contentType = document.createElement('input');
+        contentType.type = 'hidden';
+        contentType.name = 'content_type_id';
+        contentType.value = '{{ post_content_type_id|default:"" }}';
+        form.appendChild(contentType);
+        
+        const objectId = document.createElement('input');
+        objectId.type = 'hidden';
+        objectId.name = 'object_id';
+        objectId.value = postId;
+        form.appendChild(objectId);
+        
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason.trim();
+        form.appendChild(reasonInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function thankOrganizer() {
+    const button = document.getElementById('thank-button');
+    const thanksCount = document.getElementById('thanks-count');
+    const message = document.getElementById('thank-message');
+    
+    // Disable button to prevent double-clicking
+    button.disabled = true;
+    button.style.opacity = '0.6';
+    button.style.cursor = 'not-allowed';
+    button.textContent = 'Sending...';
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('organizer_id', '{{ post.author.id }}');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Send AJAX POST request
+    fetch('{% url "posting:thank_organizer" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the thanks count
+            thanksCount.textContent = data.thanks_count;
+            
+            // Show success message
+            button.textContent = 'Thanked!';
+            button.style.background = '#6c757d';
+            message.textContent = '✓ Thank you!';
+            message.style.display = 'inline';
+        } else if (data.status === 'already_thanked') {
+            // User already thanked this organizer
+            button.textContent = 'Already Thanked';
+            button.style.background = '#6c757d';
+            message.textContent = 'You already thanked this organizer';
+            message.style.display = 'inline';
+            message.style.color = '#dc3545';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Re-enable button on error
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        button.textContent = 'Thank Organizer';
+        alert('An error occurred. Please try again.');
+    });
+}
+</script>
 {% endblock %}

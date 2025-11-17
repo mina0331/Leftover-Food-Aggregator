@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Case, When, IntegerField
+from django.contrib.contenttypes.models import ContentType
 from .models import Message
 from .models import Friend
 from .models import FriendRequest, Conversation
@@ -62,18 +63,23 @@ def conversation_detail(request, convo_id):
             )
         return redirect("chat:conversation", convo_id=conversation.id)
 
-    # 5) Sidebar conversations list (all conversations this user is in)
+    # Sidebar conversations list (all conversations this user is in)
     all_conversations = (
         request.user.conversations
         .all()
         .prefetch_related("participants", "messages")
     )
+    
+    # Get content type for Message model (for flagging)
+    from django.contrib.contenttypes.models import ContentType
+    message_content_type = ContentType.objects.get_for_model(Message)
 
     return render(request, "chat/conversation.html", {
         "conversation": conversation,
         "other_user": other_user,          # None for groups
         "messages": messages_qs,
         "all_conversations": all_conversations,
+        "message_content_type_id": message_content_type.id,
     })
 
 @login_required

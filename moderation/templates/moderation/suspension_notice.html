@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Account Suspended{% endblock %}
+
+{% block content %}
+<style>
+    .suspension-notice {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .suspension-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    
+    .suspension-title {
+        color: #e74c3c;
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    
+    .suspension-info {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+        text-align: left;
+    }
+    
+    .suspension-info strong {
+        color: #856404;
+    }
+    
+    .suspension-details {
+        background: #f8f9fa;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+        text-align: left;
+    }
+    
+    .suspension-details p {
+        margin: 10px 0;
+        color: #555;
+    }
+    
+    .contact-info {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        color: #666;
+        font-size: 14px;
+    }
+</style>
+
+<div class="suspension-notice">
+    <div class="suspension-icon">🚫</div>
+    <h1 class="suspension-title">Account Suspended</h1>
+    
+    <div class="suspension-info">
+        <strong>Your account has been suspended.</strong><br>
+        You are currently unable to access this platform.
+    </div>
+    
+    <div class="suspension-details">
+        <p><strong>Suspended on:</strong> {{ suspension.suspended_at|date:"F d, Y g:i A" }}</p>
+        <p><strong>Duration:</strong> {{ suspension.get_duration_display }}</p>
+        {% if suspension.suspended_until %}
+            <p><strong>Suspension ends:</strong> {{ suspension.suspended_until|date:"F d, Y g:i A" }}</p>
+        {% else %}
+            <p><strong>Type:</strong> Permanent suspension</p>
+        {% endif %}
+        <p><strong>Reason:</strong></p>
+        <p style="margin-left: 20px; font-style: italic;">{{ suspension.reason }}</p>
+    </div>
+    
+    {% if suspension.suspended_until %}
+    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px; text-align: left;">
+        <strong style="color: #155724;">Good News:</strong> Your suspension is temporary and will automatically expire on {{ suspension.suspended_until|date:"F d, Y" }}. You will be able to access the site again after that date.
+    </div>
+    {% else %}
+    <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px; text-align: left;">
+        <strong style="color: #721c24;">Permanent Suspension:</strong> This is a permanent suspension. If you believe this is an error, please contact support.
+    </div>
+    {% endif %}
+    
+    <div class="contact-info">
+        <p>If you believe this suspension is an error or have questions, please contact the site administrators.</p>
+        <p>You can log out using the link below.</p>
+        <a href="{% url 'account_logout' %}" style="color: #3498db; text-decoration: underline;">Log Out</a>
+    </div>
+</div>
+
+{% endblock %}
+

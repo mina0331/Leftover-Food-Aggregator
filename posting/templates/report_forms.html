@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 40px auto;">
+
+  <a href="{% url 'posting:post_detail' post.id %}"
+     style="text-decoration:none; color:#232D4B; font-weight:bold;">
+     ← Back to Post
+  </a>
+
+  <div style="border:1px solid #ddd; border-radius:12px; padding:24px; margin-top:20px;
+              box-shadow:0 2px 6px rgba(0,0,0,0.05); background:white;">
+    
+    <h1 style="margin-top:0; color:#232D4B;">Report Post</h1>
+
+    <p style="color:#555; line-height:1.6;">
+      You are reporting:  
+      <strong>{{ post.event }}</strong><br>
+      <span style="font-size: 14px; color:#777;">Posted by {{ post.author.username }}</span>
+    </p>
+
+    <form method="POST" style="margin-top:20px;">
+      {% csrf_token %}
+
+      <label for="id_reason" style="font-weight:bold; color:#232D4B;">
+        Reason for Report
+      </label>
+      <textarea id="id_reason" name="reason" rows="4"
+                style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc;
+                       margin-top:6px; font-size:14px;"
+                placeholder="Briefly describe the issue..." required></textarea>
+
+      <button type="submit"
+              style="margin-top:20px; background:#e74c3c; color:white;
+                     padding:10px 18px; border:none; border-radius:6px;
+                     cursor:pointer; font-size:15px;">
+        🚩 Submit Report
+      </button>
+
+      <a href="{% url 'posting:post_detail' post.id %}"
+         style="margin-left:10px; padding:10px 18px; background:#555; color:white;
+                border-radius:6px; text-decoration:none; font-size:15px;">
+        Cancel
+      </a>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

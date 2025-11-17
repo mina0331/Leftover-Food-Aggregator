@@ -1,14 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Moderator Dashboard</title>
-    <style>
-        body {
-            font-family: sans-serif;
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Moderator Dashboard{% endblock %}
+
+{% block content %}
+<style>
+        .moderator-dashboard {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
         h1 {
             text-align: center;
@@ -123,6 +122,24 @@
         </div>
     </div>
     
+    <div class="dashboard-section" style="background: #fff3cd; border-left: 5px solid #ffc107;">
+        <h2>🚩 Content Moderation</h2>
+        <p class="info-text">Review and manage flagged content (messages, posts, etc.)</p>
+        <div class="button-group">
+            <a href="{% url 'moderation:review_flagged' %}"><button style="background: #f39c12; font-size: 18px; padding: 15px 30px; font-weight: bold;">🚩 Review Flagged Content</button></a>
+        </div>
+        <p class="info-text" style="margin-top: 10px;">Users can flag inappropriate content. Review and take action to keep the platform safe.</p>
+    </div>
+    
+    <div class="dashboard-section" style="background: #ffe6e6; border-left: 5px solid #e74c3c;">
+        <h2>🚫 User Suspension Management</h2>
+        <p class="info-text">Suspend or reinstate users for repeated violations</p>
+        <div class="button-group">
+            <a href="{% url 'moderation:manage_suspensions' %}"><button style="background: #e74c3c; font-size: 18px; padding: 15px 30px; font-weight: bold;">🚫 Manage Suspensions</button></a>
+        </div>
+        <p class="info-text" style="margin-top: 10px;">Suspend users who repeatedly violate community standards. Track suspension history and reinstate users when appropriate.</p>
+    </div>
+    
     <div class="dashboard-section">
         <h2>🌍 Site Configuration</h2>
         <p class="info-text">Configure site settings and domains</p>
@@ -163,6 +180,5 @@
         <a href="/admin/" target="_blank">🔑 Admin Panel</a> |
         <a href="/moderator/">🔄 Refresh Dashboard</a>
     </p>
-</body>
-</html>
+{% endblock %}
 

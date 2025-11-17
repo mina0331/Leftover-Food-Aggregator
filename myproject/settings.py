@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "Friendslist",
     "storages",
     "posting",
+    "moderation",
 
 
 ]
@@ -95,6 +96,9 @@ STORAGES = {
         "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
     },
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 SITE_ID = 1
@@ -138,6 +142,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "moderation.middleware.SuspensionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
