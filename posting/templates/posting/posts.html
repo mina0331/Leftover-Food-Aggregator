@@ -219,6 +219,50 @@
           </div>
         </div>
 
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <a href="{% url 'posting:post_map' %}"
+           style="
+             background:#232D4B;
+             color:white;
+             padding:8px 16px;
+             border-radius:999px;
+             text-decoration:none;
+             font-size:0.9rem;
+             display:inline-flex;
+             align-items:center;
+             gap:6px;
+           ">
+           <span>🗺</span> <span>View posts on map</span>
+        </a>
+
+        {% if user.is_authenticated %}
+          <button id="sort-distance-btn"
+                  style="
+                    padding:8px 16px;
+                    border-radius:999px;
+                    border:none;
+                    cursor:pointer;
+                    font-size:0.9rem;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:6px;
+                    {% if sort == 'distance' %}
+                      background:#155724;
+                      color:white;
+                    {% else %}
+                      background:#E57200;
+                      color:white;
+                    {% endif %}
+                  ">
+            {% if sort == 'distance' %}
+              <span>✅</span><span>Sorted by distance</span>
+            {% else %}
+              <span>📍</span><span>Sort by distance</span>
+            {% endif %}
+          </button>
+        {% endif %}
+      </div>
+
         <script>
         document.getElementById('filterToggle').onclick = function() {
             const menu = document.getElementById('filterMenu');
