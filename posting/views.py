@@ -5,9 +5,6 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
 from .forms import PostForm
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 import csv
@@ -111,7 +108,30 @@ def create_post(request):
 
 @login_required
 def post_detail(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        # Post was deleted - check if it was deleted by moderation
+        from moderation.models import FlaggedContent
+        post_content_type = ContentType.objects.get_for_model(Post)
+        deleted_flag = FlaggedContent.objects.filter(
+            content_type=post_content_type,
+            object_id=post_id,
+            status=FlaggedContent.Status.DELETED
+        ).first()
+        
+        if deleted_flag:
+            messages.warning(request, 'This post has been removed by a moderator for violating community guidelines.')
+        else:
+            messages.info(request, 'This post no longer exists. It may have been deleted by the author.')
+        
+        return redirect('posting:post_list')
+    
+    # Check if post is soft-deleted
+    if post.is_deleted:
+        messages.info(request, 'This post has been deleted.')
+        return redirect('posting:post_list')
+    
     # Get content type for Post model (for flagging)
     post_content_type = ContentType.objects.get_for_model(Post)
     return render(request, "posting/post_detail.html", {
@@ -121,9 +141,20 @@ def post_detail(request, post_id):
 
 @login_required
 def edit_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        messages.warning(request, 'This post no longer exists and cannot be edited.')
+        return redirect('posting:post_list')
+    
+    # Check if post is soft-deleted
+    if post.is_deleted:
+        messages.warning(request, 'This post has been deleted and cannot be edited.')
+        return redirect('posting:post_list')
+    
     if request.user != post.author:
-        return redirect('post_detail', post_id=post_id)
+        messages.warning(request, 'You do not have permission to edit this post.')
+        return redirect('posting:post_detail', post_id=post_id)
     if request.method == "POST":
         form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
@@ -141,17 +172,22 @@ def edit_post(request, post_id):
     return render(request, "posting/edit_post.html", {"form": form, "post": post})
 
 @login_required
-@login_required
 def delete_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        messages.warning(request, 'This post no longer exists.')
+        return redirect('posting:post_list')
+    
     if request.user != post.author:
-        return redirect('posting:post_detail', post_id=post.id)
-
+        messages.warning(request, 'You do not have permission to delete this post.')
+        return redirect('posting:post_detail', post_id=post_id)
+    
     if request.method == "POST":
         # SOFT DELETE — marking it deleted instead of removing from DB
         post.is_deleted = True
         post.save()
+        messages.success(request, 'Your post has been deleted.')
         return redirect("posting:post_list")
 
     return render(request, "posting/delete_post.html", {"post": post})
