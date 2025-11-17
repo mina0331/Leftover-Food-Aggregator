@@ -31,7 +31,7 @@
     </p>
 
     <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
-      {% if user == post.author %}
+    {% if user == post.author %}
         <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
@@ -46,7 +46,7 @@
           🚩 Flag Post
         </button>
       {% endif %}
-    </div>
+      </div>
   </div>
 
 </div>

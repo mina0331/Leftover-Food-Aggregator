@@ -1,0 +1,174 @@
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Suspension History - {{ user.username }}{% endblock %}
+
+{% block content %}
+<style>
+    .history-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .user-header {
+        background: linear-gradient(135deg, #232D4B 0%, #E57200 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .user-info-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .suspension-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        background: #fafafa;
+    }
+    
+    .suspension-item.active {
+        border-left: 4px solid #e74c3c;
+        background: #fff5f5;
+    }
+    
+    .suspension-item.reinstated {
+        border-left: 4px solid #27ae60;
+        background: #f0fff4;
+    }
+    
+    .suspension-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .suspension-status {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .suspension-status.active {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .suspension-status.reinstated {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .suspension-details {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-suspend {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-suspend:hover {
+        background: #c0392b;
+    }
+    
+    .btn-back {
+        background: #95a5a6;
+        color: white;
+    }
+</style>
+
+<div class="history-container">
+    <div class="user-header">
+        <h1 style="margin: 0 0 10px 0;">👤 {{ user.username }}</h1>
+        <p style="margin: 0; opacity: 0.9;">{{ user.email }}</p>
+    </div>
+    
+    <div class="user-info-section">
+        <h3 style="margin-top: 0; color: #232D4B;">User Information</h3>
+        <p><strong>Role:</strong> {{ user.profile.get_role_display }}</p>
+        <p><strong>Violation Count:</strong> {{ violation_count }} flagged content item(s)</p>
+        {% if active_suspension %}
+        <p style="color: #e74c3c; font-weight: bold;">⚠️ Currently Suspended</p>
+        {% else %}
+        <p style="color: #27ae60; font-weight: bold;">✓ Account Active</p>
+        {% endif %}
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #232D4B; margin: 0;">Suspension History</h2>
+        {% if not active_suspension %}
+        <a href="{% url 'moderation:suspend_user' user.id %}" class="btn btn-suspend">🚫 Suspend User</a>
+        {% endif %}
+    </div>
+    
+    {% for suspension in suspensions %}
+    <div class="suspension-item {% if suspension.is_active %}active{% else %}reinstated{% endif %}">
+        <div class="suspension-header">
+            <div>
+                <strong>Suspension #{{ suspension.id }}</strong>
+                <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                    Suspended on {{ suspension.suspended_at|date:"M d, Y g:i A" }}
+                    by <strong>{{ suspension.suspended_by.username }}</strong>
+                </div>
+            </div>
+            <span class="suspension-status {% if suspension.is_active %}active{% else %}reinstated{% endif %}">
+                {% if suspension.is_active %}Active{% else %}Reinstated{% endif %}
+            </span>
+        </div>
+        
+        <div class="suspension-details">
+            <p><strong>Duration:</strong> {{ suspension.get_duration_display }}</p>
+            {% if suspension.suspended_until %}
+                <p><strong>Suspension ends:</strong> {{ suspension.suspended_until|date:"M d, Y g:i A" }}</p>
+            {% endif %}
+            <p><strong>Reason:</strong></p>
+            <p style="margin-left: 20px; font-style: italic;">{{ suspension.reason }}</p>
+        </div>
+        
+        {% if suspension.reinstated_by %}
+        <div style="background: #d4edda; padding: 12px; border-radius: 6px; margin-top: 10px;">
+            <strong>Reinstated:</strong> On {{ suspension.reinstated_at|date:"M d, Y g:i A" }} by {{ suspension.reinstated_by.username }}
+            {% if suspension.reinstatement_notes %}
+            <br><strong>Notes:</strong> {{ suspension.reinstatement_notes }}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p>No suspension history for this user.</p>
+    </div>
+    {% endfor %}
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{% url 'moderation:manage_suspensions' %}" class="btn btn-back">← Back to Suspension Management</a>
+    </div>
+</div>
+
+{% endblock %}
+

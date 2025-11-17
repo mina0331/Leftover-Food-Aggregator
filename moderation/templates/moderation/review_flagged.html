@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends "moderator_base.html" %}
 {% load static %}
+{% load moderation_tags %}
 
 {% block title %}Review Flagged Content - Moderator Dashboard{% endblock %}
 
@@ -40,6 +41,10 @@
     
     .stat-card.dismissed {
         border-left: 4px solid #95a5a6;
+    }
+    
+    .stat-card.edited {
+        border-left: 4px solid #3498db;
     }
     
     .stat-number {
@@ -113,6 +118,11 @@
         color: white;
     }
     
+    .flag-status.edited {
+        background: #3498db;
+        color: white;
+    }
+    
     .content-preview {
         background: white;
         padding: 15px;
@@ -183,6 +193,15 @@
         background: #c0392b;
     }
     
+    .btn-edit {
+        background: #3498db;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #2980b9;
+    }
+    
     .modal {
         display: none;
         position: fixed;
@@ -247,6 +266,10 @@
             <div class="stat-label">Dismissed</div>
             <div class="stat-number">{{ stats.dismissed }}</div>
         </div>
+        <div class="stat-card edited">
+            <div class="stat-label">Edited</div>
+            <div class="stat-number">{{ stats.edited }}</div>
+        </div>
     </div>
     
     <!-- Pending Flags -->
@@ -260,6 +283,13 @@
                     <strong>Flag #{{ flag.id }}</strong> - {{ flag.get_content_type_name }}
                     <div class="flag-meta">
                         Flagged by <strong>{{ flag.flagged_by.username }}</strong> on {{ flag.flagged_at|date:"M d, Y g:i A" }}
+                        {% if flag.content_object %}
+                            {% if flag.content_type.model == 'post' %}
+                                | Content by: <strong>{{ flag.content_object.author.username }}</strong>
+                            {% elif flag.content_type.model == 'message' %}
+                                | Message from: <strong>{{ flag.content_object.sender.username }}</strong>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
                 <span class="flag-status pending">{{ flag.get_status_display }}</span>
@@ -280,7 +310,44 @@
             </div>
             
             {% if flag.content_object %}
+            {% if flag.content_type.model == 'post' %}
+                {% with author=flag.content_object.author %}
+                    {% if author.id in violation_counts %}
+                        {% with user_info=violation_counts|get_item:author.id %}
+                        <div style="background: #f8d7da; padding: 12px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #dc3545;">
+                            <strong>⚠️ User Violations:</strong> {{ user_info.count }} violation(s) from <strong>{{ author.username }}</strong>
+                            {% if user_info.is_suspended %}
+                                | <span style="color: #e74c3c; font-weight: bold;">🚫 Currently Suspended</span>
+                            {% else %}
+                                | <a href="{% url 'moderation:suspend_user' author.id %}" style="color: #e74c3c; text-decoration: underline; font-weight: bold;">🚫 Suspend User</a>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                    {% endif %}
+                {% endwith %}
+            {% elif flag.content_type.model == 'message' %}
+                {% with author=flag.content_object.sender %}
+                    {% if author.id in violation_counts %}
+                        {% with user_info=violation_counts|get_item:author.id %}
+                        <div style="background: #f8d7da; padding: 12px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #dc3545;">
+                            <strong>⚠️ User Violations:</strong> {{ user_info.count }} violation(s) from <strong>{{ author.username }}</strong>
+                            {% if user_info.is_suspended %}
+                                | <span style="color: #e74c3c; font-weight: bold;">🚫 Currently Suspended</span>
+                            {% else %}
+                                | <a href="{% url 'moderation:suspend_user' author.id %}" style="color: #e74c3c; text-decoration: underline; font-weight: bold;">🚫 Suspend User</a>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+            {% endif %}
+            
+            {% if flag.content_object %}
             <div class="action-buttons">
+                <a href="{% url 'moderation:edit_flagged' flag.id %}" class="btn btn-edit">
+                    ✏️ Edit Content
+                </a>
                 <form method="POST" action="{% url 'moderation:approve_flag' flag.id %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="button" class="btn btn-approve" onclick="openModal('approve', {{ flag.id }})">
