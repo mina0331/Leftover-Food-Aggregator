@@ -5,12 +5,11 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
 from .forms import PostForm
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
-from django.core.exceptions import ObjectDoesNotExist
+import csv
+from django.db.models import Count
+from django.contrib.admin.views.decorators import staff_member_required
 # Create your views here.
 
 
@@ -21,6 +20,21 @@ def index(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, "posting/posts.html", {
+        "posts": page_obj,
+        "page_obj": page_obj,
+        "total_posts": post_list.count(),
+    })
+
+def event_history(request):
+    #Read-only list of past leftover food posts, newest first.
+    #For now, 'history' just means all posts ordered by created_at.
+
+    post_list = Post.objects.order_by("-created_at")
+    paginator = Paginator(post_list, 10)   # 10 per page, adjust if you want
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "posting/event_history.html", {
         "posts": page_obj,
         "page_obj": page_obj,
         "total_posts": post_list.count(),
@@ -122,4 +136,36 @@ def delete_post(request, post_id):
 
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
+
+@staff_member_required
+def export_data(request):
+    #Export anonymized data about posts as a CSV file.
+    #Admin-only (staff).
+
+    # Tell browser we are returning a CSV file
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="uva_leftovers_data.csv"'
+
+    writer = csv.writer(response)
+
+    # ---- Overall metrics ----
+    total_posts = Post.objects.count()
+
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Total posts", total_posts])
+    writer.writerow([])
+
+    # ---- Posts by cuisine (anonymized: no user info) ----
+    writer.writerow(["Cuisine", "Post count"])
+
+    cuisine_counts = (
+        Post.objects.values("cuisine__name")
+        .annotate(count=Count("id"))
+        .order_by("cuisine__name")
+    )
+
+    for row in cuisine_counts:
+        writer.writerow([row["cuisine__name"], row["count"]])
+
+    return response
 
