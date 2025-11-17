@@ -10,21 +10,66 @@ from django.http import HttpResponse, HttpResponseRedirect
 import csv
 from django.db.models import Count
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q
 # Create your views here.
 
 
 def index(request):
-    post_list = Post.objects.order_by("-created_at")
+    # search text
+    q = request.GET.get("q", "").strip()
+
+    # filters
+    cuisine_id = request.GET.get("cuisine", "").strip()
+    selected_org = request.GET.get("org", "").strip()
+    date_order = request.GET.get("date_order", "newest").strip()  # 'newest' or 'oldest'
+
+    post_list = Post.objects.filter(is_deleted=False)
+
+    # Search across event, description, cuisine name, and org username
+    if q:
+        post_list = post_list.filter(
+            Q(event__icontains=q) |
+            Q(event_description__icontains=q) |
+            Q(cuisine__name__icontains=q) |
+            Q(author__username__icontains=q)
+        )
+
+    # Cuisine filter
+    if cuisine_id:
+        post_list = post_list.filter(cuisine_id=cuisine_id)
+
+    # Organization filter
+    if selected_org:
+        post_list = post_list.filter(author__username=selected_org)
+
+    # Date ordering
+    if date_order == "oldest":
+        post_list = post_list.order_by("created_at")
+    else:
+        post_list = post_list.order_by("-created_at")
+
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    cuisines = Cuisine.objects.order_by("name")
+    # org users that actually have posts, and whose profile role is 'org'
+    orgs = User.objects.filter(
+        profile__role='org',
+        post__isnull=False
+    ).distinct().order_by("username")
 
     return render(request, "posting/posts.html", {
         "posts": page_obj,
         "page_obj": page_obj,
         "total_posts": post_list.count(),
+        "search_query": q,
+        "cuisines": cuisines,
+        "selected_cuisine_id": cuisine_id,
+        "orgs": orgs,
+        "selected_org": selected_org,
+        "selected_date_order": date_order,
     })
-
 def event_history(request):
     #Read-only list of past leftover food posts, newest first.
     #For now, 'history' just means all posts ordered by created_at.
@@ -82,6 +127,11 @@ def post_detail(request, post_id):
         
         return redirect('posting:post_list')
     
+    # Check if post is soft-deleted
+    if post.is_deleted:
+        messages.info(request, 'This post has been deleted.')
+        return redirect('posting:post_list')
+    
     # Get content type for Post model (for flagging)
     post_content_type = ContentType.objects.get_for_model(Post)
     return render(request, "posting/post_detail.html", {
@@ -95,6 +145,11 @@ def edit_post(request, post_id):
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
         messages.warning(request, 'This post no longer exists and cannot be edited.')
+        return redirect('posting:post_list')
+    
+    # Check if post is soft-deleted
+    if post.is_deleted:
+        messages.warning(request, 'This post has been deleted and cannot be edited.')
         return redirect('posting:post_list')
     
     if request.user != post.author:
@@ -127,14 +182,14 @@ def delete_post(request, post_id):
     if request.user != post.author:
         messages.warning(request, 'You do not have permission to delete this post.')
         return redirect('posting:post_detail', post_id=post_id)
+    
     if request.method == "POST":
-        # remove image from storage first (S3/local)
-        if post.image:
-            post.image.delete(save=False)
-        post.delete()
-        return redirect("posting:post_list")  # go back to list
+        # SOFT DELETE — marking it deleted instead of removing from DB
+        post.is_deleted = True
+        post.save()
+        messages.success(request, 'Your post has been deleted.')
+        return redirect("posting:post_list")
 
-        # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
 
 @staff_member_required

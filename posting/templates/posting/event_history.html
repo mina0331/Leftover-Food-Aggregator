@@ -30,7 +30,6 @@
         <p style="margin:0; color:#555;">
           <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
           <strong>Cuisine:</strong> {{ post.cuisine.name }}<br>
-          <strong>Organization:</strong> {{ post.author.username }}
         </p>
 
         {% if post.event_description %}
