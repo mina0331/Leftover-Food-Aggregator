@@ -20,6 +20,21 @@
       <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
     </p>
 
+    <!-- Thanks Section -->
+    <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+      <p style="margin:0 0 10px 0; color:#555;">
+        <strong>👍 Thanks:</strong> <span id="thanks-count">{{ post.author.thanks_received.count }}</span>
+      </p>
+      {% if user.is_authenticated and user != post.author %}
+        <button id="thank-button" onclick="thankOrganizer()"
+                style="background:#28a745; color:white; border:none; padding:8px 16px;
+                       border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
+          Thank Organizer
+        </button>
+        <span id="thank-message" style="display:none; color:#28a745; margin-left:10px; font-weight:600;"></span>
+      {% endif %}
+    </div>
+
     {% if post.image %}
       <img src="{{ post.image.url }}" alt="{{ post.event }}"
            style="width:100%; border-radius:12px; margin:20px 0;">
@@ -86,6 +101,61 @@ function openFlagModal(postId) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function thankOrganizer() {
+    const button = document.getElementById('thank-button');
+    const thanksCount = document.getElementById('thanks-count');
+    const message = document.getElementById('thank-message');
+    
+    // Disable button to prevent double-clicking
+    button.disabled = true;
+    button.style.opacity = '0.6';
+    button.style.cursor = 'not-allowed';
+    button.textContent = 'Sending...';
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('organizer_id', '{{ post.author.id }}');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Send AJAX POST request
+    fetch('{% url "posting:thank_organizer" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the thanks count
+            thanksCount.textContent = data.thanks_count;
+            
+            // Show success message
+            button.textContent = 'Thanked!';
+            button.style.background = '#6c757d';
+            message.textContent = '✓ Thank you!';
+            message.style.display = 'inline';
+        } else if (data.status === 'already_thanked') {
+            // User already thanked this organizer
+            button.textContent = 'Already Thanked';
+            button.style.background = '#6c757d';
+            message.textContent = 'You already thanked this organizer';
+            message.style.display = 'inline';
+            message.style.color = '#dc3545';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Re-enable button on error
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        button.textContent = 'Thank Organizer';
+        alert('An error occurred. Please try again.');
+    });
 }
 </script>
 {% endblock %}
