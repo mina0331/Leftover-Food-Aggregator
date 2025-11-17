@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "Friendslist",
     "storages",
     "posting",
+    "moderation",
 
 ]
 

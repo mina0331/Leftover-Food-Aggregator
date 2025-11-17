@@ -3,6 +3,7 @@ from .models import Cuisine, Post
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.contrib.contenttypes.models import ContentType
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -48,7 +49,12 @@ def create_post(request):
 @login_required
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    return render (request,"posting/post_detail.html", {"post": post})
+    # Get content type for Post model (for flagging)
+    post_content_type = ContentType.objects.get_for_model(Post)
+    return render(request, "posting/post_detail.html", {
+        "post": post,
+        "post_content_type_id": post_content_type.id,
+    })
 
 @login_required
 def edit_post(request, post_id):

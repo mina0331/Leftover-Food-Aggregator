@@ -286,6 +286,15 @@
                 <div class="message">
                     <div class="message-content">{{ message.content }}</div>
                     <div class="message-time">{{ message.timestamp|date:"M d, g:i A" }}</div>
+                    {% if message.sender != request.user %}
+                    <div style="margin-top: 5px;">
+                        <button onclick="openFlagModal({{ message.id }})" 
+                                style="background: #e74c3c; color: white; border: none; padding: 4px 8px; 
+                                       border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            🚩 Flag
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}
@@ -336,6 +345,43 @@
                 }
             });
         });
+    }
+    
+    // Flag modal functionality
+    function openFlagModal(messageId) {
+        const reason = prompt('Please provide a reason for flagging this message:');
+        if (reason && reason.trim()) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "moderation:flag_content" %}';
+            
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = '{{ csrf_token }}';
+            form.appendChild(csrf);
+            
+            const contentType = document.createElement('input');
+            contentType.type = 'hidden';
+            contentType.name = 'content_type_id';
+            contentType.value = '{{ message_content_type_id|default:"" }}';
+            form.appendChild(contentType);
+            
+            const objectId = document.createElement('input');
+            objectId.type = 'hidden';
+            objectId.name = 'object_id';
+            objectId.value = messageId;
+            form.appendChild(objectId);
+            
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason.trim();
+            form.appendChild(reasonInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
 </script>
 {% endblock %}

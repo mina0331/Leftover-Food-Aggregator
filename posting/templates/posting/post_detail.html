@@ -30,17 +30,62 @@
       {{ post.event_description|linebreaks }}
     </p>
 
-    {% if user == post.author %}
-      <div style="margin-top:20px;">
+    <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
+      {% if user == post.author %}
         <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
         <a href="{% url 'posting:delete_post' post.id %}"
            style="background:#b30000; color:white; padding:8px 14px;
-                  border-radius:6px; text-decoration:none; margin-left:6px;">Delete</a>
-      </div>
-    {% endif %}
+                  border-radius:6px; text-decoration:none;">Delete</a>
+      {% endif %}
+      {% if user.is_authenticated and user != post.author %}
+        <button onclick="openFlagModal({{ post.id }})" 
+                style="background:#e74c3c; color:white; border:none; padding:8px 14px;
+                       border-radius:6px; cursor:pointer; font-size:14px;">
+          🚩 Flag Post
+        </button>
+      {% endif %}
+    </div>
   </div>
 
 </div>
+
+<script>
+function openFlagModal(postId) {
+    const reason = prompt('Please provide a reason for flagging this post:');
+    if (reason && reason.trim()) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "moderation:flag_content" %}';
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        form.appendChild(csrf);
+        
+        const contentType = document.createElement('input');
+        contentType.type = 'hidden';
+        contentType.name = 'content_type_id';
+        contentType.value = '{{ post_content_type_id|default:"" }}';
+        form.appendChild(contentType);
+        
+        const objectId = document.createElement('input');
+        objectId.type = 'hidden';
+        objectId.name = 'object_id';
+        objectId.value = postId;
+        form.appendChild(objectId);
+        
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason.trim();
+        form.appendChild(reasonInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
 {% endblock %}

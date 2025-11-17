@@ -38,6 +38,7 @@ urlpatterns = [
     path("friends/", include(("Friendslist.urls", "friends"), namespace="friends")),
     path("edit_profile/", profile_edit, name="profile_edit"),
     path("", include(("posting.urls", "posting"), namespace="posting")),
+    path("moderation/", include(("moderation.urls", "moderation"), namespace="moderation")),
 
     
 
