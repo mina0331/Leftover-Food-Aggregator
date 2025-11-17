@@ -2,6 +2,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import get_valid_filename
+from django.contrib.auth import get_user_model
+User = get_user_model()
 import time
 
 # Create your models here.
@@ -57,12 +59,12 @@ class Report(models.Model):
         HAZARD = "hazard", "Food safety hazard"
         OTHER = "other", "Other"
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="reports")
-    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reports_made")
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports_made")
     reason = models.CharField(max_length=30, choices=Reason.choices)
     description = models.TextField(blank=True)  # optional freeform
     created_at = models.DateTimeField(auto_now_add=True)
     resolved = models.BooleanField(default=False)
-    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="reports_resolved")
+    resolved_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="reports_resolved")
     resolved_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
