@@ -7,6 +7,9 @@ from django.contrib.contenttypes.models import ContentType
 from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils import timezone
+from .models import Post, Report
+from .forms import ReportForm
 import csv
 from django.db.models import Count
 from django.contrib.admin.views.decorators import staff_member_required
@@ -191,6 +194,36 @@ def delete_post(request, post_id):
         return redirect("posting:post_list")
 
     return render(request, "posting/delete_post.html", {"post": post})
+
+@login_required
+def report_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.user == post.author:
+        messages.warning(request, "You cannot report your own post.")
+        return redirect("posting:post_detail", post_id=post.id)
+
+    existing_report = Report.objects.filter(post=post, reporter=request.user).first()
+    if existing_report:
+        messages.info(request, "You already submitted a report for this post.")
+        return redirect("posting:post_detail", post_id=post.id)
+
+    if request.method == "POST":
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.post = post
+            report.reporter = request.user
+            report.save()
+            messages.success(request, "Thank you — your report has been submitted and will be reviewed.")
+            return redirect("posting:post_detail", post_id=post.id)
+    else:
+        form = ReportForm()
+
+    return render(request, "posting/report_form.html", {
+        "form": form,
+        "post": post,
+    })
 
 @staff_member_required
 def export_data(request):
