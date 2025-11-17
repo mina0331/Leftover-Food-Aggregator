@@ -10,6 +10,9 @@ from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils import timezone
+from django.models import Post, Report
+from django.forms import ReportForm
 # Create your views here.
 
 
@@ -91,4 +94,23 @@ def delete_post(request, post_id):
 
         # GET: render a confirmation page
     return render(request, "posting/delete_post.html", {"post": post})
+
+@login_required
+def report_post(request, post_id): 
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.method == "POST":
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.post = post
+            report.reporter = request.user
+            report.save()
+            messages.success(request, "Thanks — your report has been submitted. Moderators will review it.")
+            # optionally: notify post.author or moderators later
+            return redirect("posting:post_detail", post_id=post.id)
+    else:
+        form = ReportForm()
+
+    return render(request, "posting/report_form.html", {"form": form, "post": post})
 
