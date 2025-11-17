@@ -253,10 +253,10 @@
 
         <ul class="conversations-list">
             {% for conversation in all_conversations %}
-            <a href="{% url 'chat:conversation' conversation.other_user.id %}"
+            <a href="{% url 'chat:conversation' conversation.id %}"
                class="conversation-item {% if conversation.other_user.id == other_user.id %}active{% endif %}">
                 <div class="conversation-header">
-                    <span class="conversation-name">{{ conversation.other_user.username }}</span>
+                    <span class="conversation-name">{{ conversation.participants }}</span>
                     <span class="conversation-time">{{ conversation.last_message_time|timesince }} ago</span>
                 </div>
                 <div class="conversation-preview">
