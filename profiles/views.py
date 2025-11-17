@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
+from django.contrib.auth import logout
 from .models import Profile
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User
 
 
 
@@ -124,5 +126,38 @@ def profile_edit(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, "profilepage/edit_profile.html", {"form": form})
+
+@login_required
+def view_profile(request, user_id):
+    profile_user = get_object_or_404(User, pk=user_id)
+    profile = getattr(profile_user, "profile", None)  # assuming OneToOne Profile
+
+    context = {
+        "profile_user": profile_user,
+        "profile": profile,
+    }
+    return render(request, "profilepage/profile_viewable.html", context)
+
+@login_required
+def delete_account(request, user_id):
+    profile_user = get_object_or_404(User, pk=user_id)
+
+    # Only allow deleting yourself (or let superuser manage others)
+    if request.user != profile_user and not request.user.is_superuser:
+        messages.error(request, "You don't have permission to delete this account.")
+        return redirect("my_profile")  # or whatever your profile url name is
+
+    if request.method == "POST":
+        # Deleting the User will also delete Profile because of on_delete=models.CASCADE
+        logout(request)
+        profile_user.delete()
+        messages.success(request, "Your account has been deleted.")
+        return redirect("landingpage")  # update with your homepage url name
+
+    # GET → show confirmation page
+    return render(request, "profilepage/confirm_delete.html", {
+        "profile_user": profile_user,
+    })
+
 
 

@@ -45,7 +45,10 @@ def update_profile_from_google(sender, request, user, **kwargs):
     sa = SocialAccount.objects.filter(user=user, provider="google").first()
     if sa:
         data = sa.extra_data
-        profile.display_name = data["name"]
+        if not profile.display_name:
+            profile.display_name = data["name"]
+        elif profile.display_name:
+            profile.display_name = profile.display_name
         profile.email = data["email"]
         pic_url = data["picture"]
         if pic_url and not profile.profile_pic:

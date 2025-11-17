@@ -26,6 +26,8 @@ class Profile(models.Model):
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
     preferences = models.ManyToManyField(Cuisine, blank=True, related_name="profiles")
     allergens = models.ManyToManyField(Allergen, blank=True, related_name="profiles")
+    bio = models.TextField(blank = True, null = True)
+    major = models.TextField(blank = True, null = True)
     has_seen_welcome = models.BooleanField(default=False)
 
     def __str__(self):
@@ -39,6 +41,26 @@ class Profile(models.Model):
             return self.profile_pic.url  # managed file (S3/local)
         return static("images/default-avatar.png")  # fallback
 
+    def is_suspended(self):
+        """Check if user has an active suspension"""
+        from moderation.models import UserSuspension
+        active_suspension = UserSuspension.objects.filter(
+            user=self.user,
+            is_active=True
+        ).first()
+        
+        if not active_suspension:
+            return False
+        
+        # Check if temporary suspension has expired
+        if active_suspension.is_expired():
+            # Auto-reinstate expired suspensions
+            active_suspension.is_active = False
+            active_suspension.save()
+            return False
+        
+        return True
+    
     def save(self, *args, **kwargs):
         try:
             old = Profile.objects.get(pk=self.pk)

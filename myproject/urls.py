@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
 import Friendslist
 from landingpage.views import home
-from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect, profile_edit, welcome_screen
+from profiles.views import select_role, my_profile, post_login_redirect, profile_redirect, profile_edit, welcome_screen, view_profile
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,8 +40,12 @@ urlpatterns = [
     path("friends/", include(("Friendslist.urls", "friends"), namespace="friends")),
     path("edit_profile/", profile_edit, name="profile_edit"),
     path("", include(("posting.urls", "posting"), namespace="posting")),
+    path("", include("profiles.urls", namespace="profiles")),
     path("moderation/", include(("moderation.urls", "moderation"), namespace="moderation")),
 
     
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

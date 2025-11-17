@@ -4,11 +4,13 @@ from .models import Profile
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ["role", "profile_pic", "display_name", "preferences", "allergens"]
+        fields = ["role", "profile_pic", "display_name", "preferences", "allergens", "bio", "major"]
         widgets = {
             "role" : forms.RadioSelect(),
             "preferences": forms.CheckboxSelectMultiple(),
             "allergens": forms.CheckboxSelectMultiple(),
+            "bio": forms.Textarea(attrs={"rows": 4}),
+            "major": forms.TextInput(),
         }
     
     def __init__(self, *args, **kwargs):
