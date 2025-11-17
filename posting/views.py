@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post
+from .models import Cuisine, Post, OrganizerThank, Report
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
 from .forms import PostForm
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.db import IntegrityError
+from django.views.decorators.http import require_POST
 from django.utils import timezone
-from .models import Post, Report
 from .forms import ReportForm
 import csv
 from django.db.models import Count
@@ -196,6 +197,39 @@ def delete_post(request, post_id):
     return render(request, "posting/delete_post.html", {"post": post})
 
 @login_required
+@require_POST
+def thank_organizer(request):
+    """
+    Allow a logged-in user to thank an organizer.
+    Returns JSON response with success/failure status.
+    """
+    organizer_id = request.POST.get('organizer_id')
+    
+    # Get the organizer user object
+    organizer = get_object_or_404(User, id=organizer_id)
+    
+    try:
+        # Attempt to create the thank relationship
+        OrganizerThank.objects.create(
+            thanker=request.user,
+            organizer=organizer
+        )
+        
+        # Get the updated count of thanks for this organizer
+        thanks_count = organizer.thanks_received.count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'thanks_count': thanks_count
+        })
+        
+    except IntegrityError:
+        # User has already thanked this organizer
+        return JsonResponse({
+            'status': 'already_thanked'
+        })
+
+@login_required
 def report_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
 
@@ -256,4 +290,3 @@ def export_data(request):
         writer.writerow([row["cuisine__name"], row["count"]])
 
     return response
-

@@ -100,4 +100,13 @@ class Report(models.Model):
 
 
 
+class OrganizerThank(models.Model):
+    thanker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='thanks_given')
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='thanks_received')
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('thanker', 'organizer')
+
+    def __str__(self):
+        return f"{self.thanker.username} thanked {self.organizer.username}"
