@@ -27,7 +27,11 @@ def index(request):
     selected_org = request.GET.get("org", "").strip()
     date_order = request.GET.get("date_order", "newest").strip()  # 'newest' or 'oldest'
 
-    post_list = Post.objects.filter(is_deleted=False)
+    # Start with published posts that are not deleted
+    post_list = Post.objects.filter(
+        status=Post.Status.PUBLISHED,
+        is_deleted=False
+    ).select_related('cuisine', 'author')
 
     # Search across event, description, cuisine name, and org username
     if q:
@@ -51,7 +55,6 @@ def index(request):
         post_list = post_list.order_by("created_at")
     else:
         post_list = post_list.order_by("-created_at")
-
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -101,10 +104,22 @@ def create_post(request):
             post = form.save(commit=False)
             post.author = request.user
             # post.location is already set from the form's dropdown
+            
+            # Set status based on whether publish_at is provided
+            if post.publish_at:
+                post.status = Post.Status.SCHEDULED
+                messages.success(request, f'Your post has been scheduled for {post.publish_at.strftime("%B %d, %Y at %I:%M %p")}.')
+            else:
+                post.status = Post.Status.PUBLISHED
+                messages.success(request, 'Your post has been created.')
+            
             post.save()
-            messages.success(request, 'Your post has been created.')
             return redirect("posting:post_list")
         else:
+            # Debug: show form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
             messages.error(request, 'Please fix some errors.')
     else:
         form = PostForm()
@@ -113,7 +128,7 @@ def create_post(request):
 @login_required
 def post_detail(request, post_id):
     try:
-        post = Post.objects.get(id=post_id)
+        post = Post.objects.select_related('cuisine', 'author').get(id=post_id)
     except Post.DoesNotExist:
         # Post was deleted - check if it was deleted by moderation
         from moderation.models import FlaggedContent
@@ -136,7 +151,7 @@ def post_detail(request, post_id):
         messages.info(request, 'This post has been deleted.')
         return redirect('posting:post_list')
     
-    # Track read users (from HEAD)
+    # Track read users
     if request.user.is_authenticated:
         post.read_users.add(request.user)
     
@@ -150,7 +165,7 @@ def post_detail(request, post_id):
 @login_required
 def edit_post(request, post_id):
     try:
-        post = Post.objects.get(id=post_id)
+        post = Post.objects.select_related('cuisine', 'author').get(id=post_id)
     except Post.DoesNotExist:
         messages.warning(request, 'This post no longer exists and cannot be edited.')
         return redirect('posting:post_list')

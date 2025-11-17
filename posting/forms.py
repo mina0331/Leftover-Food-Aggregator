@@ -5,10 +5,12 @@ from .models import Post, Location, Report
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
+        fields = ["event", "event_description", "cuisine", "image", "location", "publish_at"]
         widgets = {
             "cuisines": forms.CheckboxSelectMultiple(),
+            "publish_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
-        exclude = ("author", "created_at", "updated_at", "read_users")
+        # status is excluded and handled automatically in the view
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
