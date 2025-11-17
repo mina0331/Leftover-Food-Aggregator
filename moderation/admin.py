@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FlaggedContent
+from .models import FlaggedContent, UserSuspension
 
 
 @admin.register(FlaggedContent)
@@ -32,3 +32,26 @@ class FlaggedContentAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False  # Flags should only be created through the flagging interface
+
+
+@admin.register(UserSuspension)
+class UserSuspensionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'suspended_by', 'is_active', 'suspended_at', 'get_duration_display', 'reinstated_at')
+    list_filter = ('is_active', 'suspended_at', 'reinstated_at', 'suspended_by')
+    search_fields = ('user__username', 'user__email', 'reason', 'reinstatement_notes')
+    readonly_fields = ('suspended_at', 'reinstated_at')
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'suspended_by')
+        }),
+        ('Suspension Details', {
+            'fields': ('reason', 'suspended_at', 'suspended_until', 'is_active')
+        }),
+        ('Reinstatement', {
+            'fields': ('reinstated_by', 'reinstated_at', 'reinstatement_notes')
+        }),
+    )
+    
+    def get_duration_display(self, obj):
+        return obj.get_duration_display()
+    get_duration_display.short_description = 'Duration'

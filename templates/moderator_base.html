@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Moderator Dashboard{% endblock %}</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f5f5f5;
+    }
+    
+    .moderator-nav {
+      width: 100%;
+      background: #232D4B;
+      color: #fff;
+      padding: 12px 20px;
+      box-sizing: border-box;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .moderator-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .moderator-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .moderator-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .moderator-nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .moderator-nav-link {
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .moderator-nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .moderator-nav-link.active {
+      background-color: #E57200;
+      color: #fff;
+    }
+    
+    .moderator-nav-right {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    .moderator-logout {
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: background-color 0.2s;
+    }
+    
+    .moderator-logout:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+    
+    .moderator-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="moderator-nav">
+    <div class="moderator-nav-inner">
+      <div class="moderator-nav-left">
+        <a href="{% url 'userprivileges:moderator_home' %}" class="moderator-brand">
+          <span>🔧</span>
+          <span>Moderator Dashboard</span>
+        </a>
+      </div>
+      
+      <ul class="moderator-nav-links">
+        <li>
+          <a href="{% url 'userprivileges:moderator_home' %}" class="moderator-nav-link {% if request.path == '/moderator/' %}active{% endif %}">
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'moderation:review_flagged' %}" class="moderator-nav-link {% if '/moderation/review' in request.path %}active{% endif %}">
+            Review Flagged
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'moderation:manage_suspensions' %}" class="moderator-nav-link {% if '/moderation/suspensions' in request.path %}active{% endif %}">
+            Manage Suspensions
+          </a>
+        </li>
+        <li>
+          <a href="/admin/" target="_blank" class="moderator-nav-link">
+            Admin Panel
+          </a>
+        </li>
+      </ul>
+      
+      <div class="moderator-nav-right">
+        {% if user.is_authenticated %}
+          <span style="color: #aab3c5; font-size: 14px;">{{ user.email }}</span>
+          <a href="{% url 'account_logout' %}" class="moderator-logout">Log Out</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="moderator-content">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>
+

@@ -46,7 +46,7 @@
     </p>
 
     <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
-      {% if user == post.author %}
+    {% if user == post.author %}
         <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
@@ -54,14 +54,32 @@
            style="background:#b30000; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Delete</a>
       {% endif %}
-      {% if user.is_authenticated and user != post.author %}
-        <button onclick="openFlagModal({{ post.id }})" 
-                style="background:#e74c3c; color:white; border:none; padding:8px 14px;
-                       border-radius:6px; cursor:pointer; font-size:14px;">
-          🚩 Flag Post
-        </button>
-      {% endif %}
+      <div style="display:flex; gap:10px; align-items:center;">
+        {% if user.is_authenticated and user != post.author %}
+          <button onclick="openFlagModal({{ post.id }})"
+                  style="background:#e74c3c; color:white; border:none; padding:8px 14px;
+                         border-radius:6px; cursor:pointer; font-size:14px;"
+                  title="Flag this post for moderator review" aria-label="Flag post">
+            🚩 Flag Post
+          </button>
+      
+          <a href="{% url 'posting:report_post' post.id %}"
+             style="background:#E57200; color:white; padding:8px 14px;
+                    border-radius:6px; text-decoration:none; font-size:14px;"
+             title="Report a food safety issue" aria-label="Report food issue">
+            ⚠️ Report Food Issue
+          </a>
+        {% endif %}
+      </div>
     </div>
+
+    {% if post.qr_code_image %}
+      <div style="margin-top:20px;">
+        <h3 style="color:#232D4B;">QR Code</h3>
+        <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}"
+             style="max-width:200px; border-radius:8px;">
+      </div>
+    {% endif %}
   </div>
 
 </div>
