@@ -1,0 +1,218 @@
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Suspend User - Moderator{% endblock %}
+
+{% block content %}
+<style>
+    .suspend-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .suspend-header {
+        background: #e74c3c;
+        color: white;
+        padding: 20px;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 0;
+    }
+    
+    .suspend-form-container {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 0 0 8px 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .user-info {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .user-info strong {
+        color: #856404;
+    }
+    
+    .violation-info {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #232D4B;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-suspend {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-suspend:hover {
+        background: #c0392b;
+    }
+    
+    .btn-cancel {
+        background: #95a5a6;
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        background: #7f8c8d;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .duration-options {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    
+    .duration-btn {
+        padding: 8px 16px;
+        background: #ecf0f1;
+        border: 1px solid #bdc3c7;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    
+    .duration-btn:hover {
+        background: #d5dbdb;
+    }
+</style>
+
+<div class="suspend-container">
+    <div class="suspend-header">
+        <h1 style="margin: 0;">🚫 Suspend User</h1>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Moderator Action</p>
+    </div>
+    
+    <div class="suspend-form-container">
+        <div class="user-info">
+            <strong>User to Suspend:</strong><br>
+            <strong>{{ user_to_suspend.username }}</strong> ({{ user_to_suspend.email }})<br>
+            Role: {{ user_to_suspend.profile.get_role_display }}
+        </div>
+        
+        {% if violation_count > 0 %}
+        <div class="violation-info">
+            <strong>⚠️ Violation Count:</strong> {{ violation_count }} flagged content item(s)
+        </div>
+        {% endif %}
+        
+        {% if active_suspension %}
+        <div class="violation-info">
+            <strong>⚠️ Note:</strong> This user has a previous suspension (now expired or reinstated).
+        </div>
+        {% endif %}
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">Reason for Suspension *</label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                    <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.reason.errors }}</div>
+                {% endif %}
+                <div class="help-text">Required: Provide a clear reason for suspending this user</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.duration_days.id_for_label }}">Suspension Duration</label>
+                <div class="duration-options">
+                    <button type="button" class="duration-btn" onclick="setDuration(0)">Permanent</button>
+                    <button type="button" class="duration-btn" onclick="setDuration(1)">1 Day</button>
+                    <button type="button" class="duration-btn" onclick="setDuration(7)">1 Week</button>
+                    <button type="button" class="duration-btn" onclick="setDuration(30)">1 Month</button>
+                    <button type="button" class="duration-btn" onclick="setDuration(90)">3 Months</button>
+                </div>
+                {{ form.duration_days }}
+                {% if form.duration_days.errors %}
+                    <div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">{{ form.duration_days.errors }}</div>
+                {% endif %}
+                <div class="help-text">Leave empty or set to 0 for permanent suspension</div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="confirm_suspend" required>
+                    I confirm that I want to suspend this user
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-suspend">🚫 Suspend User</button>
+                <a href="{% url 'moderation:manage_suspensions' %}" class="btn btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function setDuration(days) {
+    document.getElementById('id_duration_days').value = days;
+    if (days === 0) {
+        document.getElementById('id_duration_days').value = '';
+    }
+}
+</script>
+
+{% endblock %}
+

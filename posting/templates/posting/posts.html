@@ -4,50 +4,274 @@
 {% block content %}
 <div class="container" style="max-width: 800px; margin: 40px auto;">
 
-  <h1 style="text-align:center; color:#232D4B; margin-bottom:30px;">
+  <h1 style="text-align:center; color:#232D4B; margin-bottom:20px;">
     All Events
   </h1>
 
-  {% if user.is_authenticated %}
-    <div style="text-align:right; margin-bottom:20px;">
-      <a href="{% url 'posting:create_post'%}"
-         style="background:#E57200; color:white; padding:8px 16px; border-radius:8px; text-decoration:none;">
-         + Create New Post
-      </a>
-    </div>
-  {% else %}
-    <p style="text-align:right;">
-      <a href="{% url 'account_login' %}">Log in</a> to create an event post.
-    </p>
-  {% endif %}
+  <!-- Search + Right Controls -->
+  <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:16px;
+        margin-bottom:20px;
+  ">
+    <!-- Search bar (everyone) -->
+    <form method="get" style="flex:1; max-width:420px; position:relative;">
 
-    {% for post in posts %}
-      <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-        <h2 style="margin:0 0 10px 0;">{{ post.event }}</h2>
-        {% if post.image %}
-        <img src="{{ post.image.url }}" alt="{{ post.event }}"
-        style="width:50%; max-width:300px; height:auto; border-radius:8px; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;">
-        {% endif %}
+      <input
+        type="text"
+        name="q"
+        value="{{ search_query|default_if_none:'' }}"
+        placeholder="Search events, descriptions, or cuisine..."
+        style="
+          width:100%;
+          padding:10px 42px 10px 14px;   /* room for icon on right */
+          border-radius:8px;
+          border:2px solid #E57200;      /* orange outline */
+          font-size:14px;
+          height:44px;
+          box-sizing:border-box;
+          outline:none;
+        "
+      >
 
-        <p style="margin:0; color:#555;">
-          <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
-          <strong>Cuisine:</strong> {{ post.get_cuisine_display }}
-        </p>
+      {# preserve filters when searching #}
+      {% if selected_cuisine_id %}
+        <input type="hidden" name="cuisine" value="{{ selected_cuisine_id }}">
+      {% endif %}
+      {% if selected_org %}
+        <input type="hidden" name="org" value="{{ selected_org }}">
+      {% endif %}
+      {% if selected_date_order %}
+        <input type="hidden" name="date_order" value="{{ selected_date_order }}">
+      {% endif %}
 
-        {% if post.event_description %}
-          <p style="margin-top:10px; color:#333;">{{ post.event_description|truncatewords:25 }}</p>
-        {% endif %}
+      <!-- Magnifying Glass Button -->
+      <button type="submit"
+              style="
+                position:absolute;
+                right:10px;
+                top:50%;
+                transform:translateY(-50%);
+                border:none;
+                background:none;
+                cursor:pointer;
+                padding:0;
+              ">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="20" height="20"
+               fill="#E57200"
+               viewBox="0 0 24 24">
+             <path d="M10 2a8 8 0 105.293 14.293l4.707 4.707 1.414-1.414-4.707-4.707A8 8 0 0010 2zm0 2a6 6 0 110 12A6 6 0 0110 4z"/>
+          </svg>
+      </button>
 
-        <div style="margin-top:10px;">
-          <a href="{% url 'posting:post_detail' post.id %}"
-             style="text-decoration:none; color:#232D4B; font-weight:bold;">
-             View Details →
-          </a>
+    </form>
+
+    {% if user.is_authenticated %}
+      {% if user.profile.role == 'org' %}
+
+        <!-- ORG: Create New Post button -->
+        <a href="{% url 'posting:create_post' %}"
+           style="
+             background:#E57200;
+             color:white;
+             padding:10px 18px;
+             border-radius:8px;
+             text-decoration:none;
+             white-space:nowrap;
+             font-weight:bold;
+             font-size:15px;
+             height:44px;
+             display:flex;
+             align-items:center;
+             justify-content:center;
+             box-sizing:border-box;
+           ">
+           + Create New Post
+        </a>
+
+      {% elif user.profile.role == 'student' %}
+
+        <!-- STUDENT: Filter dropdown styled like button -->
+        <div style="position:relative;">
+          <button id="filterToggle"
+            style="
+              background:#E57200;
+              color:white;
+              padding:10px 18px;
+              border-radius:8px;
+              border:none;
+              cursor:pointer;
+              font-weight:bold;
+              font-size:15px;
+              white-space:nowrap;
+              height:44px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+            ">
+            Filter ▼
+          </button>
+
+          <!-- Dropdown menu -->
+          <div id="filterMenu"
+            style="
+              display:none;
+              position:absolute;
+              top:50px;
+              right:0;
+              background:white;
+              border:1px solid #ddd;
+              border-radius:8px;
+              padding:12px;
+              width:260px;
+              box-shadow:0 4px 12px rgba(0,0,0,0.12);
+              z-index:200;
+            ">
+            <form method="get" style="margin:0;">
+              {# preserve search text #}
+              <input type="hidden" name="q" value="{{ search_query|default_if_none:'' }}">
+
+              <p style="margin:0 0 8px 0; font-weight:bold; color:#232D4B;">
+                Filter by
+              </p>
+
+              <!-- Cuisine filter -->
+              <div style="margin-bottom:8px;">
+                <label style="font-weight:bold; color:#232D4B; font-size:14px;">Cuisine:</label>
+                <select name="cuisine"
+                  style="
+                    width:100%;
+                    padding:8px 10px;
+                    margin-top:4px;
+                    border-radius:6px;
+                    border:1px solid #ccc;
+                  ">
+                  <option value="">All cuisines</option>
+                  {% for c in cuisines %}
+                    <option value="{{ c.id }}"
+                      {% if selected_cuisine_id == c.id|stringformat:"s" %}selected{% endif %}>
+                      {{ c.name|capfirst }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Date filter -->
+              <div style="margin-bottom:8px;">
+                <label style="font-weight:bold; color:#232D4B; font-size:14px;">Date:</label>
+                <select name="date_order"
+                  style="
+                    width:100%;
+                    padding:8px 10px;
+                    margin-top:4px;
+                    border-radius:6px;
+                    border:1px solid #ccc;
+                  ">
+                  <option value="newest"
+                    {% if selected_date_order == "newest" %}selected{% endif %}>
+                    Newest first
+                  </option>
+                  <option value="oldest"
+                    {% if selected_date_order == "oldest" %}selected{% endif %}>
+                    Oldest first
+                  </option>
+                </select>
+              </div>
+
+              <!-- Organization filter -->
+              <div style="margin-bottom:8px;">
+                <label style="font-weight:bold; color:#232D4B; font-size:14px;">Organization:</label>
+                <select name="org"
+                  style="
+                    width:100%;
+                    padding:8px 10px;
+                    margin-top:4px;
+                    border-radius:6px;
+                    border:1px solid #ccc;
+                  ">
+                  <option value="">All organizations</option>
+                  {% for org in orgs %}
+                    <option value="{{ org.username }}"
+                      {% if selected_org == org.username %}selected{% endif %}>
+                      {{ org.username }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit"
+                style="
+                  margin-top:10px;
+                  width:100%;
+                  background:#E57200;
+                  color:white;
+                  padding:8px;
+                  border-radius:6px;
+                  border:none;
+                  cursor:pointer;
+                  font-weight:bold;
+                ">
+                Apply Filters
+              </button>
+            </form>
+          </div>
         </div>
+
+        <script>
+        document.getElementById('filterToggle').onclick = function() {
+            const menu = document.getElementById('filterMenu');
+            menu.style.display = (menu.style.display === "block") ? "none" : "block";
+        };
+        </script>
+
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- Post cards -->
+  {% for post in posts %}
+    <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+
+      <!-- Event + org on same line -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h2 style="margin:0; font-size:24px;">{{ post.event }}</h2>
+        <span style="font-size:24px; color:#666;">
+          <strong style="color:#232D4B;">
+            {{ post.author.username }}
+          </strong>
+        </span>
       </div>
+
+      {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.event }}"
+             style="width:50%; max-width:300px; height:auto; border-radius:8px;
+                    margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;">
+      {% endif %}
+
+      <p style="margin:0; color:#555;">
+        <strong>Date:</strong> {{ post.created_at|date:"M d, Y" }}<br>
+        <strong>Cuisine:</strong> {{ post.cuisine.name }}
+      </p>
+
+      {% if post.event_description %}
+        <p style="margin-top:10px; color:#333;">
+          {{ post.event_description|truncatewords:25 }}
+        </p>
+      {% endif %}
+
+      <div style="margin-top:10px;">
+        <a href="{% url 'posting:post_detail' post.id %}"
+           style="text-decoration:none; color:#232D4B; font-weight:bold;">
+           View Details →
+        </a>
+      </div>
+    </div>
   {% empty %}
-    <p style="text-align:center; color:#666;">No posts yet. Be the first to add one!</p>
- {% endfor %}
+    <p style="text-align:center; color:#666;">No posts found.</p>
+  {% endfor %}
 
   {% if page_obj %}
     <div style="text-align:center; margin-top:20px;">
@@ -60,45 +284,48 @@
       {% endif %}
     </div>
   {% endif %}
-{% if messages %}
-  <div id="toast-container" style="
-       position: fixed;
-       top: 80px;
-       right: 20px;
-       z-index: 2000;">
-    {% for message in messages %}
-      <div class="toast-message {{ message.tags }}" style="
-          background:
-            {% if message.tags == 'success' %}#d4edda
-            {% elif message.tags == 'warning' %}#fff3cd
-            {% elif message.tags == 'danger' %}#f8d7da
-            {% else %}#e2e3e5{% endif %};
-          color:#000;
-          border-left:5px solid
-            {% if message.tags == 'success' %}#28a745
-            {% elif message.tags == 'warning' %}#ffc107
-            {% elif message.tags == 'danger' %}#dc3545
-            {% else %}#6c757d{% endif %};
-          border-radius:8px;
-          padding:12px 16px;
-          margin-bottom:10px;
-          box-shadow:0 2px 8px rgba(0,0,0,0.1);
-          opacity:1;
-          transition:opacity .5s ease-out;">
-        {{ message }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
 
-<script>
-  // make messages fade away automatically
-  setTimeout(() => {
-    const toasts = document.querySelectorAll('#toast-container .toast-message');
-    toasts.forEach(toast => toast.style.opacity = '0');
-    setTimeout(() => document.getElementById('toast-container').innerHTML = '', 800);
-  }, 3000); // disappear after 3s
-</script>
+  {% if messages %}
+    <div id="toast-container"
+         style="position: fixed; top: 80px; right: 20px; z-index: 2000;">
+      {% for message in messages %}
+        <div class="toast-message {{ message.tags }}"
+             style="
+               background:
+                 {% if message.tags == 'success' %}#d4edda
+                 {% elif message.tags == 'warning' %}#fff3cd
+                 {% elif message.tags == 'danger' %}#f8d7da
+                 {% else %}#e2e3e5{% endif %};
+               color:#000;
+               border-left:5px solid
+                 {% if message.tags == 'success' %}#28a745
+                 {% elif message.tags == 'warning' %}#ffc107
+                 {% elif message.tags == 'danger' %}#dc3545
+                 {% else %}#6c757d{% endif %};
+               border-radius:8px;
+               padding:12px 16px;
+               margin-bottom:10px;
+               box-shadow:0 2px 8px rgba(0,0,0,0.1);
+               opacity:1;
+               transition:opacity .5s ease-out;
+             ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <script>
+    // auto-fade toast messages
+    setTimeout(() => {
+      const toasts = document.querySelectorAll('#toast-container .toast-message');
+      toasts.forEach(toast => toast.style.opacity = '0');
+      setTimeout(() => {
+        const c = document.getElementById('toast-container');
+        if (c) c.innerHTML = '';
+      }, 800);
+    }, 3000);
+  </script>
 
 </div>
 {% endblock %}

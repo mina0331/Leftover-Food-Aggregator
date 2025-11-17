@@ -43,7 +43,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to=event_image_upload_to, null=True, blank=True)
     qr_code_image = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
-
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']

@@ -31,7 +31,7 @@
     </p>
 
     <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
-      {% if user == post.author %}
+    {% if user == post.author %}
         <a href="{% url 'posting:edit_post' post.id %}"
            style="background:#E57200; color:white; padding:8px 14px;
                   border-radius:6px; text-decoration:none;">Edit</a>
@@ -56,15 +56,15 @@
           </a>
         {% endif %}
       </div>
-      
     </div>
-      <h2>{{ post.event }}</h2>
-  <p>{{ post.event_description }}</p>
 
-  {% if post.qr_code_image %}
-      <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}">
-  {% endif %}
-
+    {% if post.qr_code_image %}
+      <div style="margin-top:20px;">
+        <h3 style="color:#232D4B;">QR Code</h3>
+        <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}"
+             style="max-width:200px; border-radius:8px;">
+      </div>
+    {% endif %}
   </div>
 
 </div>
