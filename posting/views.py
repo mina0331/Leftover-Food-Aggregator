@@ -11,8 +11,9 @@ from .forms import PostForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import timezone
-from django.models import Post, Report
-from django.forms import ReportForm
+from .models import Post, Report
+from .forms import ReportForm
+
 # Create your views here.
 
 
@@ -96,8 +97,17 @@ def delete_post(request, post_id):
     return render(request, "posting/delete_post.html", {"post": post})
 
 @login_required
-def report_post(request, post_id): 
+def report_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+
+    if request.user == post.author:
+        messages.warning(request, "You cannot report your own post.")
+        return redirect("posting:post_detail", post_id=post.id)
+
+    existing_report = Report.objects.filter(post=post, reporter=request.user).first()
+    if existing_report:
+        messages.info(request, "You already submitted a report for this post.")
+        return redirect("posting:post_detail", post_id=post.id)
 
     if request.method == "POST":
         form = ReportForm(request.POST)
@@ -106,11 +116,13 @@ def report_post(request, post_id):
             report.post = post
             report.reporter = request.user
             report.save()
-            messages.success(request, "Thanks — your report has been submitted. Moderators will review it.")
-            # optionally: notify post.author or moderators later
+            messages.success(request, "Thank you — your report has been submitted and will be reviewed.")
             return redirect("posting:post_detail", post_id=post.id)
     else:
         form = ReportForm()
 
-    return render(request, "posting/report_form.html", {"form": form, "post": post})
+    return render(request, "posting/report_form.html", {
+        "form": form,
+        "post": post,
+    })
 
