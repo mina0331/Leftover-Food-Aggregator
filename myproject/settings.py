@@ -96,6 +96,9 @@ STORAGES = {
     },
 }
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 SITE_ID = 1
 # Create accounts automatically from Google data

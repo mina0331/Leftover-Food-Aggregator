@@ -58,6 +58,13 @@
       </div>
       
     </div>
+      <h2>{{ post.event }}</h2>
+  <p>{{ post.event_description }}</p>
+
+  {% if post.qr_code_image %}
+      <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}">
+  {% endif %}
+
   </div>
 
 </div>
