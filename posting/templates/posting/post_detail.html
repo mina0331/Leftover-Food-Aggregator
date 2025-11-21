@@ -147,7 +147,20 @@
     <!-- Meta info -->
     <div class="post-meta">
       <strong>Date:</strong> {{ post.created_at|date:"M d, Y, g:i A" }}<br>
-      <strong>Cuisine:</strong> {{ post.cuisine }}
+      <strong>Cuisine:</strong> {{ post.cuisine }}<br>
+      {% if post.pickup_deadline %}
+        <strong>Pickup Available Until:</strong> 
+        <span style="{% if not post.is_pickup_available %}color:#d32f2f; font-weight:bold;{% else %}color:#4caf50;{% endif %}">
+          {{ post.pickup_deadline|date:"M d, Y, g:i A" }}
+          {% if post.is_pickup_available %}
+            ({{ post.get_time_until_deadline }} remaining)
+          {% else %}
+            (Expired)
+          {% endif %}
+        </span>
+      {% else %}
+        <strong>Pickup Available:</strong> <span style="color:#4caf50;">No specific deadline</span>
+      {% endif %}
     </div>
 
     <!-- Thanks Section -->
@@ -162,6 +175,109 @@
           Thank Organizer
         </button>
         <span id="thank-message" style="display:none; color:#28a745; margin-left:10px; font-weight:600;"></span>
+      {% endif %}
+    </div>
+
+    <!-- RSVP Section -->
+    <div style="margin:20px 0; padding:15px; background:#e8f5e9; border-radius:8px; border:1px solid #4caf50;">
+      {% if not post.is_pickup_available %}
+        <div style="background:#ffebee; border-left:4px solid #d32f2f; padding:12px; margin-bottom:15px; border-radius:4px;">
+          <p style="margin:0; color:#c62828; font-weight:600;">
+            ⚠️ Pickup deadline has passed. Food is no longer available.
+          </p>
+        </div>
+      {% endif %}
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <p style="margin:0; color:#555;">
+          <strong>📋 RSVPs:</strong> <span id="rsvp-count">{{ rsvp_count }}</span>
+        </p>
+        {% if user == post.author and rsvp_count > 0 %}
+          <a href="{% url 'posting:view_post_rsvps' post.id %}"
+             style="background:#4caf50; color:white; padding:6px 12px;
+                    border-radius:6px; text-decoration:none; font-size:13px;">
+            View RSVPs
+          </a>
+        {% endif %}
+      </div>
+      
+      {% if user.is_authenticated and user != post.author %}
+        {% if user_rsvp %}
+          <div style="background:white; padding:12px; border-radius:6px; margin-top:10px;">
+            <p style="margin:0 0 8px 0; color:#333;">
+              <strong>✅ You RSVP'd:</strong> Arriving in {{ user_rsvp.estimated_arrival_minutes }} minutes
+            </p>
+            <p style="margin:0 0 8px 0; color:#666; font-size:0.9rem;">
+              Estimated arrival: {{ user_rsvp.get_estimated_arrival_time|date:"g:i A" }}
+              <span id="time-remaining">({{ user_rsvp.get_time_remaining }} remaining)</span>
+            </p>
+            <script>
+              // Update time remaining every minute
+              (function() {
+                const arrivalTime = new Date('{{ user_rsvp.get_estimated_arrival_time|date:"c" }}');
+                const timeRemainingEl = document.getElementById('time-remaining');
+                if (timeRemainingEl) {
+                  function updateTimeRemaining() {
+                    const now = new Date();
+                    const diff = arrivalTime - now;
+                    if (diff <= 0) {
+                      timeRemainingEl.textContent = '(Arrived)';
+                      return;
+                    }
+                    const minutes = Math.floor(diff / 60000);
+                    const hours = Math.floor(minutes / 60);
+                    const mins = minutes % 60;
+                    if (hours > 0) {
+                      timeRemainingEl.textContent = `(${hours}h ${mins}m remaining)`;
+                    } else {
+                      timeRemainingEl.textContent = `(${minutes} minutes remaining)`;
+                    }
+                  }
+                  updateTimeRemaining();
+                  setInterval(updateTimeRemaining, 60000); // Update every minute
+                }
+              })();
+            </script>
+            <p style="margin:0 0 8px 0; color:#d32f2f; font-size:0.85rem; font-style:italic;">
+              ⚠️ Note: Food is not guaranteed if you arrive late.
+            </p>
+            <form method="POST" action="{% url 'posting:cancel_rsvp' user_rsvp.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" 
+                      style="background:#f44336; color:white; border:none; padding:6px 12px;
+                             border-radius:4px; cursor:pointer; font-size:13px;">
+                Cancel RSVP
+              </button>
+            </form>
+          </div>
+        {% else %}
+          {% if post.is_pickup_available %}
+            <a href="{% url 'posting:create_rsvp' post.id %}"
+               style="background:#4caf50; color:white; padding:10px 16px;
+                      border-radius:6px; text-decoration:none; font-size:14px; font-weight:600;
+                      display:inline-block; margin-top:10px;">
+              📋 RSVP to Pick Up
+            </a>
+            {% if post.pickup_deadline %}
+              <p style="margin:8px 0 0 0; color:#666; font-size:0.85rem; font-style:italic;">
+                ⚠️ Note: Food pickup available until {{ post.pickup_deadline|date:"g:i A" }}. 
+                Food is not guaranteed if you arrive late or after the deadline.
+              </p>
+            {% else %}
+              <p style="margin:8px 0 0 0; color:#666; font-size:0.85rem; font-style:italic;">
+                ⚠️ Note: Food is not guaranteed if you arrive late.
+              </p>
+            {% endif %}
+          {% else %}
+            <p style="margin:10px 0 0 0; color:#d32f2f; font-size:0.9rem; font-weight:600;">
+              ❌ RSVP unavailable - Pickup deadline has passed
+            </p>
+          {% endif %}
+        {% endif %}
+      {% elif not user.is_authenticated %}
+        <p style="margin:10px 0 0 0; color:#666; font-size:0.9rem;">
+          <a href="{% url 'account_login' %}" style="color:#4caf50; text-decoration:underline;">Log in</a> to RSVP for this food.
+        </p>
       {% endif %}
     </div>
 
