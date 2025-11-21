@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import get_valid_filename
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 User = get_user_model()
 import time
 import qrcode
@@ -68,12 +69,43 @@ class Post(models.Model):
     )
     qr_code_image = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    pickup_deadline = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text="When will you stop giving out food? (Leave empty if no specific deadline)"
+    )
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.event} ({self.author})"
+
+    def is_pickup_available(self):
+        """Check if food pickup is still available based on deadline"""
+        from django.utils import timezone
+        if not self.pickup_deadline:
+            return True  # No deadline means always available
+        return timezone.now() < self.pickup_deadline
+
+    def get_time_until_deadline(self):
+        """Get time remaining until pickup deadline"""
+        from django.utils import timezone
+        from datetime import timedelta
+        if not self.pickup_deadline:
+            return None
+        now = timezone.now()
+        if now >= self.pickup_deadline:
+            return "Expired"
+        remaining = self.pickup_deadline - now
+        total_minutes = int(remaining.total_seconds() / 60)
+        if total_minutes < 60:
+            return f"{total_minutes} minutes"
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        if minutes == 0:
+            return f"{hours} hour{'s' if hours > 1 else ''}"
+        return f"{hours}h {minutes}m"
 
     def save(self, *args, **kwargs):
         if self.cuisine:
@@ -134,3 +166,61 @@ class OrganizerThank(models.Model):
 
     def __str__(self):
         return f"{self.thanker.username} thanked {self.organizer.username}"
+
+
+class RSVP(models.Model):
+    """RSVP model for users to indicate they will pick up food from a post"""
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='rsvps')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rsvps_made')
+    estimated_arrival_minutes = models.IntegerField(
+        help_text="Estimated time in minutes until arrival",
+        validators=[MinValueValidator(1), MaxValueValidator(300)]  # 1 minute to 5 hours
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    is_cancelled = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('post', 'user')
+        ordering = ['created_at']
+        verbose_name = "RSVP"
+        verbose_name_plural = "RSVPs"
+
+    def __str__(self):
+        status = "Cancelled" if self.is_cancelled else "Active"
+        return f"{self.user.username} RSVP'd to {self.post.event} ({status})"
+
+    def cancel(self):
+        """Cancel this RSVP"""
+        from django.utils import timezone
+        self.is_cancelled = True
+        self.cancelled_at = timezone.now()
+        self.save()
+
+    def get_estimated_arrival_time(self):
+        """Get the estimated arrival time as a datetime"""
+        from django.utils import timezone
+        from datetime import timedelta
+        # Use current time if created_at is None (object not saved yet)
+        base_time = self.created_at if self.created_at else timezone.now()
+        return base_time + timedelta(minutes=self.estimated_arrival_minutes)
+
+    def get_time_remaining(self):
+        """Get remaining time until estimated arrival"""
+        from django.utils import timezone
+        from datetime import timedelta
+        if self.is_cancelled:
+            return None
+        arrival_time = self.get_estimated_arrival_time()
+        now = timezone.now()
+        if arrival_time < now:
+            return "Arrived"
+        remaining = arrival_time - now
+        total_minutes = int(remaining.total_seconds() / 60)
+        if total_minutes < 60:
+            return f"{total_minutes} minutes"
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        if minutes == 0:
+            return f"{hours} hour{'s' if hours > 1 else ''}"
+        return f"{hours}h {minutes}m"

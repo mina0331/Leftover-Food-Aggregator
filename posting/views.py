@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post, Location, OrganizerThank, Report
+from .models import Cuisine, Post, Location, OrganizerThank, Report, RSVP
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
-from .forms import PostForm, ReportForm
+from .forms import PostForm, ReportForm, RSVPForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db import IntegrityError
@@ -155,11 +155,27 @@ def post_detail(request, post_id):
     if request.user.is_authenticated:
         post.read_users.add(request.user)
     
+    # Get RSVP information
+    user_rsvp = None
+    if request.user.is_authenticated:
+        user_rsvp = RSVP.objects.filter(post=post, user=request.user, is_cancelled=False).first()
+    
+    # Get active RSVPs for post author
+    active_rsvps = []
+    if request.user == post.author:
+        active_rsvps = RSVP.objects.filter(
+            post=post,
+            is_cancelled=False
+        ).select_related('user', 'user__profile').order_by('created_at')
+    
     # Get content type for Post model (for flagging)
     post_content_type = ContentType.objects.get_for_model(Post)
     return render(request, "posting/post_detail.html", {
         "post": post,
         "post_content_type_id": post_content_type.id,
+        "user_rsvp": user_rsvp,
+        "active_rsvps": active_rsvps,
+        "rsvp_count": RSVP.objects.filter(post=post, is_cancelled=False).count(),
     })
 
 @login_required
@@ -403,3 +419,107 @@ def export_data(request):
         writer.writerow([row["cuisine__name"], row["count"]])
 
     return response
+
+
+@login_required
+def create_rsvp(request, post_id):
+    """Create an RSVP for a post"""
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Don't allow post author to RSVP to their own post
+    if request.user == post.author:
+        messages.warning(request, "You cannot RSVP to your own post.")
+        return redirect('posting:post_detail', post_id=post_id)
+    
+    # Check if pickup deadline has passed
+    if not post.is_pickup_available():
+        messages.error(request, "Sorry, the pickup deadline for this post has passed.")
+        return redirect('posting:post_detail', post_id=post_id)
+    
+    # Check if user already has an active RSVP
+    existing_rsvp = RSVP.objects.filter(post=post, user=request.user, is_cancelled=False).first()
+    if existing_rsvp:
+        messages.info(request, "You already have an active RSVP for this post.")
+        return redirect('posting:post_detail', post_id=post_id)
+    
+    if request.method == "POST":
+        form = RSVPForm(request.POST)
+        if form.is_valid():
+            rsvp = form.save(commit=False)
+            rsvp.post = post
+            rsvp.user = request.user
+            
+            # Check if estimated arrival is after pickup deadline
+            estimated_arrival = rsvp.get_estimated_arrival_time()
+            if post.pickup_deadline and estimated_arrival > post.pickup_deadline:
+                messages.warning(
+                    request,
+                    f'Warning: Your estimated arrival time ({estimated_arrival.strftime("%I:%M %p")}) is after the pickup deadline ({post.pickup_deadline.strftime("%I:%M %p")}). '
+                    'Food may not be available when you arrive.'
+                )
+            
+            rsvp.save()
+            messages.success(
+                request,
+                f'RSVP created! You indicated you will arrive in {rsvp.estimated_arrival_minutes} minutes. '
+                'Please note: food is not guaranteed if you arrive late.'
+            )
+            return redirect('posting:post_detail', post_id=post_id)
+    else:
+        form = RSVPForm()
+    
+    return render(request, "posting/create_rsvp.html", {
+        "form": form,
+        "post": post,
+    })
+
+
+@login_required
+def cancel_rsvp(request, rsvp_id):
+    """Cancel an RSVP"""
+    rsvp = get_object_or_404(RSVP, id=rsvp_id)
+    
+    # Only allow the user who created the RSVP to cancel it
+    if rsvp.user != request.user:
+        messages.error(request, "You don't have permission to cancel this RSVP.")
+        return redirect('posting:post_detail', post_id=rsvp.post.id)
+    
+    if rsvp.is_cancelled:
+        messages.info(request, "This RSVP is already cancelled.")
+        return redirect('posting:post_detail', post_id=rsvp.post.id)
+    
+    if request.method == "POST":
+        rsvp.cancel()
+        messages.success(request, "Your RSVP has been cancelled.")
+        return redirect('posting:post_detail', post_id=rsvp.post.id)
+    
+    return render(request, "posting/cancel_rsvp.html", {
+        "rsvp": rsvp,
+    })
+
+
+@login_required
+def view_post_rsvps(request, post_id):
+    """View all RSVPs for a post (post author only)"""
+    post = get_object_or_404(Post, id=post_id)
+    
+    # Only post author can view RSVPs
+    if request.user != post.author:
+        messages.error(request, "You don't have permission to view RSVPs for this post.")
+        return redirect('posting:post_detail', post_id=post_id)
+    
+    active_rsvps = RSVP.objects.filter(
+        post=post,
+        is_cancelled=False
+    ).select_related('user', 'user__profile').order_by('created_at')
+    
+    cancelled_rsvps = RSVP.objects.filter(
+        post=post,
+        is_cancelled=True
+    ).select_related('user', 'user__profile').order_by('-cancelled_at')
+    
+    return render(request, "posting/view_rsvps.html", {
+        "post": post,
+        "active_rsvps": active_rsvps,
+        "cancelled_rsvps": cancelled_rsvps,
+    })
