@@ -27,7 +27,7 @@
 
     .nav-right{
       display:flex;
-      gap:12px;
+      gap:1px;
       align-items:center;
       margin-left:auto;
     }
@@ -196,18 +196,16 @@
           </a>
         {% endif %}
 
-        <figure>
-          <a href="{% url 'profile_redirect' %}">
-            <img src="{{ user.profile.avatar_url }}"
-                 alt="Profile photo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-          </a>
-          <figcaption style="text-align: center; margin-top: 1px; font-size: 10px; color: #ffffff;">{{ user.profile.display_name }}</figcaption>
-        </figure>
-
-        <a href="{% url 'profile_redirect' %}"
-           class="nav-link {% if '/profile' in p %}active-link{% endif %}">
-           Profile
-        </a>
+        <figure style="display:flex; flex-direction:column; align-items:center;">
+        <a href="{% url 'profile_redirect' %}">
+          <img src="{{ user.profile.avatar_url }}"
+            alt="Profile photo"
+            style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+      </a>
+     <figcaption style="margin-top: 1px; font-size: 10px; color: #ffffff;">
+        {{ user.profile.display_name }}
+      </figcaption>
+      </figure>
 
         <a href="{% url 'account_logout' %}" class="nav-link">Log Out</a>
 

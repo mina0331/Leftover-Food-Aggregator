@@ -42,6 +42,7 @@ urlpatterns = [
     path("", include(("posting.urls", "posting"), namespace="posting")),
     path("", include("profiles.urls", namespace="profiles")),
     path("moderation/", include(("moderation.urls", "moderation"), namespace="moderation")),
+    path("profile/<int:pk>/", view_profile, name="view_profile")
 
     
 

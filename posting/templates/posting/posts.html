@@ -462,47 +462,7 @@
     </div>
   {% endif %}
 
-  {% if messages %}
-    <div id="toast-container"
-         style="position: fixed; top: 80px; right: 20px; z-index: 2000;">
-      {% for message in messages %}
-        <div class="toast-message {{ message.tags }}"
-             style="
-               background:
-                 {% if message.tags == 'success' %}#d4edda
-                 {% elif message.tags == 'warning' %}#fff3cd
-                 {% elif message.tags == 'danger' %}#f8d7da
-                 {% else %}#e2e3e5{% endif %};
-               color:#000;
-               border-left:5px solid
-                 {% if message.tags == 'success' %}#28a745
-                 {% elif message.tags == 'warning' %}#ffc107
-                 {% elif message.tags == 'danger' %}#dc3545
-                 {% else %}#6c757d{% endif %};
-               border-radius:8px;
-               padding:12px 16px;
-               margin-bottom:10px;
-               box-shadow:0 2px 8px rgba(0,0,0,0.1);
-               opacity:1;
-               transition:opacity .5s ease-out;
-             ">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
-  <script>
-    // auto-fade toast messages
-    setTimeout(() => {
-      const toasts = document.querySelectorAll('#toast-container .toast-message');
-      toasts.forEach(toast => toast.style.opacity = '0');
-      setTimeout(() => {
-        const c = document.getElementById('toast-container');
-        if (c) c.innerHTML = '';
-      }, 800);
-    }, 3000);
-  </script>
+  
 
 </div>
 {% endblock %}

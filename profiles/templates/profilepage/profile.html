@@ -58,6 +58,19 @@
             Edit Profile
         </a>
     </div>
+    <div style="margin-top: 16px">
+        <a href = "{% url 'view_profile' request.user.id%}"
+            style="display:inline-block;
+            background:#E57200;
+            color:white;
+            padding:10px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:600;
+            transition:.2s;">
+            View Profile
+        </a>
+        </div>
     <div style="margin-top:24px;">
         {% if profile.role == "student" %}
             <a href="{% url 'userprivileges:student_home' %}"

@@ -11,7 +11,8 @@ class ProfileForm(forms.ModelForm):
             "allergens": forms.CheckboxSelectMultiple(),
             "bio": forms.Textarea(attrs={"rows": 4}),
             "major": forms.TextInput(),
-            "display_name": forms.TextInput(attrs={"maxlength": 50}),
+            "display_name": forms.TextInput(attrs={"maxlength": 10}),
+            'profile_pic': forms.FileInput(attrs={'id': 'profilePicInput', 'style': 'display:none;'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -27,11 +28,11 @@ class ProfileForm(forms.ModelForm):
         
         # Add character limit validation for display_name
         if 'display_name' in self.fields:
-            self.fields['display_name'].max_length = 50
-            self.fields['display_name'].help_text = "Maximum 50 characters"
+            self.fields['display_name'].max_length = 10
+            self.fields['display_name'].help_text = "Maximum 10 characters"
     
     def clean_display_name(self):
         display_name = self.cleaned_data.get('display_name')
-        if display_name and len(display_name) > 50:
-            raise forms.ValidationError("Display name must be 50 characters or less.")
+        if display_name and len(display_name) > 10:
+            raise forms.ValidationError("Display name must be 10 characters or less.")
         return display_name
