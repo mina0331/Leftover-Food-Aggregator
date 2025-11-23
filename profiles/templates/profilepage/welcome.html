@@ -3,7 +3,7 @@
 {% block title %}Welcome | UVA Leftovers{% endblock %}
 
 {% block content %}
-<div style="text-align:center; margin-top:60px; padding: 20px;">
+<div style="text-align:center; margin-top:30px; padding: 20px;">
     
     <div style="max-width:600px; margin:0 auto;">
         <h1 style="font-size:36px; margin-bottom:40px; color:#10172A;">
@@ -34,7 +34,7 @@
         <form method="post" id="guidelinesForm" style="margin-top:30px;">
             {% csrf_token %}
             
-            <div style="padding:20px; margin-bottom:20px; text-align:left;">
+            <div style="padding:20px; margin-bottom:12px; text-align:left;">
                 <label style="display:flex; align-items:center; cursor:pointer; font-size:16px; color:#333;">
                     <input type="checkbox" 
                            name="acknowledge" 
@@ -53,7 +53,8 @@
                            font-size:18px; 
                            font-weight:600; 
                            cursor:pointer; 
-                           transition:all 0.3s;"
+                           transition:all 0.3s;
+                           margin-bottom: 40px;"
                     onmouseover="this.style.background='#c56200';"
                     onmouseout="this.style.background='#E57200';">
                 Continue
