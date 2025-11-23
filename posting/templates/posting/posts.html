@@ -16,7 +16,7 @@
         gap:16px;
         margin-bottom:20px;
   ">
-    <!-- Search bar (everyone) -->
+    <!-- Search bar (everyone - students and orgs) -->
     <form method="get" style="flex:1; max-width:420px; position:relative;">
 
       <input
@@ -71,25 +71,159 @@
     {% if user.is_authenticated %}
       {% if user.profile.role == 'org' %}
 
-        <!-- ORG: Create New Post button -->
-        <a href="{% url 'posting:create_post' %}"
-           style="
-             background:#E57200;
-             color:white;
-             padding:10px 18px;
-             border-radius:8px;
-             text-decoration:none;
-             white-space:nowrap;
-             font-weight:bold;
-             font-size:15px;
-             height:44px;
-             display:flex;
-             align-items:center;
-             justify-content:center;
-             box-sizing:border-box;
-           ">
-           + Create New Post
-        </a>
+        <!-- ORG: Create New Post button and Filter -->
+        <div style="display:flex; gap:10px; align-items:center;">
+          <a href="{% url 'posting:create_post' %}"
+             style="
+               background:#E57200;
+               color:white;
+               padding:10px 18px;
+               border-radius:8px;
+               text-decoration:none;
+               white-space:nowrap;
+               font-weight:bold;
+               font-size:15px;
+               height:44px;
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               box-sizing:border-box;
+             ">
+             + Create New Post
+          </a>
+
+          <!-- Filter dropdown for orgs too -->
+          <div style="position:relative;">
+            <button id="filterToggleOrg"
+              style="
+                background:#232D4B;
+                color:white;
+                padding:10px 18px;
+                border-radius:8px;
+                border:none;
+                cursor:pointer;
+                font-weight:bold;
+                font-size:15px;
+                white-space:nowrap;
+                height:44px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+              ">
+              Filter ▼
+            </button>
+
+            <!-- Dropdown menu -->
+            <div id="filterMenuOrg"
+              style="
+                display:none;
+                position:absolute;
+                top:50px;
+                right:0;
+                background:white;
+                border:1px solid #ddd;
+                border-radius:8px;
+                padding:12px;
+                width:260px;
+                box-shadow:0 4px 12px rgba(0,0,0,0.12);
+                z-index:200;
+              ">
+              <form method="get" style="margin:0;">
+                <input type="hidden" name="q" value="{{ search_query|default_if_none:'' }}">
+
+                <p style="margin:0 0 8px 0; font-weight:bold; color:#232D4B;">
+                  Filter by
+                </p>
+
+                <!-- Cuisine filter -->
+                <div style="margin-bottom:8px;">
+                  <label style="font-weight:bold; color:#232D4B; font-size:14px;">Cuisine:</label>
+                  <select name="cuisine"
+                    style="
+                      width:100%;
+                      padding:8px 10px;
+                      margin-top:4px;
+                      border-radius:6px;
+                      border:1px solid #ccc;
+                    ">
+                    <option value="">All cuisines</option>
+                    {% for c in cuisines %}
+                      <option value="{{ c.id }}"
+                        {% if selected_cuisine_id == c.id|stringformat:"s" %}selected{% endif %}>
+                        {{ c.name|capfirst }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Date filter -->
+                <div style="margin-bottom:8px;">
+                  <label style="font-weight:bold; color:#232D4B; font-size:14px;">Date:</label>
+                  <select name="date_order"
+                    style="
+                      width:100%;
+                      padding:8px 10px;
+                      margin-top:4px;
+                      border-radius:6px;
+                      border:1px solid #ccc;
+                    ">
+                    <option value="newest"
+                      {% if selected_date_order == "newest" %}selected{% endif %}>
+                      Newest first
+                    </option>
+                    <option value="oldest"
+                      {% if selected_date_order == "oldest" %}selected{% endif %}>
+                      Oldest first
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Organization filter -->
+                <div style="margin-bottom:8px;">
+                  <label style="font-weight:bold; color:#232D4B; font-size:14px;">Organization:</label>
+                  <select name="org"
+                    style="
+                      width:100%;
+                      padding:8px 10px;
+                      margin-top:4px;
+                      border-radius:6px;
+                      border:1px solid #ccc;
+                    ">
+                    <option value="">All organizations</option>
+                    {% for org in orgs %}
+                      <option value="{{ org.username }}"
+                        {% if selected_org == org.username %}selected{% endif %}>
+                        {{ org.profile.display_name|default:org.username }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <button type="submit"
+                  style="
+                    margin-top:10px;
+                    width:100%;
+                    background:#E57200;
+                    color:white;
+                    padding:8px;
+                    border-radius:6px;
+                    border:none;
+                    cursor:pointer;
+                    font-weight:bold;
+                  ">
+                  Apply Filters
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        document.getElementById('filterToggleOrg').onclick = function() {
+            const menu = document.getElementById('filterMenuOrg');
+            menu.style.display = (menu.style.display === "block") ? "none" : "block";
+        };
+        </script>
 
       {% elif user.profile.role == 'student' %}
 
@@ -195,7 +329,7 @@
                   {% for org in orgs %}
                     <option value="{{ org.username }}"
                       {% if selected_org == org.username %}selected{% endif %}>
-                      {{ org.username }}
+                      {{ org.profile.display_name|default:org.username }}
                     </option>
                   {% endfor %}
                 </select>

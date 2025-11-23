@@ -14,5 +14,8 @@ urlpatterns = [
     path("post/<int:post_id>/report/", views.report_post, name="report_post"),
     path("posts/history/", views.event_history, name="event_history"),
     path("posts/export-data", views.export_data, name="export_data"),
+    path("posts/<int:post_id>/rsvp/", views.create_rsvp, name="create_rsvp"),
+    path("posts/<int:post_id>/rsvps/", views.view_post_rsvps, name="view_post_rsvps"),
+    path("rsvp/<int:rsvp_id>/cancel/", views.cancel_rsvp, name="cancel_rsvp"),
 
 ]
