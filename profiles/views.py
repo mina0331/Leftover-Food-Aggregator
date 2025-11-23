@@ -4,6 +4,7 @@ from django.contrib.auth import logout
 from .models import Profile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
+from Friendslist.models import Friend;
 
 
 
@@ -131,10 +132,11 @@ def profile_edit(request):
 def view_profile(request, user_id):
     profile_user = get_object_or_404(User, pk=user_id)
     profile = getattr(profile_user, "profile", None)  # assuming OneToOne Profile
-
+    is_friend = Friend.are_friends(request.user, profile_user)
     context = {
         "profile_user": profile_user,
         "profile": profile,
+        "is_friend": is_friend,
     }
     return render(request, "profilepage/profile_viewable.html", context)
 

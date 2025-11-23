@@ -103,17 +103,20 @@
         </p>
       {% endif %}
 
-      {% if request.user != profile_user %}
+      {% if request.user != profile_user and not is_friend %}
         <form method="POST" action="{% url 'friends:send_friend_request' profile_user.id %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary w-100 mt-3" style="padding:10px; font-weight:600;">
             Send Friend Request
         </button>
         </form>
-      {% else %}
+      {% elif request.user == profile_user %}
         <button class="btn btn-outline-secondary w-100 mt-3" disabled>
           This is your profile
         </button>
+      {% else %}
+      <button class="btn btn-outline-secondary w-100 mt-3" disabled>
+          Already Friends
       {% endif %}
 
     </div>
