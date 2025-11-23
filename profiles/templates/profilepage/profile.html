@@ -14,6 +14,37 @@
 
     <p>Email: <strong>{{ request.user.email }}</strong></p>
     <p>Role: <strong>{{ profile.get_role_display }}</strong></p>
+    
+    {% if profile.major %}
+        <p style="margin-top:16px;"><strong>Major:</strong> {{ profile.major }}</p>
+    {% endif %}
+    
+    {% if profile.bio %}
+        <p style="margin-top:16px;"><strong>Bio:</strong> {{ profile.bio }}</p>
+    {% endif %}
+    
+    {% if profile.preferences.all %}
+        <div style="margin-top:16px;">
+            <strong>Favorite Cuisines:</strong>
+            <div style="margin-top:8px;">
+                {% for cuisine in profile.preferences.all %}
+                    <span style="display:inline-block; background:#E57200; color:white; padding:4px 12px; border-radius:12px; margin:2px; font-size:0.9rem;">{{ cuisine.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if profile.allergens.all %}
+        <div style="margin-top:16px;">
+            <strong>Allergens:</strong>
+            <div style="margin-top:8px;">
+                {% for allergen in profile.allergens.all %}
+                    <span style="display:inline-block; background:#dc3545; color:white; padding:4px 12px; border-radius:12px; margin:2px; font-size:0.9rem;">{{ allergen.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
     <div style="margin-top:16px;">
         <a href="{% url 'profile_edit' %}"
             style="display:inline-block;

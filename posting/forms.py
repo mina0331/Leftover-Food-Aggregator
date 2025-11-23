@@ -15,6 +15,14 @@ class PostForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Make all fields required except publish_at and pickup_deadline (which are optional)
+        self.fields["event"].required = True
+        self.fields["event_description"].required = True
+        self.fields["cuisine"].required = True
+        self.fields["image"].required = True
+        self.fields["location"].required = True
+        # publish_at and pickup_deadline remain optional
+        
         # nice label and ordering
         if "location" in self.fields:
             self.fields["location"].label = "UVA Building"

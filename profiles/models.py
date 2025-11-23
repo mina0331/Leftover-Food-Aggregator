@@ -22,7 +22,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=20, choices=Role.choices, blank=False, null=False, default=Role.STUDENT)
-    display_name = models.CharField(max_length=120, blank = True)
+    display_name = models.CharField(max_length=50, blank = True)
     profile_pic = models.ImageField(upload_to=profile_pic_upload_to, blank=True, null=True)
     preferences = models.ManyToManyField(Cuisine, blank=True, related_name="profiles")
     allergens = models.ManyToManyField(Allergen, blank=True, related_name="profiles")

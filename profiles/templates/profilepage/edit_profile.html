@@ -6,132 +6,295 @@
 {% block content %}
 <style>
   .profile-edit-wrapper {
-    text-align: center;
-    margin-top: 48px;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
   }
 
   .profile-edit-card {
-    display: inline-block;
-    padding: 24px 32px;
     background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 40px;
     text-align: left;
-    min-width: 320px;
-    max-width: 520px;
   }
 
   .profile-edit-title {
-    margin-bottom: 24px;
-    font-size: 1.6rem;
-    font-weight: 600;
+    margin-bottom: 32px;
+    font-size: 2rem;
+    font-weight: 700;
     color: #232D4B;
+    text-align: center;
+    border-bottom: 3px solid #E57200;
+    padding-bottom: 16px;
   }
 
   .form-row {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
   }
 
   .form-label {
     font-weight: 600;
+    font-size: 1rem;
+    display: block;
+    margin-bottom: 8px;
+    color: #232D4B;
+  }
+
+  .form-row input[type="text"],
+  .form-row input[type="email"],
+  .form-row textarea,
+  .form-row select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
     font-size: 0.95rem;
-    display: inline-block;
-    margin-bottom: 4px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-row input[type="text"]:focus,
+  .form-row input[type="email"]:focus,
+  .form-row textarea:focus,
+  .form-row select:focus {
+    outline: none;
+    border-color: #E57200;
+    box-shadow: 0 0 0 3px rgba(229, 114, 0, 0.1);
+  }
+
+  .form-row textarea {
+    resize: vertical;
+    min-height: 100px;
   }
 
   .hint-text {
     font-size: 0.85rem;
     color: #6b7280;
-    margin-top: 4px;
+    margin-top: 6px;
+    font-style: italic;
   }
 
   .error-text {
     color: #b91c1c;
     font-size: 0.85rem;
-    margin-top: 4px;
+    margin-top: 6px;
+    font-weight: 500;
   }
 
   .avatar-wrapper {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 32px;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px dashed #e5e7eb;
   }
 
   .avatar-preview {
-    width: 96px;
-    height: 96px;
-    border-radius: 999px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #e5e7eb;
+    border: 4px solid #E57200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .avatar-upload-section {
+    flex: 1;
+  }
+
+  .avatar-upload-section input[type="file"] {
+    padding: 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #f3f4f6;
   }
 
   .primary-button {
-    margin-top: 12px;
-    padding: 10px 18px;
+    padding: 14px 28px;
     background: #E57200;
     color: white;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.95rem;
-    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(229, 114, 0, 0.3);
   }
 
   .primary-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(229, 114, 0, 0.4);
     background: #cf6500;
   }
 
   .link-button {
-    margin-left: 8px;
-    color: #E57200;
+    padding: 14px 28px;
+    color: #6b7280;
     text-decoration: none;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    display: inline-block;
+    transition: all 0.2s ease;
+  }
+
+  .link-button:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #232D4B;
   }
 
   .danger-zone {
-    margin-top: 24px;
-    padding: 16px 18px;
+    margin-top: 40px;
+    padding: 24px;
     border-radius: 12px;
-    border: 1px solid #fecaca;
-    background: #fef2f2;
+    border: 2px solid #fecaca;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   }
 
   .danger-title {
-    font-weight: 600;
+    font-weight: 700;
     color: #b91c1c;
-    margin-bottom: 4px;
-    font-size: 0.95rem;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .danger-title::before {
+    content: "⚠️";
+    font-size: 1.2rem;
   }
 
   .danger-text {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #7f1d1d;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
+    line-height: 1.6;
   }
 
   .danger-button {
     display: inline-block;
-    padding: 8px 14px;
+    padding: 10px 20px;
     border-radius: 8px;
     background: #b91c1c;
     color: white;
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     border: 0;
     cursor: pointer;
-    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(185,28,28,0.3);
   }
 
   .danger-button:hover {
     background: #991b1b;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(185,28,28,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(185,28,28,0.4);
+  }
+
+  /* Radio buttons styling */
+  .form-row ul:not(.checkbox-list) {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .form-row ul:not(.checkbox-list) li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-row ul:not(.checkbox-list) li label {
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-row ul:not(.checkbox-list) li input[type="radio"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  /* Checkbox styling for preferences and allergens */
+  .form-row ul[id*="preferences"],
+  .form-row ul[id*="allergens"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .form-row ul[id*="preferences"] li,
+  .form-row ul[id*="allergens"] li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #f9fafb;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+  }
+
+  .form-row ul[id*="preferences"] li:hover,
+  .form-row ul[id*="allergens"] li:hover {
+    background: #f3f4f6;
+    border-color: #E57200;
+  }
+
+  .form-row ul[id*="preferences"] li label,
+  .form-row ul[id*="allergens"] li label {
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .form-row ul[id*="preferences"] li input[type="checkbox"],
+  .form-row ul[id*="allergens"] li input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 24px;
+    color: #E57200;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: #cf6500;
+    text-decoration: underline;
   }
 </style>
 
@@ -154,13 +317,13 @@
         <img id="avatarPreview" src="{% static 'images/default-avatar.png' %}" alt="Default avatar" class="avatar-preview">
       {% endif %}
 
-      <div>
-        <label for="{{ form.profile_pic.id_for_label }}" class="form-label">Change profile photo</label><br>
+      <div class="avatar-upload-section">
+        <label for="{{ form.profile_pic.id_for_label }}" class="form-label">Change profile photo</label>
         {{ form.profile_pic }}
         {% if form.profile_pic.errors %}
           <div class="error-text">{{ form.profile_pic.errors }}</div>
         {% endif %}
-        <div class="hint-text">JPEG/PNG recommended.</div>
+        <div class="hint-text">JPEG/PNG recommended. Max file size: 5MB</div>
       </div>
     </div>
 
@@ -186,19 +349,25 @@
       {% if role == 'student' %}
 
         <div class="form-row">
-          <label for="{{ form.preferences.id_for_label }}" class="form-label">Preferences</label>
-          {{ form.preferences }}
+          <label for="{{ form.preferences.id_for_label }}" class="form-label">🍽️ Favorite Cuisines (Preferences)</label>
+          <div style="margin-top: 8px;">
+            {{ form.preferences }}
+          </div>
           {% if form.preferences.errors %}
             <div class="error-text">{{ form.preferences.errors }}</div>
           {% endif %}
+          <div class="hint-text">Select your favorite types of cuisine</div>
         </div>
 
         <div class="form-row">
-          <label for="{{ form.allergens.id_for_label }}" class="form-label">Allergens</label>
-          {{ form.allergens }}
+          <label for="{{ form.allergens.id_for_label }}" class="form-label">⚠️ Allergens</label>
+          <div style="margin-top: 8px;">
+            {{ form.allergens }}
+          </div>
           {% if form.allergens.errors %}
             <div class="error-text">{{ form.allergens.errors }}</div>
           {% endif %}
+          <div class="hint-text">Select any allergens you need to avoid</div>
         </div>
 
         <!-- Major -->
@@ -239,10 +408,12 @@
     {% endwith %}
 
     <!-- Save / Cancel -->
-    <button type="submit" class="primary-button">
-      Save
-    </button>
-    <a href="{% url 'my_profile' %}" class="link-button">Cancel</a>
+    <div class="button-group">
+      <button type="submit" class="primary-button">
+        💾 Save Changes
+      </button>
+      <a href="{% url 'my_profile' %}" class="link-button">Cancel</a>
+    </div>
 
     <!-- Danger zone / delete account -->
     <div class="danger-zone">
@@ -261,8 +432,9 @@
 
   </form>
 
-  <br><br>
-  <a href="/" style="color:#E57200; text-decoration:none;">Back to Home</a>
+  <div style="text-align: center;">
+    <a href="{% url 'my_profile' %}" class="back-link">← Back to Profile</a>
+  </div>
 </div>
 
 <script>
