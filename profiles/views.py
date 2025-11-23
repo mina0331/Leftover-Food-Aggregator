@@ -5,6 +5,7 @@ from .models import Profile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from Friendslist.models import Friend;
+from posting.models import Post;
 
 
 
@@ -133,10 +134,17 @@ def view_profile(request, user_id):
     profile_user = get_object_or_404(User, pk=user_id)
     profile = getattr(profile_user, "profile", None)  # assuming OneToOne Profile
     is_friend = Friend.are_friends(request.user, profile_user)
+    user_posts = (
+    Post.objects
+    .filter(author=profile_user, is_deleted=False)  # or whatever field you use
+    .order_by('-created_at')
+    .distinct()
+)
     context = {
         "profile_user": profile_user,
         "profile": profile,
         "is_friend": is_friend,
+        "user_posts": user_posts,
     }
     return render(request, "profilepage/profile_viewable.html", context)
 

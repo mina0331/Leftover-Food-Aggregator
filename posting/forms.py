@@ -10,6 +10,11 @@ class PostForm(forms.ModelForm):
             "cuisines": forms.CheckboxSelectMultiple(),
             "publish_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "pickup_deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            'image': forms.FileInput(attrs={
+                'id': 'imageInput',
+                'style': 'display:none;',  
+                'accept': 'image/*'  
+            }),
         }
         # status is excluded and handled automatically in the view
 
