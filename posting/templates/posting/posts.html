@@ -410,6 +410,7 @@
 
   <!-- Post cards -->
   {% for post in posts %}
+  {% if post.is_pickup_available %}
     <div style="border:1px solid #ddd; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
 
       <!-- Event + org on same line -->
@@ -421,6 +422,7 @@
           </strong>
         </span>
       </div>
+    
 
       {% if post.image %}
         <img src="{{ post.image.url }}" alt="{{ post.event }}"
@@ -446,7 +448,8 @@
         </a>
       </div>
     </div>
-  {% empty %}
+    {% endif %}
+    {% empty %}
     <p style="text-align:center; color:#666;">No posts found.</p>
   {% endfor %}
 

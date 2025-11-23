@@ -18,6 +18,7 @@ import json
 from django.urls import reverse
 import math
 
+
 def index(request):
     # search text
     q = request.GET.get("q", "").strip()
@@ -27,15 +28,21 @@ def index(request):
     selected_org = request.GET.get("org", "").strip()
     date_order = request.GET.get("date_order", "newest").strip()  # 'newest' or 'oldest'
 
-    # Start with published posts that are not deleted
-    post_list = Post.objects.filter(
+    # Start with published posts that are not deleted and not expired 
+    qs = (
+    Post.objects.filter(
         status=Post.Status.PUBLISHED,
-        is_deleted=False
-    ).select_related('cuisine', 'author')
+        is_deleted=False,
+    )
+    .select_related("cuisine", "author")
+    )
+    
+    
+
 
     # Search across event, description, cuisine name, and org username
     if q:
-        post_list = post_list.filter(
+        qs = qs.filter(
             Q(event__icontains=q) |
             Q(event_description__icontains=q) |
             Q(cuisine__name__icontains=q) |
@@ -44,20 +51,25 @@ def index(request):
 
     # Cuisine filter
     if cuisine_id:
-        post_list = post_list.filter(cuisine_id=cuisine_id)
+        qs = qs.filter(cuisine_id=cuisine_id)
 
     # Organization filter
     if selected_org:
-        post_list = post_list.filter(author__username=selected_org)
+        qs = qs.filter(author__username=selected_org)
 
     # Date ordering
     if date_order == "oldest":
-        post_list = post_list.order_by("created_at")
+        qs = qs.order_by("created_at")
     else:
-        post_list = post_list.order_by("-created_at")
+        qs = qs.order_by("-created_at")
+
+    
+
     paginator = Paginator(post_list, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    
 
     cuisines = Cuisine.objects.order_by("name")
     # org users that actually have posts, and whose profile role is 'org'
@@ -65,6 +77,8 @@ def index(request):
         profile__role='org',
         post__isnull=False
     ).distinct().order_by("username")
+
+    
 
     return render(request, "posting/posts.html", {
         "posts": page_obj,
