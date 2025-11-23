@@ -138,6 +138,7 @@
                 <!-- Cuisine filter -->
                 <div style="margin-bottom:8px;">
                   <label style="font-weight:bold; color:#232D4B; font-size:14px;">Cuisine:</label>
+                  
                   <select name="cuisine"
                     style="
                       width:100%;
@@ -147,8 +148,8 @@
                       border:1px solid #ccc;
                     ">
                     <option value="">All cuisines</option>
-                    {% for c in cuisines %}
-                      <option value="{{ c.id }}"
+                      {% for c in cuisines %}
+                        <option value="{{ c.id }}"
                         {% if selected_cuisine_id == c.id|stringformat:"s" %}selected{% endif %}>
                         {{ c.name|capfirst }}
                       </option>

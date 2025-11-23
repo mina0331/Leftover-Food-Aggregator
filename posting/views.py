@@ -62,13 +62,16 @@ def index(request):
 
     
 
-    paginator = Paginator(post_list, 5)
+    paginator = Paginator(qs, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     
 
-    cuisines = Cuisine.objects.order_by("name")
+    cuisines = Cuisine.objects.filter(
+        post__isnull=False
+    ).distinct().order_by("name")
+    
     # org users that actually have posts, and whose profile role is 'org'
     orgs = User.objects.filter(
         profile__role='org',
@@ -80,7 +83,7 @@ def index(request):
     return render(request, "posting/posts.html", {
         "posts": page_obj,
         "page_obj": page_obj,
-        "total_posts": post_list.count(),
+        "total_posts": qs.count(),
         "search_query": q,
         "cuisines": cuisines,
         "selected_cuisine_id": cuisine_id,
@@ -285,56 +288,6 @@ def haversine_distance_km(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
 
-def post_list(request):
-    qs = (
-        Post.objects
-        .select_related("location", "cuisine")
-        .filter(is_deleted=False)
-        .order_by("-created_at")
-    )
-
-    sort = request.GET.get("sort")
-    user_lat = request.GET.get("lat")
-    user_lng = request.GET.get("lng")
-    selected_cuisine_id = request.GET.get("cuisine")
-
-    # Filter by cuisine, if selected
-    if selected_cuisine_id:
-        qs = qs.filter(cuisine_id=selected_cuisine_id)
-
-    posts = list(qs)
-
-    # Optional distance sorting
-    if sort == "distance" and user_lat and user_lng:
-        try:
-            user_lat = float(user_lat)
-            user_lng = float(user_lng)
-
-            for p in posts:
-                loc = p.location
-                if loc and loc.latitude is not None and loc.longitude is not None:
-                    p.distance_km = haversine_distance_km(
-                        user_lat, user_lng, loc.latitude, loc.longitude
-                    )
-                else:
-                    p.distance_km = None
-
-            posts.sort(key=lambda p: p.distance_km if p.distance_km is not None else 1e9)
-        except ValueError:
-            pass
-
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        "posts": page_obj.object_list,
-        "page_obj": page_obj,
-        "sort": sort,
-        "selected_cuisine_id": selected_cuisine_id,
-        "cuisine_list": Cuisine.objects.all().order_by("name"),
-    }
-    return render(request, "posting/posts.html", context)
 
 @login_required
 @require_POST
