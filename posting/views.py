@@ -36,9 +36,6 @@ def index(request):
     )
     .select_related("cuisine", "author")
     )
-    
-    
-
 
     # Search across event, description, cuisine name, and org username
     if q:
