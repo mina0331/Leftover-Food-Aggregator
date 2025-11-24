@@ -108,6 +108,65 @@
         transform:none;
       }
     }
+    .nav-profile {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-right:12px;
+  }
+
+  .nav-profile img {
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid #E57200;
+    box-shadow:0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .nav-profile-name {
+    margin-top:4px;
+    font-size:11px;
+    font-weight:700;
+    color:#ffffff;
+    letter-spacing:0.4px;
+    max-width:110px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+
+    /* pill effect */
+    padding:2px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(3px);
+    box-shadow:0 1px 3px rgba(0,0,0,0.35);
+  }
+
+  .btn-orange {
+    padding:6px 14px;
+    background:#E57200;
+    color:white;
+    border-radius:8px;
+    font-weight:600;
+    text-decoration:none;
+    border:none;
+    transition:background .2s, transform .1s, box-shadow .1s;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .btn-orange:hover {
+    background:#c96000;
+    transform:translateY(-1px);
+    box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .btn-orange-icon {
+    font-size:14px;
+    line-height:1;
+  }
   </style>
 
 
@@ -127,7 +186,6 @@
     <div class="nav-center">
       <ul class="nav-list">
 
-        {# NOTE: Profile moved to nav-right #}
 
         {% if user.is_authenticated %}
           {% with role=user.profile.role %}
@@ -197,20 +255,55 @@
         {% endif %}
 
         <figure style="display:flex; flex-direction:column; align-items:center;">
-        <a href="{% url 'profile_redirect' %}">
-          <img src="{{ user.profile.avatar_url }}"
-            alt="Profile photo"
-            style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-      </a>
-     <figcaption style="margin-top: 1px; font-size: 10px; color: #ffffff;">
-        {{ user.profile.display_name }}
-      </figcaption>
-      </figure>
 
-        <a href="{% url 'account_logout' %}" class="nav-link">Log Out</a>
+  <a href="{% url 'profile_redirect' %}">
+    <img src="{{ user.profile.avatar_url }}"
+      alt="Profile photo"
+      style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:2px solid #E57200;">
+  </a>
+
+  <figcaption style="
+      margin-top: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      letter-spacing: 0.3px;
+    ">
+    {{ user.profile.display_name }}
+  </figcaption>
+</figure>
+
+
+        <a href="{% url 'account_logout' %}"
+   class="nav-link"
+   style="
+      padding:6px 14px;
+      background:#E57200;
+      color:white;
+      border-radius:8px;
+      font-weight:600;
+      text-decoration:none;
+      transition:all .2s;
+   "
+   onmouseover="this.style.background='#c96000'; this.style.transform='translateY(-1px)';"
+   onmouseout="this.style.background='#E57200'; this.style.transform='none';">
+  Log Out
+</a>
+
 
       {% else %}
-        <a href="{% url 'loginpage:login' %}" class="nav-link">Log In</a>
+        <a href="{% url 'loginpage:login' %}" class="nav-link"
+        style="
+      padding:6px 14px;
+      background:#E57200;
+      color:white;
+      border-radius:8px;
+      font-weight:600;
+      text-decoration:none;
+      transition:all .2s;
+      "
+      >Log In</a>
       {% endif %}
     </div>
 

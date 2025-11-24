@@ -59,6 +59,14 @@
     .grid{ grid-template-columns:repeat(6,1fr); }
     .col-4{ grid-column: span 6; }
   }
+  .img-card {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+  height: 250px;         /* keeps height consistent */
+  object-fit: cover;     /* crops nicely */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
 </style>
 
 <section class="hero">
@@ -91,23 +99,35 @@
 <main class="container mt-40">
   <div class="grid">
     <div class="col-4">
-      <article class="card">
-        <h3>How it works</h3>
-        <p>Providers post extra food; students see live listings and pick up before it’s wasted.</p>
-      </article>
-    </div>
-    <div class="col-4">
-      <article class="card">
-        <h3>Why participate?</h3>
-        <p>Save money, reduce waste, and support the Hoo community with real-time sharing.</p>
-      </article>
-    </div>
-    <div class="col-4">
-      <article class="card">
-        <h3>Safety &amp; guidelines</h3>
-        <p>Follow UVA’s food safety tips and pickup instructions on each listing.</p>
-      </article>
-    </div>
+  <article class="card">
+    <h3>How it works</h3>
+    <p>Providers post extra food; students see live listings and pick up before it’s wasted.</p>
+    <img src="{% static 'img/landingpage_picture1.jpg' %}"
+         alt="How it works"
+         class="img-card">
+  </article>
+</div>
+
+<div class="col-4">
+  <article class="card">
+    <h3>Why participate?</h3>
+    <p>Save money, reduce waste, and support the Hoo community with real-time sharing.</p>
+    <img src="{% static 'img/landingpage_picture2.png' %}"
+         alt="Why participate"
+         class="img-card">
+  </article>
+</div>
+
+<div class="col-4">
+  <article class="card">
+    <h3>Safety &amp; guidelines</h3>
+    <p>Follow UVA’s food safety tips and pickup instructions on each listing.</p>
+    <img src="{% static 'img/landingpage_picture3.jpg' %}"
+         alt="Guidelines"
+         class="img-card">
+  </article>
+</div>
+
   </div>
 </main>
 {% endblock %}
