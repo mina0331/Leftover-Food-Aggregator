@@ -371,31 +371,32 @@
         </a>
 
         {% if user.is_authenticated %}
-          <button id="sort-distance-btn"
-                  style="
-                    padding:8px 16px;
-                    border-radius:999px;
-                    border:none;
-                    cursor:pointer;
-                    font-size:0.9rem;
-                    display:inline-flex;
-                    align-items:center;
-                    gap:6px;
-                    {% if sort == 'distance' %}
-                      background:#155724;
-                      color:white;
-                    {% else %}
-                      background:#E57200;
-                      color:white;
-                    {% endif %}
-                  ">
+  <button id="sort-distance-btn"
+          style="
+            padding:8px 16px;
+            border-radius:999px;
+            border:none;
+            cursor:pointer;
+            font-size:0.9rem;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
             {% if sort == 'distance' %}
-              <span>✅</span><span>Sorted by distance</span>
+              background:#155724;
+              color:white;
             {% else %}
-              <span>📍</span><span>Sort by distance</span>
+              background:#E57200;
+              color:white;
             {% endif %}
-          </button>
-        {% endif %}
+          ">
+    {% if sort == 'distance' %}
+      <span>✅</span><span>Sorted by distance</span>
+    {% else %}
+      <span>📍</span><span>Sort by distance</span>
+    {% endif %}
+  </button>
+{% endif %}
+
       </div>
 
         <script>
@@ -441,6 +442,10 @@
           {{ post.event_description|truncatewords:25 }}
         </p>
       {% endif %}
+      <p style="margin-top:10px; color:#333;">
+          <strong> Location: </strong>
+          {{ post.location.building_name|truncatewords:25 }}
+        </p>
 
       <div style="margin-top:10px;">
         <a href="{% url 'posting:post_detail' post.id %}"
@@ -469,4 +474,44 @@
   
 
 </div>
+<script>
+  const sortBtn = document.getElementById("sort-distance-btn");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const params = new URLSearchParams(window.location.search);
+
+          // set sorting mode + coordinates
+          params.set("sort", "distance");
+          params.set("lat", lat);
+          params.set("lng", lng);
+
+          // reset page when changing sort
+          params.delete("page");
+
+          window.location.search = params.toString();
+        },
+        (err) => {
+          console.warn("Geolocation error:", err);
+          alert("Couldn't get your location, so distance sorting isn't available.");
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000,
+        }
+      );
+    });
+  }
+</script>
+
 {% endblock %}

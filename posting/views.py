@@ -17,6 +17,8 @@ from django.db.models import Q
 import json
 from django.urls import reverse
 import math
+from django.db.models import Q, F, FloatField, ExpressionWrapper
+from django.db.models.functions import Power
 
 
 def index(request):
@@ -27,6 +29,9 @@ def index(request):
     cuisine_id = request.GET.get("cuisine", "").strip()
     selected_org = request.GET.get("org", "").strip()
     date_order = request.GET.get("date_order", "newest").strip()  # 'newest' or 'oldest'
+    sort = request.GET.get("sort", "").strip()                    # '' or 'distance'
+    lat_param = request.GET.get("lat")
+    lng_param = request.GET.get("lng")
 
     # Start with published posts that are not deleted and not expired 
     qs = (
@@ -55,6 +60,23 @@ def index(request):
     if selected_org:
         qs = qs.filter(author__username=selected_org)
 
+    #distance ordering 
+    if sort == "distance" and lat_param and lng_param:
+        try:
+            user_lat = float(lat_param)
+            user_lng = float(lng_param)
+
+            # Simple squared distance on lat/lng (fine for UVA scale)
+            qs = qs.annotate(
+                distance=ExpressionWrapper(
+                    Power(F("location__latitude") - user_lat, 2) +
+                    Power(F("location__longitude") - user_lng, 2),
+                    output_field=FloatField(),
+                )
+            ).order_by("distance")
+        except ValueError:
+            # If lat/lng are invalid, just fall back to date ordering below
+            pass
     # Date ordering
     if date_order == "oldest":
         qs = qs.order_by("created_at")
@@ -91,7 +113,9 @@ def index(request):
         "orgs": orgs,
         "selected_org": selected_org,
         "selected_date_order": date_order,
+        "sort": sort,  
     })
+
 def event_history(request):
     #Read-only list of past leftover food posts, newest first.
     #For now, 'history' just means all posts ordered by created_at.
