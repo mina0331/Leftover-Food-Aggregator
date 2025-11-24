@@ -9,6 +9,86 @@
   </p>
 
 
+  <div style="margin-top:16px; margin-bottom:24px; padding:12px 14px; background:#f8fafc; border-radius:8px;">
+  <form method="get" action="{% url 'friends:friends_list' %}"> 
+    <label for="friend-search" style="display:block; font-size:0.9rem; color:#555; margin-bottom:6px;">
+      🔍 Find new friends
+    </label>
+    <div style="display:flex; gap:8px;">
+      <input id="friend-search"
+             type="text"
+             name="search"
+             value="{{ search_query|default_if_none:'' }}"
+             placeholder="Search by name, username, or email"
+             style="
+               flex:1;
+               padding:8px 10px;
+               border-radius:6px;
+               border:1px solid #d1d5db;
+               font-size:0.9rem;
+             ">
+      <button type="submit"
+              style="
+                background:#232D4B;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:8px 14px;
+                cursor:pointer;
+                font-size:0.9rem;
+              ">
+        Search
+      </button>
+    </div>
+  </form>
+
+  {% if search_query %}
+    <div style="margin-top:14px;">
+      <div style="font-size:0.9rem; color:#555; margin-bottom:6px;">
+        Search results for <strong>"{{ search_query }}"</strong>
+      </div>
+
+      {% if search_results %}
+        <ul class="users-list" style="list-style:none; padding:0; margin:0;">
+          {% for u in search_results %}
+            <li class="user-item"
+                style="display:flex; justify-content:space-between; align-items:center;
+                       border:1px solid #e0e0e0; border-radius:8px; padding:10px 12px; margin:8px 0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <a href="{% url 'profiles:view_profile' u.id %}">
+                  <img src="{{ u.profile.avatar_url }}"
+                       alt="Profile photo"
+                       style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                </a>
+                <div>
+                  <div class="user-name" style="font-weight:600; color:#10172A;">
+                    {{ u.profile.display_name|default:u.username }}
+                  </div>
+                  <div class="user-email" style="font-size:13px; color:#666;">
+                    {{ u.email }}
+                  </div>
+                </div>
+              </div>
+              <form method="post" action="{% url 'friends:send_friend_request' u.id %}">
+                {% csrf_token %}
+                <button class="action-btn btn-add"
+                        style="background:#E57200; color:#fff; border:none;
+                               border-radius:6px; padding:8px 14px; cursor:pointer;">
+                  Add friend
+                </button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p style="color:#999; font-size:0.9rem; margin:4px 0 0;">
+          No users found you can add.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
 
   <h3 style="margin-top:24px;">Current Friends</h3>
   {% if friends %}

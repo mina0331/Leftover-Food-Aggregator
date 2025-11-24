@@ -9,19 +9,51 @@ from .models import Friend, FriendRequest
 
 @login_required
 def FriendsList_index(request):
-    friends = (Friend.get_friends(request.user)
-               .select_related('profile')
-               .order_by('username'))
+    user = request.user
 
-    received_reqs = (FriendRequest.objects
-                     .filter(to_user=request.user, status='pending')
-                     .select_related('from_user__profile')
-                     .order_by('-created_at'))
+    friends = (
+        Friend.get_friends(user)
+        .select_related('profile')
+        .order_by('username')
+    )
 
-    sent_reqs = (FriendRequest.objects
-                 .filter(from_user=request.user, status='pending')
-                 .select_related('to_user__profile')
-                 .order_by('-created_at'))
+    received_reqs = (
+        FriendRequest.objects
+        .filter(to_user=user, status='pending')
+        .select_related('from_user__profile')
+        .order_by('-created_at')
+    )
+
+    sent_reqs = (
+        FriendRequest.objects
+        .filter(from_user=user, status='pending')
+        .select_related('to_user__profile')
+        .order_by('-created_at')
+    )
+
+    # --- NEW: search for non-friends ---
+    search_query = request.GET.get("search", "").strip()
+    search_results = []
+
+    if search_query:
+        # IDs you should NOT show in results
+        exclude_ids = {user.id}
+        exclude_ids.update(friends.values_list("id", flat=True))
+        exclude_ids.update(received_reqs.values_list("from_user_id", flat=True))
+        exclude_ids.update(sent_reqs.values_list("to_user_id", flat=True))
+
+        search_results = (
+            User.objects
+            .filter(
+                Q(profile__display_name__icontains=search_query) |
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+            .exclude(id__in=exclude_ids)
+            .select_related("profile")
+            .order_by("username")[:20]
+        )
+    # -----------------------------------
 
     return render(request, 'Friendslist/index.html', {
         'friends': friends,
@@ -31,9 +63,10 @@ def FriendsList_index(request):
             'friends': friends.count(),
             'received': received_reqs.count(),
             'sent': sent_reqs.count(),
-        }
+        },
+        'search_query': search_query,
+        'search_results': search_results,
     })
-
 
 @login_required
 def accept_friend_request(request, req_id):
