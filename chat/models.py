@@ -12,6 +12,13 @@ class Conversation(models.Model):
     is_group = models.BooleanField(default=False)
     participants = models.ManyToManyField(User, related_name='conversations')
     created_at = models.DateTimeField(auto_now_add=True)
+    dm_key = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="Canonical key for 1:1 DMs, e.g. '3:7'. Null for group chats."
+    )
 
     def __str__(self):
         if self.is_group and self.name:
@@ -20,23 +27,21 @@ class Conversation(models.Model):
 
     @classmethod
     def get_or_create_dm(cls, user1, user2):
-        from django.db.models import Count
+        # Normalize order so (A,B) and (B,A) are the same
+        uid1, uid2 = sorted([user1.id, user2.id])
+        key = f"{uid1}:{uid2}"
 
-        qs = cls.objects.filter(
+        convo, created = cls.objects.get_or_create(
             is_group=False,
-            participants=user1,
-        ).annotate(num_participants=Count('participants')).filter(
-            num_participants=2,
-            participants__in=[user2],
+            dm_key=key,
+            defaults={"name": ""},  # name unused for DMs; optional
         )
 
-        convo = qs.first()
-        if convo:
-            return convo
+        if created:
+            convo.participants.add(user1, user2)
 
-        convo = cls.objects.create(is_group=False)
-        convo.participants.add(user1, user2)
         return convo
+
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
