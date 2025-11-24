@@ -87,14 +87,40 @@
   }).addTo(map);
 
   // markers for posts
-  posts.forEach(p => {
-    const marker = L.marker([p.lat, p.lng]).addTo(map);
-    marker.bindPopup(`
-      <b>${p.event}</b><br/>
-      ${p.building}<br/>
-      <a href="${p.detail_url}">View details →</a>
-    `);
+  // Group posts by coordinates
+const groups = {};
+
+posts.forEach(p => {
+  const key = `${p.lat},${p.lng}`;
+  if (!groups[key]) {
+    groups[key] = {
+      lat: p.lat,
+      lng: p.lng,
+      building: p.building,
+      events: []
+    };
+  }
+  groups[key].events.push(p);
+});
+
+// Create one marker per location, with all events in the popup
+Object.values(groups).forEach(group => {
+  const marker = L.marker([group.lat, group.lng]).addTo(map);
+
+  let popupHtml = `<b>${group.building}</b><br/>`;
+
+  group.events.forEach(ev => {
+    popupHtml += `
+      <div style="margin-top:6px; padding-top:6px; border-top:1px solid #eee;">
+        <strong>${ev.event}</strong><br/>
+        <a href="${ev.detail_url}">View details →</a>
+      </div>
+    `;
   });
+
+  marker.bindPopup(popupHtml);
+});
+
 
   let userMarker = null;
 let firstFix = true;

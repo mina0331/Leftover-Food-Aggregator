@@ -33,8 +33,9 @@ def index(request):
     Post.objects.filter(
         status=Post.Status.PUBLISHED,
         is_deleted=False,
-    )
-    .select_related("cuisine", "author")
+    ).filter(
+    Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
+    ).select_related("cuisine", "author")
     )
 
     # Search across event, description, cuisine name, and org username
