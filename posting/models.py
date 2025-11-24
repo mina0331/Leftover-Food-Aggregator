@@ -118,17 +118,27 @@ class Post(models.Model):
             self.generate_qr_code()
             super().save(update_fields=['qr_code_image'])
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('posting:post_detail', args=[self.id])
+
     def generate_qr_code(self):
-        qr_data = f"Post ID: {self.id}, Event: {self.event}, Author: {self.author.username}"
-    
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-        qr.add_data(qr_data)
+    # build full url for the post
+        base_url = "https://swe-b-27-0f4424ee120f.herokuapp.com"  # change to real domain in production
+        detail_url = base_url + self.get_absolute_url()  # /posts/5/
+
+        qr = qrcode.QRCode(
+            version=1,
+            box_size=10,
+            border=4
+        )
+        qr.add_data(detail_url)  # store URL only!
         qr.make(fit=True)
 
         img = qr.make_image(fill_color="black", back_color="white")
         blob = BytesIO()
-        img.save(blob, 'PNG')
-        
+        img.save(blob, format='PNG')
+
         self.qr_code_image.save(f'post_{self.id}_qr.png', File(blob), save=False)
         blob.close()
 

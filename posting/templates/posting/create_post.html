@@ -15,22 +15,57 @@
     {% csrf_token %}
     
     {% for field in form %}
-      {% if field.name != 'publish_at' %}
-      <div style="display:flex; flex-direction:column;">
-        <label for="{{ field.id_for_label }}" 
-               style="font-weight:bold; color:#232D4B; margin-bottom:6px;">
-          {{ field.label }}
-        </label>
-        {{ field }}
-        {% if field.help_text %}
-          <small style="color:#777;">{{ field.help_text }}</small>
-        {% endif %}
-        {% for error in field.errors %}
-          <p style="color:#b30000; margin:4px 0;">{{ error }}</p>
-        {% endfor %}
+  {% if field.name == "image" %}
+    <div style="display:flex; flex-direction:column;">
+      <label style="font-weight:bold; color:#232D4B; margin-bottom:6px;">
+        {{ field.label }}
+      </label>
+
+      <!-- Clickable "text-like" area that opens the file picker -->
+      <div id="imageDisplay"
+           onclick="document.getElementById('imageInput').click();"
+           style="
+             padding: 10px 12px;
+             border-radius: 8px;
+             border: 1px solid #ccc;
+             background: #f9fafb;
+             font-size: 14px;
+             color: #555;
+             cursor: pointer;
+           ">
+        <span id="imageDisplayText">Click to upload an image</span>
       </div>
+
+      <!-- Hidden actual file input -->
+      {{ field }}
+
+      <!-- Optional preview -->
+      <img id="imagePreview"
+           src=""
+           style="display:none; margin-top:10px; max-width:100%; border-radius:8px;">
+
+      {% for error in field.errors %}
+        <p style="color:#b30000; margin:4px 0;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+  {% elif field.name != "publish_at" %}
+    <div style="display:flex; flex-direction:column;">
+      <label for="{{ field.id_for_label }}" 
+             style="font-weight:bold; color:#232D4B; margin-bottom:6px;">
+        {{ field.label }}
+      </label>
+      {{ field }}
+      {% if field.help_text %}
+        <small style="color:#777;">{{ field.help_text }}</small>
       {% endif %}
-    {% endfor %}
+      {% for error in field.errors %}
+        <p style="color:#b30000; margin:4px 0;">{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endfor %}
+
 
     <!-- Schedule for later checkbox -->
     <div style="display:flex; align-items:center; gap:8px;">
@@ -88,4 +123,33 @@
     }
   });
 </script>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const imageDisplayText = document.getElementById('imageDisplayText');
+  const imagePreview = document.getElementById('imagePreview');
+
+  if (imageInput) {
+    imageInput.addEventListener('change', (e) => {
+      const [file] = e.target.files || [];
+      if (file) {
+        // Show file name in the "text-like" field
+        imageDisplayText.textContent = file.name;
+
+        // Optional: preview the image
+        if (imagePreview) {
+          imagePreview.src = URL.createObjectURL(file);
+          imagePreview.style.display = 'block';
+        }
+      } else {
+        imageDisplayText.textContent = "Click to upload an image";
+        if (imagePreview) {
+          imagePreview.src = "";
+          imagePreview.style.display = 'none';
+        }
+      }
+    });
+  }
+</script>
+
 {% endblock %}
