@@ -19,7 +19,9 @@ from django.urls import reverse
 import math
 from django.db.models import Q, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Power
+from datetime import timedelta
 
+two_days_ago = timezone.now() - timedelta(days=2)
 
 def index(request):
     # search text
@@ -38,6 +40,7 @@ def index(request):
     Post.objects.filter(
         status=Post.Status.PUBLISHED,
         is_deleted=False,
+        created_at__gte=two_days_ago
     ).filter(
     Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
     ).select_related("cuisine", "author")
