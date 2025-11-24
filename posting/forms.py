@@ -18,6 +18,23 @@ class PostForm(forms.ModelForm):
         }
         # status is excluded and handled automatically in the view
 
+    def clean_image(self):
+        pic = self.cleaned_data.get("image")
+
+        # If no new file was uploaded → skip validation
+        if not pic or not hasattr(pic, "content_type"):
+            return pic
+
+        # Validate MIME type
+        if pic.content_type not in ["image/jpeg", "image/png"]:
+            raise forms.ValidationError("Only JPEG and PNG files are allowed.")
+
+        # Validate size (5MB limit)
+        if pic.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("File too large! Maximum size is 5MB.")
+
+        return pic
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Make all fields required except publish_at and pickup_deadline (which are optional)

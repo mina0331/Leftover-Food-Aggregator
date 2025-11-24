@@ -1,5 +1,7 @@
 from django import forms
 from .models import Profile
+from django.core.exceptions import ValidationError
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -12,7 +14,7 @@ class ProfileForm(forms.ModelForm):
             "bio": forms.Textarea(attrs={"rows": 4}),
             "major": forms.TextInput(),
             "display_name": forms.TextInput(attrs={"maxlength": 10}),
-            'profile_pic': forms.FileInput(attrs={'id': 'profilePicInput', 'style': 'display:none;'}),
+            'profile_pic': forms.FileInput(attrs={'id': 'profilePicInput', 'style': 'display:none;', "accept": "image/*"}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -36,3 +38,20 @@ class ProfileForm(forms.ModelForm):
         if display_name and len(display_name) > 10:
             raise forms.ValidationError("Display name must be 10 characters or less.")
         return display_name
+    
+    def clean_profile_pic(self):
+        pic = self.cleaned_data.get("profile_pic")
+
+        # If no new file was uploaded → skip validation
+        if not pic or not hasattr(pic, "content_type"):
+            return pic
+
+        # Validate MIME type
+        if pic.content_type not in ["image/jpeg", "image/png"]:
+            raise forms.ValidationError("Only JPEG and PNG files are allowed.")
+
+        # Validate size (5MB limit)
+        if pic.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("File too large! Maximum size is 5MB.")
+
+        return pic
