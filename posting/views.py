@@ -61,12 +61,12 @@ def index(request):
         qs = qs.filter(author__username=selected_org)
 
     #distance ordering 
+    # distance ordering 
     if sort == "distance" and lat_param and lng_param:
         try:
             user_lat = float(lat_param)
             user_lng = float(lng_param)
 
-            # Simple squared distance on lat/lng (fine for UVA scale)
             qs = qs.annotate(
                 distance=ExpressionWrapper(
                     Power(F("location__latitude") - user_lat, 2) +
@@ -75,15 +75,16 @@ def index(request):
                 )
             ).order_by("distance")
         except ValueError:
-            # If lat/lng are invalid, just fall back to date ordering below
-            pass
-    # Date ordering
-    if date_order == "oldest":
-        qs = qs.order_by("created_at")
-    else:
-        qs = qs.order_by("-created_at")
+            # If lat/lng are invalid, fall back to date ordering below
+            sort = ""   # force it to behave like "no distance sort"
 
-    
+# Date ordering (only if NOT distance)
+    if sort != "distance":
+        if date_order == "oldest":
+            qs = qs.order_by("created_at")
+        else:
+            qs = qs.order_by("-created_at")
+
 
     paginator = Paginator(qs, 5)
     page_number = request.GET.get("page")
