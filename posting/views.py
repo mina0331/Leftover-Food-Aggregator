@@ -258,8 +258,11 @@ def post_map(request):
             location__isnull=False,
             location__latitude__isnull=False,
             location__longitude__isnull=False,
-            is_deleted=False
+            is_deleted=False,
         )
+        .filter(
+            Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
+            )
     )
 
     posts_data = []
