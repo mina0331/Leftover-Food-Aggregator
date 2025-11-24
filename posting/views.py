@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post, Location, OrganizerThank, Report, RSVP
+from .models import Cuisine, Post, Location, OrganizerThank, RSVP
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
-from .forms import PostForm, ReportForm, RSVPForm
+from .forms import PostForm, RSVPForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db import IntegrityError
@@ -350,35 +350,8 @@ def thank_organizer(request):
             'status': 'already_thanked'
         })
 
-@login_required
-def report_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
 
-    if request.user == post.author:
-        messages.warning(request, "You cannot report your own post.")
-        return redirect("posting:post_detail", post_id=post.id)
 
-    existing_report = Report.objects.filter(post=post, reporter=request.user).first()
-    if existing_report:
-        messages.info(request, "You already submitted a report for this post.")
-        return redirect("posting:post_detail", post_id=post.id)
-
-    if request.method == "POST":
-        form = ReportForm(request.POST)
-        if form.is_valid():
-            report = form.save(commit=False)
-            report.post = post
-            report.reporter = request.user
-            report.save()
-            messages.success(request, "Thank you — your report has been submitted and will be reviewed.")
-            return redirect("posting:post_detail", post_id=post.id)
-    else:
-        form = ReportForm()
-
-    return render(request, "posting/report_form.html", {
-        "form": form,
-        "post": post,
-    })
 
 @staff_member_required
 def export_data(request):

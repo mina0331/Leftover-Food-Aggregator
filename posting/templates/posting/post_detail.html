@@ -113,7 +113,27 @@
   }
 </style>
 
+
+
+{% if messages %}
+  {% for message in messages %}
+    {% if "report-notice" in message.tags %}
+      <div style="
+          background:#fff3cd;
+          color:#664d03;
+          padding:10px 14px;
+          border-radius:6px;
+          margin:10px 0;
+          border:1px solid #ffeeba;
+      ">
+        {{ message }}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
 <div class="container post-container">
+
 
   <a href="{% url 'posting:post_list' %}" class="back-link">
      ← Back to All Posts
@@ -308,12 +328,6 @@
             🚩 Flag Post
           </button>
       
-          <a href="{% url 'posting:report_post' post.id %}"
-             style="background:#E57200; color:white; padding:8px 14px;
-                    border-radius:6px; text-decoration:none; font-size:14px;"
-             title="Report a food safety issue" aria-label="Report food issue">
-            ⚠️ Report Food Issue
-          </a>
         {% endif %}
       </div>
     </div>

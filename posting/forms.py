@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Post, Location, Report, RSVP
+from .models import Post, Location, RSVP
 
 class PostForm(forms.ModelForm):
     class Meta:
@@ -35,15 +35,6 @@ class PostForm(forms.ModelForm):
         if "pickup_deadline" in self.fields:
             self.fields["pickup_deadline"].label = "Pickup Deadline (Optional)"
             self.fields["pickup_deadline"].help_text = "When will you stop giving out food? Leave empty if no specific deadline."
-
-class ReportForm(forms.ModelForm):
-    class Meta: 
-        model = Report 
-        fields = ["reason", "description"]
-        widgets = {
-            "reason": forms.Select(attrs={"class": "form-control"}),
-            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Describe what you saw (optional)"}),
-        }
 
 
 class RSVPForm(forms.ModelForm):

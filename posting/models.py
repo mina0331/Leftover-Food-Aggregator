@@ -142,30 +142,6 @@ class Post(models.Model):
         self.qr_code_image.save(f'post_{self.id}_qr.png', File(blob), save=False)
         blob.close()
 
-class Report(models.Model):
-    class Reason(models.TextChoices):
-        SPOILED = "spoiled", "Spoiled / Rotten"
-        EXPIRED = "expired", "Expired"
-        ALLERGEN = "allergen", "Incorrect allergen info"
-        HAZARD = "hazard", "Food safety hazard"
-        OTHER = "other", "Other"
-    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="reports")
-    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports_made")
-    reason = models.CharField(max_length=30, choices=Reason.choices)
-    description = models.TextField(blank=True)  # optional freeform
-    created_at = models.DateTimeField(auto_now_add=True)
-    resolved = models.BooleanField(default=False)
-    resolved_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="reports_resolved")
-    resolved_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"Report #{self.id} on {self.post} by {self.reporter}"
-
-
-
 class OrganizerThank(models.Model):
     thanker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='thanks_given')
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='thanks_received')
