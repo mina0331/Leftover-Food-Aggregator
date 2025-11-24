@@ -240,27 +240,36 @@
           {% endif %}
         </li>
     {% if user.profile.role == 'org' %}
-    <li class="nav-item">
-        <a href="{% url 'posting:notification_inbox' %}"
-          class="nav-link"
-          style="position:relative; display:flex; align-items:center; gap:4px;">
+    <li class="nav-item" style="position:relative;">
+  <a href="{% url 'posting:notification_inbox' %}"
+     class="nav-link"
+     style="
+       display:flex;
+       align-items:center;
+       gap:4px;
+       padding:6px 12px;
+       border-radius:12px;
+       transition: background 0.2s ease;
+     ">
 
-        <span>RSVPs</span>
+    <i class="fa-regular fa-message"></i>
 
-      {% if notification_count %}
-        <span
-          style="
-          position:absolute;
-          top:-6px;
-          right:-10px;
-          background:#E57200;
-          color:white;
-          padding:4px 8px;
-          border-radius:16px;
-          font-size:0.75rem;
-          box-shadow:0 2px 6px rgba(0,0,0,0.2);
-          font-weight:600;
-        ">
+    <span>Notifications</span>
+
+    {% if notification_count %}
+      <span class="badge"
+            style="
+              position:absolute;
+              top:2px;
+              right:2px;
+              background:#E57200;
+              color:white;
+              padding:3px 7px;
+              border-radius:12px;
+              font-size:0.7rem;
+              font-weight:600;
+              box-shadow:0 2px 4px rgba(0,0,0,0.2);
+            ">
         {{ notification_count }}
       </span>
     {% endif %}

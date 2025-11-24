@@ -22,9 +22,9 @@
             {{ n.message }}
           </p>
 
-          {% if n.post %}
+          {% if n.post_id %}
             <p style="margin:4px 0 0 0; font-size:0.85rem;">
-              <a href="{% url 'posting:post_detail' n.post.id %}" style="color:#E57200;">
+              <a href="{% url 'posting:post_detail' n.post_id %}" style="color:#E57200;">
                 View post
               </a>
             </p>
