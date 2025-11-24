@@ -171,6 +171,7 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
     'chat.context_processors.unread_messages',
     "Friendslist.context_processors.pending_friend_requests_count",
     "posting.context_processors.unread_posts_count",
+    "posting.context_processors.rsvp_notifications",
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"

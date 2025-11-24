@@ -1,6 +1,7 @@
 from .models import Post
 from django.utils import timezone
 from django.db.models import Q
+from .models import Notification
 
 
 def unread_posts_count(request):
@@ -19,3 +20,17 @@ def unread_posts_count(request):
     )
 
     return {"unread_posts_count": count}
+
+def rsvp_notifications(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    # You can tweak: here we only bring a few most recent unread
+    unread = Notification.objects.filter(
+        user=request.user,
+        is_read=False        
+    ).order_by("-created_at")[:5]
+
+    return {
+        "rsvp_notifications": unread
+    }

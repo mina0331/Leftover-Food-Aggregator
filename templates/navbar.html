@@ -208,7 +208,7 @@
               </li>
             {% endif %}
           {% endwith %}
-        {% endif %}
+        
 
         {% url 'posting:event_history' as history_url %}
         <li>
@@ -239,6 +239,35 @@
             <span class="badge">{{ pending_friend_requests_count }}</span>
           {% endif %}
         </li>
+    {% if user.profile.role == 'org' %}
+    <li class="nav-item">
+        <a href="{% url 'posting:notification_inbox' %}"
+          class="nav-link"
+          style="position:relative; display:flex; align-items:center; gap:4px;">
+
+        <span>RSVPs</span>
+
+      {% if notification_count %}
+        <span
+          style="
+          position:absolute;
+          top:-6px;
+          right:-10px;
+          background:#E57200;
+          color:white;
+          padding:4px 8px;
+          border-radius:16px;
+          font-size:0.75rem;
+          box-shadow:0 2px 6px rgba(0,0,0,0.2);
+          font-weight:600;
+        ">
+        {{ notification_count }}
+      </span>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+  </a>
+</li>
 
 
       </ul>

@@ -16,5 +16,6 @@ urlpatterns = [
     path("posts/<int:post_id>/rsvp/", views.create_rsvp, name="create_rsvp"),
     path("posts/<int:post_id>/rsvps/", views.view_post_rsvps, name="view_post_rsvps"),
     path("rsvp/<int:rsvp_id>/cancel/", views.cancel_rsvp, name="cancel_rsvp"),
+    path("notifications/", views.notification_inbox, name="notification_inbox"),
 
 ]

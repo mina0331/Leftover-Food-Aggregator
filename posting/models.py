@@ -9,6 +9,7 @@ import time
 import qrcode
 from io import BytesIO
 from django.core.files import File
+from django.utils import timezone
 
 
 # Create your models here.
@@ -165,6 +166,7 @@ class RSVP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
     is_cancelled = models.BooleanField(default=False)
+    is_seen_by_owner = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('post', 'user')
@@ -210,3 +212,34 @@ class RSVP(models.Model):
         if minutes == 0:
             return f"{hours} hour{'s' if hours > 1 else ''}"
         return f"{hours}h {minutes}m"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    message = models.CharField(max_length=255)
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+    rsvp = models.ForeignKey(
+        RSVP,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Notification for {self.user}: {self.message[:40]}"

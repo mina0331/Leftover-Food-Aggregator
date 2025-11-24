@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cuisine, Post, Location, OrganizerThank, RSVP
+from .models import Cuisine, Post, Location, OrganizerThank, RSVP, Notification
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -385,23 +385,18 @@ def export_data(request):
 
     return response
 
-
 @login_required
 def create_rsvp(request, post_id):
-    """Create an RSVP for a post"""
     post = get_object_or_404(Post, id=post_id)
     
-    # Don't allow post author to RSVP to their own post
     if request.user == post.author:
         messages.warning(request, "You cannot RSVP to your own post.")
         return redirect('posting:post_detail', post_id=post_id)
     
-    # Check if pickup deadline has passed
     if not post.is_pickup_available():
         messages.error(request, "Sorry, the pickup deadline for this post has passed.")
         return redirect('posting:post_detail', post_id=post_id)
     
-    # Check if user already has an active RSVP
     existing_rsvp = RSVP.objects.filter(post=post, user=request.user, is_cancelled=False).first()
     if existing_rsvp:
         messages.info(request, "You already have an active RSVP for this post.")
@@ -414,7 +409,6 @@ def create_rsvp(request, post_id):
             rsvp.post = post
             rsvp.user = request.user
             
-            # Check if estimated arrival is after pickup deadline
             estimated_arrival = rsvp.get_estimated_arrival_time()
             if post.pickup_deadline and estimated_arrival > post.pickup_deadline:
                 messages.warning(
@@ -424,6 +418,21 @@ def create_rsvp(request, post_id):
                 )
             
             rsvp.save()
+
+            # 🔔 Create in-app notification for the org / post author
+            org_user = post.author
+            profile = getattr(org_user, "profile", None)
+            if profile and profile.role == "org":
+                Notification.objects.create(
+                    user=org_user,
+                    post=post,
+                    rsvp=rsvp,
+                    message=(
+                        f"{request.user.profile.display_name} RSVP’d to your post "
+                        f"“{post.event}” and plans to arrive in {rsvp.estimated_arrival_minutes} minutes."
+                    ),
+                )
+
             messages.success(
                 request,
                 f'RSVP created! You indicated you will arrive in {rsvp.estimated_arrival_minutes} minutes. '
@@ -437,7 +446,6 @@ def create_rsvp(request, post_id):
         "form": form,
         "post": post,
     })
-
 
 @login_required
 def cancel_rsvp(request, rsvp_id):
@@ -488,3 +496,16 @@ def view_post_rsvps(request, post_id):
         "active_rsvps": active_rsvps,
         "cancelled_rsvps": cancelled_rsvps,
     })
+
+
+@login_required
+def notification_inbox(request):
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).select_related("post", "rsvp").order_by("-created_at")
+
+    # Mark all unread as read once user visits inbox
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+
+    return render(request, "posting/notification_inbox.html", {"notifications": notifications})
+

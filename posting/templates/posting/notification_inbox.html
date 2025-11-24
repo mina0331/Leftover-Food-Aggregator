@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width: 700px; margin: 40px auto;">
+  <h1 style="margin-top:0; color:#232D4B; text-align:center;">
+    RSVP Notifications
+  </h1>
+
+  {% if notifications %}
+    <ul style="list-style:none; padding:0; margin-top:24px;">
+      {% for n in notifications %}
+        <li style="
+          background:#f8f9fb;
+          border-radius:16px;
+          padding:14px 18px;
+          margin-bottom:12px;
+          box-shadow:0 2px 6px rgba(0,0,0,0.12);
+          font-family:system-ui, -apple-system;
+        ">
+          <p style="margin:0 0 4px 0; color:#232D4B;">
+            {{ n.message }}
+          </p>
+
+          {% if n.post %}
+            <p style="margin:4px 0 0 0; font-size:0.85rem;">
+              <a href="{% url 'posting:post_detail' n.post.id %}" style="color:#E57200;">
+                View post
+              </a>
+            </p>
+          {% endif %}
+
+          <p style="margin:6px 0 0 0; font-size:0.8rem; color:#777;">
+            {{ n.created_at|date:"M d, Y g:i A" }}
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="margin-top:24px; text-align:center; color:#666;">
+      No notifications right now 
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

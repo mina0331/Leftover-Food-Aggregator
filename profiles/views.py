@@ -135,11 +135,11 @@ def view_profile(request, user_id):
     profile = getattr(profile_user, "profile", None)  # assuming OneToOne Profile
     is_friend = Friend.are_friends(request.user, profile_user)
     user_posts = (
-    Post.objects
-    .filter(author=profile_user, is_deleted=False)  # or whatever field you use
-    .order_by('-created_at')
-    .distinct()
-)
+        Post.objects
+        .filter(author=profile_user, is_deleted=False)  # or whatever field you use
+        .order_by('-created_at')
+        .distinct()
+    )
     context = {
         "profile_user": profile_user,
         "profile": profile,
