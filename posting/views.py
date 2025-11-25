@@ -287,12 +287,12 @@ def post_map(request):
             location__latitude__isnull=False,
             location__longitude__isnull=False,
             is_deleted=False,
+            created_at__gte=two_days_ago,
         )
         .filter(
             Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
             )
     )
-
     posts_data = []
     for p in posts:
         posts_data.append({

@@ -16,6 +16,9 @@
     margin-top: 20px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
 
   .post-title {
@@ -68,9 +71,9 @@
   }
 
   .post-image {
-    width: 100%;
+    width: 50%;
     border-radius: 12px;
-    margin: 20px 0;
+    margin: 8px 0 0 0;
   }
 
   .section-title {
@@ -87,33 +90,81 @@
     font-size: 0.98rem;
   }
 
-  .post-actions {
-    margin-top: 20px;
+  /* Reusable buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   }
 
-  .btn-edit {
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .btn-primary {
     background: #E57200;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 600;
+    color: #fff;
   }
 
-  .btn-delete {
+  .btn-danger {
     background: #b30000;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 6px;
-    text-decoration: none;
-    margin-left: 6px;
-    font-size: 0.95rem;
-    font-weight: 600;
+    color: #fff;
+  }
+
+  .btn-muted {
+    background: #6c757d;
+    color: #fff;
+  }
+
+  .btn-flag {
+    background: #e74c3c;
+    color: #fff;
+  }
+
+  /* Footer row with actions */
+  .post-footer {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .post-footer-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .post-footer-right {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
   }
 </style>
-
-
 
 {% if messages %}
   {% for message in messages %}
@@ -133,7 +184,6 @@
 {% endif %}
 
 <div class="container post-container">
-
 
   <a href="{% url 'posting:post_list' %}" class="back-link">
      ← Back to All Posts
@@ -183,23 +233,26 @@
       {% endif %}
     </div>
 
-    <!-- Thanks Section -->
-    <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
-      <p style="margin:0 0 10px 0; color:#555;">
-        <strong>👍 Thanks:</strong> <span id="thanks-count">{{ post.author.thanks_received.count }}</span>
+    {% if post.image %}
+      <img src="{{ post.image.url }}" alt="{{ post.event }}" class="post-image">
+    {% endif %}
+
+    <div>
+      <h3 class="section-title">Event Description</h3>
+      <p class="post-description">
+        {{ post.event_description|linebreaks }}
       </p>
-      {% if user.is_authenticated and user != post.author %}
-        <button id="thank-button" onclick="thankOrganizer()"
-                style="background:#28a745; color:white; border:none; padding:8px 16px;
-                       border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">
-          Thank Organizer
-        </button>
-        <span id="thank-message" style="display:none; color:#28a745; margin-left:10px; font-weight:600;"></span>
-      {% endif %}
     </div>
 
-    <!-- RSVP Section -->
-    <div style="margin:20px 0; padding:15px; background:#e8f5e9; border-radius:8px; border:1px solid #4caf50;">
+    <!-- Thanks Section (no button here) -->
+    <div style="margin:10px 0; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+      <p style="margin:0; color:#555;">
+        <strong>👍 Thanks:</strong> <span id="thanks-count">{{ post.author.thanks_received.count }}</span>
+      </p>
+    </div>
+
+    <!-- RSVP Section (info only; button is in footer) -->
+    <div style="margin:0; padding:15px; background:#e8f5e9; border-radius:8px; border:1px solid #4caf50;">
       {% if not post.is_pickup_available %}
         <div style="background:#ffebee; border-left:4px solid #d32f2f; padding:12px; margin-bottom:15px; border-radius:4px;">
           <p style="margin:0; color:#c62828; font-weight:600;">
@@ -214,8 +267,8 @@
         </p>
         {% if user == post.author and rsvp_count > 0 %}
           <a href="{% url 'posting:view_post_rsvps' post.id %}"
-             style="background:#4caf50; color:white; padding:6px 12px;
-                    border-radius:6px; text-decoration:none; font-size:13px;">
+             class="btn"
+             style="background:#4caf50; color:white; font-size:13px;">
             View RSVPs
           </a>
         {% endif %}
@@ -263,21 +316,13 @@
             </p>
             <form method="POST" action="{% url 'posting:cancel_rsvp' user_rsvp.id %}" style="display:inline;">
               {% csrf_token %}
-              <button type="submit" 
-                      style="background:#f44336; color:white; border:none; padding:6px 12px;
-                             border-radius:4px; cursor:pointer; font-size:13px;">
+              <button type="submit" class="btn btn-danger" style="font-size:13px;">
                 Cancel RSVP
               </button>
             </form>
           </div>
         {% else %}
           {% if post.is_pickup_available %}
-            <a href="{% url 'posting:create_rsvp' post.id %}"
-               style="background:#4caf50; color:white; padding:10px 16px;
-                      border-radius:6px; text-decoration:none; font-size:14px; font-weight:600;
-                      display:inline-block; margin-top:10px;">
-              📋 RSVP to Pick Up
-            </a>
             {% if post.pickup_deadline %}
               <p style="margin:8px 0 0 0; color:#666; font-size:0.85rem; font-style:italic;">
                 ⚠️ Note: Food pickup available until {{ post.pickup_deadline|date:"g:i A" }}. 
@@ -301,44 +346,57 @@
       {% endif %}
     </div>
 
-    {% if post.image %}
-      <img src="{{ post.image.url }}" alt="{{ post.event }}" class="post-image">
-    {% endif %}
-
-    <h3 class="section-title">Event Description</h3>
-    <p class="post-description">
-      {{ post.event_description|linebreaks }}
-    </p>
-
-    <div style="margin-top:20px; display: flex; gap: 10px; align-items: center;">
-    {% if user == post.author %}
-        <a href="{% url 'posting:edit_post' post.id %}"
-           style="background:#E57200; color:white; padding:8px 14px;
-                  border-radius:6px; text-decoration:none;">Edit</a>
-        <a href="{% url 'posting:delete_post' post.id %}"
-           style="background:#b30000; color:white; padding:8px 14px;
-                  border-radius:6px; text-decoration:none;">Delete</a>
-      {% endif %}
-      <div style="display:flex; gap:10px; align-items:center;">
-        {% if user.is_authenticated and user != post.author %}
-          <button onclick="openFlagModal({{ post.id }})"
-                  style="background:#e74c3c; color:white; border:none; padding:8px 14px;
-                         border-radius:6px; cursor:pointer; font-size:14px;"
-                  title="Flag this post for moderator review" aria-label="Flag post">
-            🚩 Flag Post
-          </button>
-      
-        {% endif %}
-      </div>
-    </div>
-
     {% if post.qr_code_image %}
-      <div style="margin-top:20px;">
+      <div style="margin-top:4px;">
         <h3 style="color:#232D4B;">QR Code</h3>
         <img src="{{ post.qr_code_image.url }}" alt="QR Code for {{ post.event }}"
              style="max-width:200px; border-radius:8px;">
       </div>
     {% endif %}
+
+    <!-- Footer actions at bottom of card -->
+    <div class="post-footer">
+      <div class="post-footer-left">
+        <!-- optional: tags/badges later -->
+      </div>
+
+      <div class="post-footer-right">
+        {% if user == post.author %}
+          <a href="{% url 'posting:edit_post' post.id %}" class="btn btn-primary">
+            Edit
+          </a>
+          <a href="{% url 'posting:delete_post' post.id %}" class="btn btn-danger">
+            Delete
+          </a>
+        {% endif %}
+
+        {% if user.is_authenticated and user != post.author %}
+          {% if post.is_pickup_available and not user_rsvp %}
+            <a href="{% url 'posting:create_rsvp' post.id %}"
+               class="btn"
+               style="background:#4caf50; color:white; font-size:14px;">
+              📋 RSVP to Pick Up
+            </a>
+          {% endif %}
+
+          <button id="thank-button"
+                  onclick="thankOrganizer()"
+                  class="btn"
+                  style="background:#28a745; color:white;">
+            Thank Organizer
+          </button>
+          <span id="thank-message" style="display:none; color:#28a745; font-weight:600;"></span>
+
+          <button
+            onclick="openFlagModal({{ post.id }})"
+            class="btn btn-flag"
+            title="Flag this post for moderator review"
+            aria-label="Flag post">
+            🚩 Flag
+          </button>
+        {% endif %}
+      </div>
+    </div>
 
   </div>
 
@@ -388,16 +446,12 @@ function thankOrganizer() {
     
     // Disable button to prevent double-clicking
     button.disabled = true;
-    button.style.opacity = '0.6';
-    button.style.cursor = 'not-allowed';
     button.textContent = 'Sending...';
     
-    // Prepare form data
     const formData = new FormData();
     formData.append('organizer_id', '{{ post.author.id }}');
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     
-    // Send AJAX POST request
     fetch('{% url "posting:thank_organizer" %}', {
         method: 'POST',
         body: formData,
@@ -408,18 +462,14 @@ function thankOrganizer() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Update the thanks count
             thanksCount.textContent = data.thanks_count;
-            
-            // Show success message
             button.textContent = 'Thanked!';
-            button.style.background = '#6c757d';
+            button.classList.add('btn-muted');
             message.textContent = '✓ Thank you!';
             message.style.display = 'inline';
         } else if (data.status === 'already_thanked') {
-            // User already thanked this organizer
             button.textContent = 'Already Thanked';
-            button.style.background = '#6c757d';
+            button.classList.add('btn-muted');
             message.textContent = 'You already thanked this organizer';
             message.style.display = 'inline';
             message.style.color = '#dc3545';
@@ -427,10 +477,7 @@ function thankOrganizer() {
     })
     .catch(error => {
         console.error('Error:', error);
-        // Re-enable button on error
         button.disabled = false;
-        button.style.opacity = '1';
-        button.style.cursor = 'pointer';
         button.textContent = 'Thank Organizer';
         alert('An error occurred. Please try again.');
     });

@@ -2,7 +2,9 @@ from .models import Post
 from django.utils import timezone
 from django.db.models import Q
 from .models import Notification
+from datetime import timedelta
 
+two_days_ago = timezone.now() - timedelta(days=2)
 
 def unread_posts_count(request):
     if not request.user.is_authenticated:
@@ -10,8 +12,11 @@ def unread_posts_count(request):
 
     count = (
         Post.objects
-        .filter(is_deleted=False)  
-        .filter(
+        .filter
+        (is_deleted=False,
+         status=Post.Status.PUBLISHED,
+         created_at__gte=two_days_ago
+        ).filter(
             Q(pickup_deadline__isnull=True) |
             Q(pickup_deadline__gt=timezone.now())
         )
