@@ -130,10 +130,6 @@
         <p>{{ profile.bio }}</p>
       {% endif %}
 
-    {% if profile.role %}
-        <div class="profile-section-title">Role</div>
-        <p>{{ profile.get_role_display }}</p>
-      {% endif %}
 
       {% if profile.preferences.all %}
         <div class="profile-section-title">Favorite cuisines</div>
