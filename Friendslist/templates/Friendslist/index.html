@@ -149,7 +149,7 @@
       {% for r in sent_reqs %}
         <li class="user-item" style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e0e0e0;border-radius:8px;padding:14px;margin:10px 0;">
           <div>
-            <div class="user-name" style="font-weight:600;color:#10172A;">{{ r.to_user.username }}</div>
+            <div class="user-name" style="font-weight:600;color:#10172A;">{{ r.to_user.profile.display_name }}</div>
             <div class="user-email" style="font-size:13px;color:#666;">{{ r.to_user.email }}</div>
           </div>
           <form method="post" action="{% url 'friends:cancel_friend_request' r.id %}">
