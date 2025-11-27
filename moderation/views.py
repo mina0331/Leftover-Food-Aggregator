@@ -80,17 +80,30 @@ def review_flagged_content(request):
         django_messages.error(request, "You don't have permission to access this page.")
         return redirect('/')
     
-    # Get pending flags (most recent first)
-    pending_flags = FlaggedContent.objects.filter(
+    # Get pending flags queryset (most recent first) - will paginate this
+    pending_flags_qs = FlaggedContent.objects.filter(
         status=FlaggedContent.Status.PENDING
-    ).select_related('flagged_by', 'content_type').prefetch_related('content_object')
+    ).select_related('flagged_by', 'content_type').prefetch_related('content_object').order_by('-flagged_at')
     
-    # Get recently reviewed flags
+    # Paginate pending flags (10 per page for better performance)
+    paginator = Paginator(pending_flags_qs, 10)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_number = int(page_number)
+        pending_flags_page = paginator.page(page_number)
+    except (ValueError, TypeError):
+        # Invalid page number, default to page 1
+        pending_flags_page = paginator.page(1)
+    except:
+        # EmptyPage or other pagination errors, default to page 1
+        pending_flags_page = paginator.page(1)
+    
+    # Get recently reviewed flags (limit to 20 for performance)
     reviewed_flags = FlaggedContent.objects.exclude(
         status=FlaggedContent.Status.PENDING
     ).select_related('flagged_by', 'reviewed_by', 'content_type').order_by('-reviewed_at')[:20]
     
-    # Count by status
+    # Count by status (using efficient count queries)
     stats = {
         'pending': FlaggedContent.objects.filter(status=FlaggedContent.Status.PENDING).count(),
         'approved': FlaggedContent.objects.filter(status=FlaggedContent.Status.APPROVED).count(),
@@ -99,21 +112,21 @@ def review_flagged_content(request):
         'edited': FlaggedContent.objects.filter(status=FlaggedContent.Status.EDITED).count(),
     }
     
-    # Get violation counts for content authors (for suspend user feature)
+    # Get violation counts for content authors (only for current page to optimize)
     violation_counts = {}
     post_ct = ContentType.objects.get_for_model(Post)
     message_ct = ContentType.objects.get_for_model(Message)
     
-    # Get all unique authors from pending flags
+    # Get unique authors from current page of pending flags only
     authors = set()
-    for flag in pending_flags:
+    for flag in pending_flags_page:
         if flag.content_object:
             if flag.content_type.model == 'post':
                 authors.add(flag.content_object.author)
             elif flag.content_type.model == 'message':
                 authors.add(flag.content_object.sender)
     
-    # Count violations per author
+    # Count violations per author (only for authors on current page)
     for author in authors:
         post_ids = Post.objects.filter(author=author).values_list('id', flat=True)
         message_ids = Message.objects.filter(sender=author).values_list('id', flat=True)
@@ -131,7 +144,7 @@ def review_flagged_content(request):
             }
     
     return render(request, 'moderation/review_flagged.html', {
-        'pending_flags': pending_flags,
+        'pending_flags': pending_flags_page,
         'reviewed_flags': reviewed_flags,
         'stats': stats,
         'violation_counts': violation_counts,

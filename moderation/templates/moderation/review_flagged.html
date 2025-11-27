@@ -274,7 +274,7 @@
     
     <!-- Pending Flags -->
     <div class="flags-section">
-        <h2 style="color: #232D4B; margin-bottom: 20px;">⏳ Pending Review ({{ pending_flags.count }})</h2>
+        <h2 style="color: #232D4B; margin-bottom: 20px;">⏳ Pending Review ({{ pending_flags.paginator.count }} total)</h2>
         
         {% for flag in pending_flags %}
         <div class="flag-item pending">
@@ -374,6 +374,31 @@
         {% empty %}
         <p style="text-align: center; color: #666; padding: 40px;">🎉 No pending flags! All clear.</p>
         {% endfor %}
+        
+        <!-- Pagination Controls -->
+        {% if pending_flags.has_other_pages %}
+        <div style="margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            {% if pending_flags.has_previous %}
+                <a href="?page=1" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">« First</a>
+                <a href="?page={{ pending_flags.previous_page_number }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">‹ Previous</a>
+            {% else %}
+                <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">« First</span>
+                <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">‹ Previous</span>
+            {% endif %}
+            
+            <span style="padding: 8px 15px; background: #f8f9fa; border-radius: 6px; font-weight: 600;">
+                Page {{ pending_flags.number }} of {{ pending_flags.paginator.num_pages }}
+            </span>
+            
+            {% if pending_flags.has_next %}
+                <a href="?page={{ pending_flags.next_page_number }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Next ›</a>
+                <a href="?page={{ pending_flags.paginator.num_pages }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Last »</a>
+            {% else %}
+                <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">Next ›</span>
+                <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">Last »</span>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
     
     <!-- Recently Reviewed -->
