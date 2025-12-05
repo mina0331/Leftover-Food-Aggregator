@@ -279,6 +279,17 @@
     }
 
 
+  .conversation-item.unread .conversation-name,
+  .conversation-item.unread .conversation-preview {
+    font-weight: 700;      /* bold */
+    color: #10172A;        /* strong color */
+  }
+
+  .conversation-item.unread {
+    background: #ffe8d6;   /* slightly stronger than active */
+    border-left: 4px solid #1040ed;  /* strong visual marker */
+  }
+
     @media (max-width: 768px) {
         .messages-container {
             grid-template-columns: 1fr;
@@ -311,7 +322,10 @@
     <ul class="conversations-list">
       {% for conv in all_conversations %}
         <a href="{% url 'chat:conversation' conv.id %}"
-           class="conversation-item {% if conv.id == conversation.id %}active{% endif %}">
+          class="conversation-item
+          {% if conv.id == conversation.id %} active{% endif %}
+          {% if conv.unread_count > 0 %} unread{% endif %}">
+
           <div class="conversation-header">
             <span class="conversation-name">
               {% if conv.is_group %}
