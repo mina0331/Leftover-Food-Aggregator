@@ -22,6 +22,9 @@ from django.db.models.functions import Power
 from datetime import timedelta
 from django.http import Http404
 from Friendslist.models import Friend
+from django.http import Http404
+from Friendslist.models import Friend
+
 
 two_days_ago = timezone.now() - timedelta(days=2)
 
@@ -248,6 +251,10 @@ def post_detail(request, post_id):
         messages.info(request, 'This post has been deleted.')
         return redirect('posting:post_list')
     
+    if not user_can_view_post(request.user, post):
+        # Hide existence from unauthorized users
+        raise Http404("Post not found")
+    
     # Track read users
     if request.user.is_authenticated:
         post.read_users.add(request.user)
@@ -347,6 +354,9 @@ def post_map(request):
             Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
             )
     )
+
+    posts = apply_visibility_filter(posts, request.user)
+
     posts_data = []
     for p in posts:
         posts_data.append({
@@ -446,6 +456,9 @@ def export_data(request):
 @login_required
 def create_rsvp(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    
+    if not user_can_view_post(request.user, post):
+        raise Http404("Post not found")
     
     if request.user == post.author:
         messages.warning(request, "You cannot RSVP to your own post.")
