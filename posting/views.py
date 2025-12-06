@@ -20,8 +20,59 @@ import math
 from django.db.models import Q, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Power
 from datetime import timedelta
+from django.http import Http404
+from Friendslist.models import Friend
 
 two_days_ago = timezone.now() - timedelta(days=2)
+
+def apply_visibility_filter(qs, user):
+    if not user.is_authenticated:
+        return qs.filter(visibility=Post.Visibility.PUBLIC)
+
+    # Staff/admin → see everything
+    if user.is_staff or user.is_superuser:
+        return qs
+
+    # Authenticated normal user → use Friend model
+    friends = Friend.get_friends(user)
+
+    return qs.filter(
+        Q(visibility=Post.Visibility.PUBLIC)
+        | Q(author=user)
+        | Q(visibility=Post.Visibility.FRIENDS_ONLY, author__in=friends)
+    )
+
+
+def user_can_view_post(user, post):
+    # Deleted posts shouldn't be visible at all
+    if post.is_deleted:
+        return False
+
+    # Staff/admin → can always view
+    if user.is_authenticated and (user.is_staff or user.is_superuser):
+        return True
+
+    # Public posts
+    if post.visibility == Post.Visibility.PUBLIC:
+        # If published → visible to everyone
+        if post.status == Post.Status.PUBLISHED:
+            return True
+        # Draft/scheduled → only author
+        if user.is_authenticated and post.author == user:
+            return True
+        return False
+
+    # Friends-only posts
+    if not user.is_authenticated:
+        return False
+
+    # Author always sees their own post
+    if post.author == user:
+        return True
+
+    # Check friendship
+    friends = Friend.get_friends(user)
+    return friends.filter(id=post.author_id).exists()
 
 def index(request):
     # search text
