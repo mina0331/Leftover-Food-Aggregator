@@ -51,6 +51,10 @@ class Post(models.Model):
         SCHEDULED = "scheduled", "Scheduled"
         PUBLISHED = "published", "Published"
 
+    class Visibility(models.TextChoices):
+        PUBLIC = "public", "Public"
+        FRIENDS_ONLY = "friends", "Friends Only"
+
     event = models.TextField()
     event_description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
