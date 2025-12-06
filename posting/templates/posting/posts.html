@@ -417,7 +417,23 @@
 
       <!-- Event + org on same line -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h2 style="margin:0; font-size:24px;">{{ post.event }}</h2>
+        <h2 style="margin:0; font-size:24px;">
+          {{ post.event }}
+          {% if post.visibility == post.Visibility.FRIENDS_ONLY %}
+          <span style="
+            display:inline-block;
+            padding:2px 8px;
+            border-radius:12px;
+            background:#FFE8B2;
+            color:#8A4B00;
+            font-size:12px;
+            margin-left:8px;
+            vertical-align:middle;
+          ">
+            🔒 Friends Only
+          </span>
+        {% endif %}
+        </h2>
         <span style="font-size:24px; color:#666;">
           <strong style="color:#232D4B;">
             {{ post.author.profile.display_name }}
