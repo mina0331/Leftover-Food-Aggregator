@@ -172,19 +172,21 @@ def index(request):
         "sort": sort,  
     })
 
-def event_history(request):
-    #Read-only list of past leftover food posts, newest first.
-    #For now, 'history' just means all posts ordered by created_at.
+def event_history(request): 
+    # Start with all posts, newest first, excluding soft-deleted
+    qs = Post.objects.filter(is_deleted=False).order_by("-created_at")
 
-    post_list = Post.objects.order_by("-created_at")
-    paginator = Paginator(post_list, 10)   # 10 per page, adjust if you want
+    # Apply the same visibility rules we use elsewhere
+    qs = apply_visibility_filter(qs, request.user)
+
+    paginator = Paginator(qs, 10)   # 10 per page, same as before
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(request, "posting/event_history.html", {
         "posts": page_obj,
         "page_obj": page_obj,
-        "total_posts": post_list.count(),
+        "total_posts": qs.count(),
     })
 
 @login_required
