@@ -5,7 +5,7 @@ from .models import Post, Location, RSVP
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ["event", "event_description", "cuisine", "image", "location", "publish_at", "pickup_deadline"]
+        fields = ["event", "event_description", "cuisine", "image", "location", "publish_at", "pickup_deadline", "visibility"]
         widgets = {
             "cuisines": forms.CheckboxSelectMultiple(),
             "publish_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
