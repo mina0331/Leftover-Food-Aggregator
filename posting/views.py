@@ -137,8 +137,9 @@ def index(request):
         if date_order == "oldest":
             qs = qs.order_by("created_at")
         else:
-            qs = qs.order_by("-created_at")
+            qs = qs.order_by("-created_at")        
 
+    qs = apply_visibility_filter(qs, request.user)
 
     paginator = Paginator(qs, 5)
     page_number = request.GET.get("page")
