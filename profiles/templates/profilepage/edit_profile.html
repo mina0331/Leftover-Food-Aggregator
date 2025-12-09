@@ -417,6 +417,7 @@
     </div>
 
     <!-- Danger zone / delete account -->
+    {% if profile.role != "moderator" %}
     <div class="danger-zone">
       <div class="danger-title">
         Danger zone
@@ -430,6 +431,16 @@
         Delete my account
       </a>
     </div>
+    {% else %}
+    <div class="danger-zone" style="background: #fff3cd; border-color: #ffc107;">
+      <div class="danger-title" style="color: #856404;">
+        Account Deletion Restricted
+      </div>
+      <p class="danger-text" style="color: #856404;">
+        Moderators cannot delete accounts. Please contact an administrator if you need to delete your account.
+      </p>
+    </div>
+    {% endif %}
 
   </form>
 

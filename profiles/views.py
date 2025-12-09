@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from Friendslist.models import Friend;
 from posting.models import Post;
+from userprivileges.roles import is_moderator
 
 
 
@@ -108,6 +109,17 @@ from .forms import ProfileForm
 @login_required
 def profile_edit(request):
     profile = request.user.profile
+    
+    # Prevent moderators from editing other users' profiles
+    # They can only edit their own profile
+    if request.method == "POST":
+        # Check if trying to edit someone else's profile (shouldn't happen via normal flow, but check anyway)
+        profile_id = request.POST.get('profile_id') or request.GET.get('profile_id')
+        if profile_id and int(profile_id) != profile.id:
+            if is_moderator(request.user) or request.user.is_staff:
+                messages.error(request, "Moderators cannot edit other users' profiles.")
+                return redirect("my_profile")
+    
     if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
@@ -152,7 +164,12 @@ def view_profile(request, user_id):
 def delete_account(request, user_id):
     profile_user = get_object_or_404(User, pk=user_id)
 
-    # Only allow deleting yourself (or let superuser manage others)
+    # Prevent moderators from deleting ANY account (including their own)
+    if is_moderator(request.user) or request.user.is_staff:
+        messages.error(request, "Moderators cannot delete accounts. Please contact an administrator if you need to delete your account.")
+        return redirect("my_profile")
+    
+    # Only allow deleting yourself (or let superuser manage others, but not moderators)
     if request.user != profile_user and not request.user.is_superuser:
         messages.error(request, "You don't have permission to delete this account.")
         return redirect("my_profile")  # or whatever your profile url name is

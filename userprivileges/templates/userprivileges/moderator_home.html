@@ -119,7 +119,10 @@
         <p class="info-text">View all admin actions and changes</p>
         <div class="button-group">
             <a href="/admin/admin/logentry/" target="_blank"><button>📜 Admin Action Log</button></a>
+            <a href="/admin/moderation/moderatoractivitylog/" target="_blank"><button>📋 Organization Activity Logs</button></a>
+            <a href="/admin/moderation/moderatornotification/" target="_blank"><button>🔔 Moderator Notifications</button></a>
         </div>
+        <p class="info-text" style="margin-top: 10px;">View activity logs for specific organizations: Use the command <code>python manage.py list_organizations</code> to get organization IDs, then visit <code>/moderation/activity-log/&lt;user_id&gt;/</code></p>
     </div>
     
     <div class="dashboard-section" style="background: #fff3cd; border-left: 5px solid #ffc107;">
@@ -129,6 +132,18 @@
             <a href="{% url 'moderation:review_flagged' %}"><button style="background: #f39c12; font-size: 18px; padding: 15px 30px; font-weight: bold;">🚩 Review Flagged Content</button></a>
         </div>
         <p class="info-text" style="margin-top: 10px;">Users can flag inappropriate content. Review and take action to keep the platform safe.</p>
+    </div>
+    
+    <div class="dashboard-section" style="background: #e8f4f8; border-left: 5px solid #3498db;">
+        <h2>📋 Organization Activity Logs</h2>
+        <p class="info-text">View detailed activity logs for specific organizations</p>
+        <div class="button-group">
+            <a href="/admin/moderation/moderatoractivitylog/" target="_blank"><button style="background: #3498db; font-size: 18px; padding: 15px 30px; font-weight: bold;">📋 View All Activity Logs (Admin)</button></a>
+        </div>
+        <p class="info-text" style="margin-top: 10px;">
+            <strong>Quick Access:</strong> Run <code>python manage.py list_organizations</code> to get organization IDs, then visit 
+            <code>/moderation/activity-log/&lt;user_id&gt;/</code> to view logs for a specific organization.
+        </p>
     </div>
     
     <div class="dashboard-section" style="background: #ffe6e6; border-left: 5px solid #e74c3c;">

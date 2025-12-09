@@ -153,3 +153,76 @@ class UserSuspension(models.Model):
         if self.is_expired():
             return f"Expired (was until {self.suspended_until.date()})"
         return f"Until {self.suspended_until.date()}"
+
+
+class ModeratorNotification(models.Model):
+    """
+    Notifications for moderators when new reports are created
+    """
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='moderator_notifications')
+    flagged_content = models.ForeignKey(FlaggedContent, on_delete=models.CASCADE, related_name='notifications')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['moderator', 'is_read']),
+            models.Index(fields=['is_read', '-created_at']),
+        ]
+        verbose_name = "Moderator Notification"
+        verbose_name_plural = "Moderator Notifications"
+        unique_together = [['moderator', 'flagged_content']]
+    
+    def __str__(self):
+        status = "Read" if self.is_read else "Unread"
+        return f"Notification for {self.moderator.username} - Flag #{self.flagged_content.id} ({status})"
+
+
+class ModeratorActivityLog(models.Model):
+    """
+    Activity log for tracking moderator and organization actions
+    """
+    class ActionType(models.TextChoices):
+        FLAG_CREATED = "flag_created", "Flag Created"
+        CONTENT_DELETED = "content_deleted", "Content Deleted"
+        CONTENT_EDITED = "content_edited", "Content Edited"
+        USER_SUSPENDED = "user_suspended", "User Suspended"
+        USER_REINSTATED = "user_reinstated", "User Reinstated"
+        POST_CREATED = "post_created", "Post Created"
+        POST_EDITED = "post_edited", "Post Edited"
+        POST_DELETED = "post_deleted", "Post Deleted"
+    
+    organization = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='activity_logs',
+        help_text="The organization this activity is related to"
+    )
+    action_type = models.CharField(max_length=20, choices=ActionType.choices)
+    performed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='actions_performed',
+        help_text="The user who performed this action (moderator or organization user)"
+    )
+    # Generic foreign key to link to any related content
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    related_content = GenericForeignKey('content_type', 'object_id')
+    description = models.TextField(help_text="Description of the action")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', '-created_at']),
+            models.Index(fields=['action_type', '-created_at']),
+            models.Index(fields=['content_type', 'object_id']),
+        ]
+        verbose_name = "Activity Log"
+        verbose_name_plural = "Activity Logs"
+    
+    def __str__(self):
+        return f"{self.get_action_type_display()} - {self.organization.username} ({self.created_at.date()})"
