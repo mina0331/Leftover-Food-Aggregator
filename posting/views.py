@@ -20,10 +20,61 @@ import math
 from django.db.models import Q, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Power
 from datetime import timedelta
+from django.http import Http404
+from Friendslist.models import Friend
 from moderation.models import ModeratorActivityLog
 from profiles.models import Profile
 
 two_days_ago = timezone.now() - timedelta(days=2)
+
+def apply_visibility_filter(qs, user):
+    if not user.is_authenticated:
+        return qs.filter(visibility=Post.Visibility.PUBLIC)
+
+    # Staff/admin → see everything
+    if user.is_staff or user.is_superuser:
+        return qs
+
+    # Authenticated normal user → use Friend model
+    friends = Friend.get_friends(user)
+
+    return qs.filter(
+        Q(visibility=Post.Visibility.PUBLIC)
+        | Q(author=user)
+        | Q(visibility=Post.Visibility.FRIENDS_ONLY, author__in=friends)
+    )
+
+
+def user_can_view_post(user, post):
+    # Deleted posts shouldn't be visible at all
+    if post.is_deleted:
+        return False
+
+    # Staff/admin → can always view
+    if user.is_authenticated and (user.is_staff or user.is_superuser):
+        return True
+
+    # Public posts
+    if post.visibility == Post.Visibility.PUBLIC:
+        # If published → visible to everyone
+        if post.status == Post.Status.PUBLISHED:
+            return True
+        # Draft/scheduled → only author
+        if user.is_authenticated and post.author == user:
+            return True
+        return False
+
+    # Friends-only posts
+    if not user.is_authenticated:
+        return False
+
+    # Author always sees their own post
+    if post.author == user:
+        return True
+
+    # Check friendship
+    friends = Friend.get_friends(user)
+    return friends.filter(id=post.author_id).exists()
 
 def index(request):
     # search text
@@ -88,8 +139,9 @@ def index(request):
         if date_order == "oldest":
             qs = qs.order_by("created_at")
         else:
-            qs = qs.order_by("-created_at")
+            qs = qs.order_by("-created_at")        
 
+    qs = apply_visibility_filter(qs, request.user)
 
     paginator = Paginator(qs, 5)
     page_number = request.GET.get("page")
@@ -122,19 +174,21 @@ def index(request):
         "sort": sort,  
     })
 
-def event_history(request):
-    #Read-only list of past leftover food posts, newest first.
-    #For now, 'history' just means all posts ordered by created_at.
+def event_history(request): 
+    # Start with all posts, newest first, excluding soft-deleted
+    qs = Post.objects.filter(is_deleted=False).order_by("-created_at")
 
-    post_list = Post.objects.order_by("-created_at")
-    paginator = Paginator(post_list, 10)   # 10 per page, adjust if you want
+    # Apply the same visibility rules we use elsewhere
+    qs = apply_visibility_filter(qs, request.user)
+
+    paginator = Paginator(qs, 10)   # 10 per page, same as before
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(request, "posting/event_history.html", {
         "posts": page_obj,
         "page_obj": page_obj,
-        "total_posts": post_list.count(),
+        "total_posts": qs.count(),
     })
 
 @login_required
@@ -207,6 +261,10 @@ def post_detail(request, post_id):
     if post.is_deleted:
         messages.info(request, 'This post has been deleted.')
         return redirect('posting:post_list')
+    
+    if not user_can_view_post(request.user, post):
+        # Hide existence from unauthorized users
+        raise Http404("Post not found")
     
     # Track read users
     if request.user.is_authenticated:
@@ -331,6 +389,9 @@ def post_map(request):
             Q(pickup_deadline__isnull=True) | Q(pickup_deadline__gt=timezone.now())
             )
     )
+
+    posts = apply_visibility_filter(posts, request.user)
+
     posts_data = []
     for p in posts:
         posts_data.append({
@@ -430,6 +491,9 @@ def export_data(request):
 @login_required
 def create_rsvp(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    
+    if not user_can_view_post(request.user, post):
+        raise Http404("Post not found")
     
     if request.user == post.author:
         messages.warning(request, "You cannot RSVP to your own post.")

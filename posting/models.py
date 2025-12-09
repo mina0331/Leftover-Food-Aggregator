@@ -51,11 +51,21 @@ class Post(models.Model):
         SCHEDULED = "scheduled", "Scheduled"
         PUBLISHED = "published", "Published"
 
+    class Visibility(models.TextChoices):
+        PUBLIC = "public", "Public"
+        FRIENDS_ONLY = "friends", "Friends Only"
+
     event = models.TextField()
     event_description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
     cuisine = models.ForeignKey(Cuisine, on_delete=models.PROTECT)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PUBLISHED)
+    visibility = models.CharField(
+        max_length=20,
+        choices=Visibility.choices,
+        default=Visibility.PUBLIC,
+        help_text="Who can see this post? Public or Friends Only."
+    )
     publish_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

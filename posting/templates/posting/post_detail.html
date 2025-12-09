@@ -191,8 +191,24 @@
 
   <div class="post-card">
 
-    <h1 class="post-title">{{ post.event }}</h1>
+    <h1 class="post-title" style="display:flex; align-items:center; gap:10px;">
+      {{ post.event }}
 
+      {% if post.visibility == post.Visibility.FRIENDS_ONLY %}
+          <span style="
+              padding:4px 10px;
+              background:#FFE8B2;
+              color:#8A4B00;
+              border-radius:12px;
+              font-size:13px;
+              display:inline-flex;
+              align-items:center;
+              gap:4px;
+          ">
+              🔒 Friends Only
+          </span>
+      {% endif %}
+  </h1>
     <!-- Author Profile -->
     <div class="author-row">
       <a href="{% url 'profiles:view_profile' post.author.id %}">
