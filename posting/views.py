@@ -77,6 +77,13 @@ def user_can_view_post(user, post):
     return friends.filter(id=post.author_id).exists()
 
 def index(request):
+    # Lazy publish: Check for scheduled posts that are due and publish them
+    # This ensures posts appear on time even if Heroku Scheduler runs only every 10 min
+    Post.objects.filter(
+        status=Post.Status.SCHEDULED,
+        publish_at__lte=timezone.now()
+    ).update(status=Post.Status.PUBLISHED)
+
     # search text
     q = request.GET.get("q", "").strip()
 
@@ -175,6 +182,12 @@ def index(request):
     })
 
 def event_history(request): 
+    # Lazy publish: Check for scheduled posts that are due
+    Post.objects.filter(
+        status=Post.Status.SCHEDULED,
+        publish_at__lte=timezone.now()
+    ).update(status=Post.Status.PUBLISHED)
+
     # Start with all posts, newest first, excluding soft-deleted
     qs = Post.objects.filter(is_deleted=False).order_by("-created_at")
 
@@ -383,6 +396,12 @@ def delete_post(request, post_id):
     return render(request, "posting/delete_post.html", {"post": post})
 
 def post_map(request):
+    # Lazy publish: Check for scheduled posts that are due
+    Post.objects.filter(
+        status=Post.Status.SCHEDULED,
+        publish_at__lte=timezone.now()
+    ).update(status=Post.Status.PUBLISHED)
+
     # Only posts that actually have a location with coordinates
     posts = (
         Post.objects
