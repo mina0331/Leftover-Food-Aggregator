@@ -37,11 +37,11 @@ class PostForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make all fields required except publish_at and pickup_deadline (which are optional)
+        # Make all fields required except publish_at, pickup_deadline, and image (which are optional)
         self.fields["event"].required = True
         self.fields["event_description"].required = True
         self.fields["cuisine"].required = True
-        self.fields["image"].required = True
+        self.fields["image"].required = False  # Optional - hidden input causes silent validation failure if required
         self.fields["location"].required = True
         # publish_at and pickup_deadline remain optional
         
