@@ -22,9 +22,8 @@ from django.db.models.functions import Power
 from datetime import timedelta
 from django.http import Http404
 from Friendslist.models import Friend
-from django.http import Http404
-from Friendslist.models import Friend
-
+from moderation.models import ModeratorActivityLog
+from profiles.models import Profile
 
 two_days_ago = timezone.now() - timedelta(days=2)
 
@@ -214,6 +213,18 @@ def create_post(request):
                 messages.success(request, 'Your post has been created.')
             
             post.save()
+            
+            # Log activity for organization
+            if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+                ModeratorActivityLog.objects.create(
+                    organization=request.user,
+                    action_type=ModeratorActivityLog.ActionType.POST_CREATED,
+                    performed_by=request.user,
+                    content_type=ContentType.objects.get_for_model(Post),
+                    object_id=post.id,
+                    description=f"Post created: {post.event[:100]}"
+                )
+            
             return redirect("posting:post_list")
         else:
             # Debug: show form errors
@@ -309,6 +320,18 @@ def edit_post(request, post_id):
                     post.image = None
             form.save()
             post.read_users.clear()
+            
+            # Log activity for organization
+            if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+                ModeratorActivityLog.objects.create(
+                    organization=request.user,
+                    action_type=ModeratorActivityLog.ActionType.POST_EDITED,
+                    performed_by=request.user,
+                    content_type=ContentType.objects.get_for_model(Post),
+                    object_id=post.id,
+                    description=f"Post edited: {post.event[:100]}"
+                )
+            
             return redirect('posting:post_detail', post_id=post.id)
     else:
         form = PostForm(instance=post)
@@ -333,6 +356,18 @@ def delete_post(request, post_id):
         post.save()
         # Clear read users when post is deleted
         post.read_users.clear()
+        
+        # Log activity for organization
+        if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+            ModeratorActivityLog.objects.create(
+                organization=request.user,
+                action_type=ModeratorActivityLog.ActionType.POST_DELETED,
+                performed_by=request.user,
+                content_type=ContentType.objects.get_for_model(Post),
+                object_id=post.id,
+                description=f"Post deleted: {post.event[:100]}"
+            )
+        
         messages.success(request, 'Your post has been deleted.')
         return redirect("posting:post_list")
 

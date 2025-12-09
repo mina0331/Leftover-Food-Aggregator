@@ -1,0 +1,190 @@
+{% extends "moderator_base.html" %}
+{% load static %}
+
+{% block title %}Activity Log - {{ organization.username }} | Moderator Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    .activity-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .activity-header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .activity-item {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .activity-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .action-type {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .action-type.flag_created {
+        background: #f39c12;
+    }
+    
+    .action-type.content_deleted {
+        background: #e74c3c;
+    }
+    
+    .action-type.content_edited {
+        background: #3498db;
+    }
+    
+    .action-type.user_suspended {
+        background: #c0392b;
+    }
+    
+    .action-type.user_reinstated {
+        background: #27ae60;
+    }
+    
+    .action-type.post_created {
+        background: #16a085;
+    }
+    
+    .action-type.post_edited {
+        background: #2980b9;
+    }
+    
+    .action-type.post_deleted {
+        background: #8e44ad;
+    }
+    
+    .activity-meta {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .activity-description {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 3px solid #E57200;
+        margin-top: 10px;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 8px 15px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .pagination a {
+        background: #3498db;
+        color: white;
+    }
+    
+    .pagination span {
+        background: #f8f9fa;
+        color: #666;
+    }
+</style>
+
+<div class="activity-container">
+    <div class="activity-header">
+        <h1 style="color: #232D4B; margin-bottom: 10px;">📋 Activity Log</h1>
+        <h2 style="color: #666; font-size: 1.2rem; margin: 0;">
+            Organization: <strong>{{ organization.username }}</strong>
+        </h2>
+        <p style="color: #999; margin-top: 10px; margin-bottom: 0;">
+            Total activities: {{ activity_logs.paginator.count }}
+        </p>
+    </div>
+    
+    {% if activity_logs %}
+        {% for log in activity_logs %}
+        <div class="activity-item">
+            <div class="activity-item-header">
+                <div>
+                    <span class="action-type {{ log.action_type }}">{{ log.get_action_type_display }}</span>
+                    <div class="activity-meta" style="margin-top: 8px;">
+                        Performed by: <strong>{{ log.performed_by.username|default:"System" }}</strong>
+                        | {{ log.created_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="activity-description">
+                {{ log.description }}
+            </div>
+            
+            {% if log.related_content %}
+            <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                Related: {{ log.related_content|truncatewords:20 }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if activity_logs.has_other_pages %}
+        <div class="pagination">
+            {% if activity_logs.has_previous %}
+                <a href="?page=1">« First</a>
+                <a href="?page={{ activity_logs.previous_page_number }}">‹ Previous</a>
+            {% else %}
+                <span>« First</span>
+                <span>‹ Previous</span>
+            {% endif %}
+            
+            <span>Page {{ activity_logs.number }} of {{ activity_logs.paginator.num_pages }}</span>
+            
+            {% if activity_logs.has_next %}
+                <a href="?page={{ activity_logs.next_page_number }}">Next ›</a>
+                <a href="?page={{ activity_logs.paginator.num_pages }}">Last »</a>
+            {% else %}
+                <span>Next ›</span>
+                <span>Last »</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 18px; color: #666;">No activity logs found for this organization.</p>
+        </div>
+    {% endif %}
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{% url 'moderation:review_flagged' %}" class="btn" style="background: #3498db; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+            ← Back to Review Flagged Content
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+

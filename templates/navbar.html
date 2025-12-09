@@ -1,25 +1,20 @@
 {% load static %}
 {% with p=request.path %}
-<nav style="width:100%; background:#232D4B; color:#fff; padding:10px 16px; box-sizing:border-box; position:relative; z-index:1000;">
+<nav style="width:100%; background:#232D4B; color:#fff; padding:10px 16px; box-sizing:border-box; position:relative; z-index:1000; overflow-x:hidden;">
+
   <style>
     .nav-inner{
       display:flex;
       align-items:center;
       gap:16px;
-      position:relative; /* for absolute center */
+      position:relative;
+      flex-wrap:nowrap;
     }
 
-    .nav-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
+    .nav-left{ display:flex; align-items:center; gap:10px; }
 
-    /* Center tabs centered relative to full navbar */
     .nav-center{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
+      flex:1;
       display:flex;
       justify-content:center;
       pointer-events:auto;
@@ -27,7 +22,7 @@
 
     .nav-right{
       display:flex;
-      gap:1px;
+      gap:12px;
       align-items:center;
       margin-left:auto;
     }
@@ -39,30 +34,20 @@
       margin:0;
       padding:0;
       align-items:center;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
+      white-space:nowrap;
     }
 
-    /* Brand */
-    .brand{
+    .brand, .nav-link{
       display:inline-flex;
       align-items:center;
-      gap:10px;
       text-decoration:none;
       padding:6px 10px;
       border-radius:6px;
       color:#fff;
       position:relative;
       transition:transform .2s, opacity .2s, color .2s;
-    }
-
-    .nav-link{
-      display:inline-block;
-      text-decoration:none;
-      padding:6px 10px;
-      border-radius:6px;
-      color:#fff;
-      position:relative;
-      transition:transform .2s, opacity .2s, color .2s;
+      white-space:nowrap;
     }
 
     .nav-link:hover, .brand:hover{
@@ -80,7 +65,6 @@
       background:#E57200;
       transition:width .25s;
     }
-
     .nav-link:hover::after, .brand:hover::after{
       width:100%;
     }
@@ -89,9 +73,7 @@
       color:#E57200 !important;
       font-weight:bold;
     }
-    .active-link::after{
-      width:100%;
-    }
+    .active-link::after{ width:100%; }
 
     .badge{
       background:#E57200;
@@ -102,73 +84,70 @@
       margin-left:6px;
     }
 
-    @media (max-width: 900px){
-      .nav-center{
-        left:0;
-        transform:none;
-      }
+    /* ---------- Auth button style (Log In / Log Out) ---------- */
+    .btn-auth{
+      background:#E57200;
+      border-radius:8px;
+      padding:6px 16px;
+      font-weight:600;
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);
     }
-    .nav-profile {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    margin-right:12px;
-  }
+    .btn-auth::after{
+      /* no orange underline for pill buttons */
+      height:0;
+      width:0;
+    }
+    .btn-auth:hover{
+      background:#c96000;
+      transform:translateY(-2px);
+      opacity:1;
+    }
 
-  .nav-profile img {
-    width:30px;
-    height:30px;
-    border-radius:50%;
-    object-fit:cover;
-    border:2px solid #E57200;
-    box-shadow:0 1px 4px rgba(0,0,0,0.4);
-  }
+    /* ---------- Avatar ring styles ---------- */
+    .nav-avatar-link::after{ height:0; width:0; }
 
-  .nav-profile-name {
-    margin-top:4px;
-    font-size:11px;
-    font-weight:700;
-    color:#ffffff;
-    letter-spacing:0.4px;
-    max-width:110px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    .avatar-wrapper{
+      position:relative;
+      width:40px;
+      height:40px;
+    }
 
-    /* pill effect */
-    padding:2px 8px;
-    border-radius:999px;
-    background:rgba(255,255,255,0.12);
-    backdrop-filter:blur(3px);
-    box-shadow:0 1px 3px rgba(0,0,0,0.35);
-  }
+    .avatar-ring{
+      position:absolute;
+      top:-4px;
+      left:-4px;
+      width:48px;
+      height:48px;
+      pointer-events:none;
+    }
 
-  .btn-orange {
-    padding:6px 14px;
-    background:#E57200;
-    color:white;
-    border-radius:8px;
-    font-weight:600;
-    text-decoration:none;
-    border:none;
-    transition:background .2s, transform .1s, box-shadow .1s;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-  }
+    .avatar-ring svg circle{
+      fill:none;
+      stroke:#E57200;
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-dasharray:150;
+      stroke-dashoffset:150;
+      opacity:0;
+      transition:stroke-dashoffset .5s ease, opacity .2s ease;
+    }
 
-  .btn-orange:hover {
-    background:#c96000;
-    transform:translateY(-1px);
-    box-shadow:0 2px 6px rgba(0,0,0,0.3);
-  }
+    .avatar-wrapper:hover .avatar-ring svg circle{
+      opacity:1;
+      animation:ring-spin 1.6s linear infinite;
+    }
 
-  .btn-orange-icon {
-    font-size:14px;
-    line-height:1;
-  }
+    .avatar-wrapper.avatar-active .avatar-ring svg circle{
+      opacity:1;
+      stroke-dashoffset:0;
+      animation:none;
+    }
+
+    @keyframes ring-spin{
+      0%{ stroke-dashoffset:150; }
+      100%{ stroke-dashoffset:0; }
+    }
   </style>
-
 
   <div class="nav-inner">
 
@@ -181,14 +160,14 @@
       </a>
     </div>
 
-    <!-- CENTER NAV -->
-    {% url 'posting:post_list' as posts_url %}
-    <div class="nav-center">
-      <ul class="nav-list">
+    <!-- CENTER NAV (only when logged in) -->
+    {% if user.is_authenticated %}
+      <div class="nav-center">
+        <ul class="nav-list">
 
-
-        {% if user.is_authenticated %}
+          {% url 'posting:post_list' as posts_url %}
           {% with role=user.profile.role %}
+
             {% if role == 'student' %}
               <li>
                 <a href="{{ posts_url }}"
@@ -199,6 +178,7 @@
                   <span class="badge">{{ unread_posts_count }}</span>
                 {% endif %}
               </li>
+
             {% elif role == 'org' %}
               <li>
                 <a href="{{ posts_url }}"
@@ -207,142 +187,80 @@
                 </a>
               </li>
             {% endif %}
+
           {% endwith %}
-        
 
-        {% url 'posting:event_history' as history_url %}
-        <li>
-          <a href="{{ history_url }}"
-             class="nav-link {% if '/posts/history' in p %}active-link{% endif %}">
-             Event History
-          </a>
-        </li>
+          {% url 'posting:event_history' as history_url %}
+          <li>
+            <a href="{{ history_url }}"
+               class="nav-link {% if '/posts/history' in p %}active-link{% endif %}">
+               Event History
+            </a>
+          </li>
 
-        <li>
           {% url 'chat:index' as chat_url %}
-          <a href="{{ chat_url }}"
-             class="nav-link {% if p|slice:':6' == '/chat/' or p|slice:':9' == '/chat/' %}active-link{% endif %}">
-             Chat
-          </a>
-          {% if unread_count %}
-            <span class="badge">{{ unread_count }}</span>
-          {% endif %}
-        </li>
+          <li>
+            <a href="{{ chat_url }}"
+               class="nav-link {% if p|slice:':6' == '/chat/' %}active-link{% endif %}">
+               Chat
+            </a>
+            {% if unread_count %}
+              <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+          </li>
 
-        <li>
           {% url 'friends:friends_list' as friends_url %}
-          <a href="{{ friends_url }}"
-             class="nav-link {% if p|slice:':9' == '/friends/' %}active-link{% endif %}">
-             Friends
-          </a>
-          {% if pending_friend_requests_count %}
-            <span class="badge">{{ pending_friend_requests_count }}</span>
-          {% endif %}
-        </li>
-    {% if user.profile.role == 'org' %}
-    <li class="nav-item" style="position:relative;">
-  <a href="{% url 'posting:notification_inbox' %}"
-     class="nav-link"
-     style="
-       display:flex;
-       align-items:center;
-       gap:4px;
-       padding:6px 12px;
-       border-radius:12px;
-       transition: background 0.2s ease;
-     ">
+          <li>
+            <a href="{{ friends_url }}"
+               class="nav-link {% if p|slice:':9' == '/friends/' %}active-link{% endif %}">
+               Friends
+            </a>
+            {% if pending_friend_requests_count %}
+              <span class="badge">{{ pending_friend_requests_count }}</span>
+            {% endif %}
+          </li>
 
-    <i class="fa-regular fa-message"></i>
-
-    <span>Notifications</span>
-
-    {% if notification_count %}
-      <span class="badge"
-            style="
-              position:absolute;
-              top:2px;
-              right:2px;
-              background:#E57200;
-              color:white;
-              padding:3px 7px;
-              border-radius:12px;
-              font-size:0.7rem;
-              font-weight:600;
-              box-shadow:0 2px 4px rgba(0,0,0,0.2);
-            ">
-        {{ notification_count }}
-      </span>
+        </ul>
+      </div>
     {% endif %}
-    {% endif %}
-    {% endif %}
-  </a>
-</li>
 
-
-      </ul>
-    </div>
-
-    <!-- RIGHT: Export (admin), Profile, Login/Logout -->
+    <!-- RIGHT SIDE -->
     <div class="nav-right">
+
       {% if user.is_authenticated %}
 
         {% if user.is_staff %}
-          <a href="{% url 'posting:export_data' %}" class="nav-link">
-            Export Data
-          </a>
+          <a href="{% url 'posting:export_data' %}" class="nav-link">Export Data</a>
         {% endif %}
 
-        <figure style="display:flex; flex-direction:column; align-items:center;">
+        <!-- Avatar -->
+        <a href="{% url 'profile_redirect' %}"
+           class="nav-link nav-avatar-link"
+           style="padding:0; display:flex; align-items:center;">
+          <div class="avatar-wrapper {% if '/profile' in p %}avatar-active{% endif %}">
+            <img src="{{ user.profile.avatar_url }}"
+                 alt="Profile photo"
+                 style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+            <div class="avatar-ring">
+              <svg viewBox="0 0 50 50">
+                <circle cx="25" cy="25" r="22"></circle>
+              </svg>
+            </div>
+          </div>
+        </a>
 
-  <a href="{% url 'profile_redirect' %}">
-    <img src="{{ user.profile.avatar_url }}"
-      alt="Profile photo"
-      style="width:35px; height:35px; border-radius:50%; object-fit:cover; border:2px solid #E57200;">
-  </a>
-
-  <figcaption style="
-      margin-top: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-      letter-spacing: 0.3px;
-    ">
-    {{ user.profile.display_name }}
-  </figcaption>
-</figure>
-
-
-        <a href="{% url 'account_logout' %}"
-   class="nav-link"
-   style="
-      padding:6px 14px;
-      background:#E57200;
-      color:white;
-      border-radius:8px;
-      font-weight:600;
-      text-decoration:none;
-      transition:all .2s;
-   "
-   onmouseover="this.style.background='#c96000'; this.style.transform='translateY(-1px)';"
-   onmouseout="this.style.background='#E57200'; this.style.transform='none';">
-  Log Out
-</a>
-
+        <!-- ORANGE LOG OUT BUTTON -->
+        <a href="{% url 'account_logout' %}" class="nav-link btn-auth">
+          Log Out
+        </a>
 
       {% else %}
-        <a href="{% url 'loginpage:login' %}" class="nav-link"
-        style="
-      padding:6px 14px;
-      background:#E57200;
-      color:white;
-      border-radius:8px;
-      font-weight:600;
-      text-decoration:none;
-      transition:all .2s;
-      "
-      >Log In</a>
+        <!-- ORANGE LOG IN BUTTON WHEN LOGGED OUT -->
+        <a href="{% url 'loginpage:login' %}" class="nav-link btn-auth">
+          Log In
+        </a>
       {% endif %}
+
     </div>
 
   </div>

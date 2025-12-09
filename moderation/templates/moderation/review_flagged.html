@@ -246,7 +246,40 @@
 </style>
 
 <div class="review-container">
-    <h1 style="color: #232D4B; margin-bottom: 30px;">🚩 Review Flagged Content</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="color: #232D4B; margin: 0;">🚩 Review Flagged Content</h1>
+        {% if unread_notifications > 0 %}
+        <div style="background: #e74c3c; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold;">
+            🔔 {{ unread_notifications }} Unread Notification{{ unread_notifications|pluralize }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Search Bar -->
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <form method="get" style="display: flex; gap: 10px; align-items: center;">
+            <input 
+                type="text" 
+                name="q" 
+                value="{{ search_query|default_if_none:'' }}" 
+                placeholder="Search reports by reason, username, content, or status..." 
+                style="flex: 1; padding: 12px; border: 2px solid #E57200; border-radius: 6px; font-size: 14px;"
+            >
+            <button type="submit" class="btn" style="background: #E57200; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                🔍 Search
+            </button>
+            {% if search_query %}
+            <a href="{% url 'moderation:review_flagged' %}" class="btn" style="background: #95a5a6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                Clear
+            </a>
+            {% endif %}
+        </form>
+        {% if search_query %}
+        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Searching for: <strong>{{ search_query }}</strong> ({{ pending_flags.paginator.count }} result{{ pending_flags.paginator.count|pluralize }})
+        </p>
+        {% endif %}
+    </div>
     
     <!-- Statistics -->
     <div class="stats-section">
@@ -379,8 +412,8 @@
         {% if pending_flags.has_other_pages %}
         <div style="margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 10px;">
             {% if pending_flags.has_previous %}
-                <a href="?page=1" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">« First</a>
-                <a href="?page={{ pending_flags.previous_page_number }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">‹ Previous</a>
+                <a href="?page=1{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">« First</a>
+                <a href="?page={{ pending_flags.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">‹ Previous</a>
             {% else %}
                 <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">« First</span>
                 <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">‹ Previous</span>
@@ -391,8 +424,8 @@
             </span>
             
             {% if pending_flags.has_next %}
-                <a href="?page={{ pending_flags.next_page_number }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Next ›</a>
-                <a href="?page={{ pending_flags.paginator.num_pages }}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Last »</a>
+                <a href="?page={{ pending_flags.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Next ›</a>
+                <a href="?page={{ pending_flags.paginator.num_pages }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn" style="background: #3498db; color: white; padding: 8px 15px;">Last »</a>
             {% else %}
                 <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">Next ›</span>
                 <span class="btn" style="background: #95a5a6; color: white; padding: 8px 15px; cursor: not-allowed; opacity: 0.6;">Last »</span>

@@ -7,11 +7,33 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
-from .models import FlaggedContent, UserSuspension
+from .models import FlaggedContent, UserSuspension, ModeratorNotification, ModeratorActivityLog
 from .forms import ModeratorPostEditForm, ModeratorMessageEditForm, SuspendUserForm, ReinstateUserForm
 from posting.models import Post
 from chat.models import Message
 from userprivileges.roles import is_moderator
+from profiles.models import Profile
+
+
+def log_activity(organization, action_type, performed_by, description, related_content=None):
+    """
+    Helper function to create activity log entries
+    """
+    content_type = None
+    object_id = None
+    
+    if related_content:
+        content_type = ContentType.objects.get_for_model(related_content.__class__)
+        object_id = related_content.id
+    
+    ModeratorActivityLog.objects.create(
+        organization=organization,
+        action_type=action_type,
+        performed_by=performed_by,
+        content_type=content_type,
+        object_id=object_id,
+        description=description
+    )
 
 
 @login_required
@@ -58,6 +80,18 @@ def flag_content(request):
             reason=reason
         )
         
+        # Log activity if content is from an organization
+        if content_type.model == 'post' and hasattr(content_object, 'author'):
+            author = content_object.author
+            if hasattr(author, 'profile') and author.profile.role == Profile.Role.ORG:
+                log_activity(
+                    organization=author,
+                    action_type=ModeratorActivityLog.ActionType.FLAG_CREATED,
+                    performed_by=request.user,
+                    description=f"Content flagged by {request.user.username}. Reason: {reason[:100]}",
+                    related_content=flag
+                )
+        
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Content flagged successfully. A moderator will review it.'})
         
@@ -80,10 +114,45 @@ def review_flagged_content(request):
         django_messages.error(request, "You don't have permission to access this page.")
         return redirect('/')
     
+    # Get search query
+    search_query = request.GET.get('q', '').strip()
+    
     # Get pending flags queryset (most recent first) - will paginate this
     pending_flags_qs = FlaggedContent.objects.filter(
         status=FlaggedContent.Status.PENDING
     ).select_related('flagged_by', 'content_type').prefetch_related('content_object').order_by('-flagged_at')
+    
+    # Apply search filter if query provided
+    if search_query:
+        # Search in reason, flagged_by username, and status
+        search_q = Q(
+            Q(reason__icontains=search_query) |
+            Q(flagged_by__username__icontains=search_query) |
+            Q(status__icontains=search_query)
+        )
+        
+        # Also search in content text (for posts and messages)
+        post_ct = ContentType.objects.get_for_model(Post)
+        message_ct = ContentType.objects.get_for_model(Message)
+        
+        # Get post IDs that match search
+        post_ids = Post.objects.filter(
+            Q(event__icontains=search_query) |
+            Q(event_description__icontains=search_query)
+        ).values_list('id', flat=True)
+        
+        # Get message IDs that match search
+        message_ids = Message.objects.filter(
+            Q(content__icontains=search_query)
+        ).values_list('id', flat=True)
+        
+        # Add content search to query
+        search_q |= Q(
+            Q(content_type=post_ct, object_id__in=post_ids) |
+            Q(content_type=message_ct, object_id__in=message_ids)
+        )
+        
+        pending_flags_qs = pending_flags_qs.filter(search_q)
     
     # Paginate pending flags (10 per page for better performance)
     paginator = Paginator(pending_flags_qs, 10)
@@ -143,11 +212,19 @@ def review_flagged_content(request):
                 'is_suspended': author.profile.is_suspended() if hasattr(author, 'profile') else False
             }
     
+    # Get unread notification count for current moderator
+    unread_count = ModeratorNotification.objects.filter(
+        moderator=request.user,
+        is_read=False
+    ).count()
+    
     return render(request, 'moderation/review_flagged.html', {
         'pending_flags': pending_flags_page,
         'reviewed_flags': reviewed_flags,
         'stats': stats,
         'violation_counts': violation_counts,
+        'search_query': search_query,
+        'unread_notifications': unread_count,
     })
 
 
@@ -202,7 +279,26 @@ def delete_flagged_content(request, flag_id):
     flag = get_object_or_404(FlaggedContent, id=flag_id)
     notes = request.POST.get('notes', '').strip()
     
+    # Get organization before deleting
+    organization = None
+    if flag.content_object:
+        if flag.content_type.model == 'post':
+            organization = flag.content_object.author
+        elif flag.content_type.model == 'message':
+            organization = flag.content_object.sender
+    
     flag.delete_content(request.user, notes)
+    
+    # Log activity if organization exists
+    if organization and hasattr(organization, 'profile') and organization.profile.role == Profile.Role.ORG:
+        log_activity(
+            organization=organization,
+            action_type=ModeratorActivityLog.ActionType.CONTENT_DELETED,
+            performed_by=request.user,
+            description=f"Content deleted by moderator {request.user.username}. Notes: {notes[:100] if notes else 'No notes'}",
+            related_content=flag
+        )
+    
     django_messages.success(request, "Flagged content has been deleted.")
     
     return redirect('moderation:review_flagged')
@@ -254,6 +350,22 @@ def edit_flagged_content(request, flag_id):
             # Mark flag as edited
             flag.edit_content(request.user, notes)
             
+            # Log activity if organization exists
+            organization = None
+            if content_type.model == 'post':
+                organization = content_object.author
+            elif content_type.model == 'message':
+                organization = content_object.sender
+            
+            if organization and hasattr(organization, 'profile') and organization.profile.role == Profile.Role.ORG:
+                log_activity(
+                    organization=organization,
+                    action_type=ModeratorActivityLog.ActionType.CONTENT_EDITED,
+                    performed_by=request.user,
+                    description=f"Content edited by moderator {request.user.username}. Notes: {notes[:100] if notes else 'No notes'}",
+                    related_content=content_object
+                )
+            
             django_messages.success(request, "Content has been edited successfully.")
             return redirect('moderation:review_flagged')
         else:
@@ -304,6 +416,17 @@ def suspend_user(request, user_id):
                 reason=form.cleaned_data['reason'],
                 suspended_until=form.cleaned_data.get('suspended_until')
             )
+            
+            # Log activity if suspended user is an organization
+            if hasattr(user_to_suspend, 'profile') and user_to_suspend.profile.role == Profile.Role.ORG:
+                log_activity(
+                    organization=user_to_suspend,
+                    action_type=ModeratorActivityLog.ActionType.USER_SUSPENDED,
+                    performed_by=request.user,
+                    description=f"User suspended by moderator {request.user.username}. Reason: {form.cleaned_data['reason'][:100]}",
+                    related_content=suspension
+                )
+            
             django_messages.success(
                 request,
                 f"{user_to_suspend.username} has been suspended. {suspension.get_duration_display()}."
@@ -352,6 +475,17 @@ def reinstate_user(request, suspension_id):
     if form.is_valid():
         notes = form.cleaned_data.get('notes', '')
         suspension.reinstate(request.user, notes)
+        
+        # Log activity if reinstated user is an organization
+        if hasattr(suspension.user, 'profile') and suspension.user.profile.role == Profile.Role.ORG:
+            log_activity(
+                organization=suspension.user,
+                action_type=ModeratorActivityLog.ActionType.USER_REINSTATED,
+                performed_by=request.user,
+                description=f"User reinstated by moderator {request.user.username}. Notes: {notes[:100] if notes else 'No notes'}",
+                related_content=suspension
+            )
+        
         django_messages.success(request, f"{suspension.user.username} has been reinstated.")
         return redirect('moderation:manage_suspensions')
     
@@ -518,4 +652,78 @@ def suspension_notice(request, suspension_id):
     
     return render(request, 'moderation/suspension_notice.html', {
         'suspension': suspension,
+    })
+
+
+@login_required
+@require_POST
+def mark_notification_read(request, notification_id):
+    """
+    Mark a notification as read
+    """
+    if not (is_moderator(request.user) or request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+    
+    notification = get_object_or_404(ModeratorNotification, id=notification_id, moderator=request.user)
+    notification.is_read = True
+    notification.save()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    
+    return redirect('moderation:review_flagged')
+
+
+@login_required
+def organization_activity_log(request, user_id=None):
+    """
+    View activity log for a specific organization
+    """
+    if not (is_moderator(request.user) or request.user.is_staff or request.user.is_superuser):
+        django_messages.error(request, "You don't have permission to access this page.")
+        return redirect('/')
+    
+    from profiles.models import Profile
+    
+    # Get organization from user_id or username
+    organization = None
+    if user_id:
+        organization = get_object_or_404(User, id=user_id)
+    else:
+        username = request.GET.get('username', '').strip()
+        if username:
+            try:
+                organization = User.objects.get(username=username)
+            except User.DoesNotExist:
+                django_messages.error(request, f"Organization '{username}' not found.")
+                return redirect('moderation:review_flagged')
+    
+    if not organization:
+        django_messages.error(request, "Please specify an organization.")
+        return redirect('moderation:review_flagged')
+    
+    # Verify it's an organization
+    if not hasattr(organization, 'profile') or organization.profile.role != Profile.Role.ORG:
+        django_messages.error(request, f"{organization.username} is not an organization.")
+        return redirect('moderation:review_flagged')
+    
+    # Get activity logs for this organization
+    activity_logs = ModeratorActivityLog.objects.filter(
+        organization=organization
+    ).select_related('performed_by', 'content_type').order_by('-created_at')
+    
+    # Paginate
+    paginator = Paginator(activity_logs, 20)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_number = int(page_number)
+        activity_logs_page = paginator.page(page_number)
+    except (ValueError, TypeError):
+        activity_logs_page = paginator.page(1)
+    except:
+        activity_logs_page = paginator.page(1)
+    
+    return render(request, 'moderation/organization_activity_log.html', {
+        'organization': organization,
+        'activity_logs': activity_logs_page,
     })

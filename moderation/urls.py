@@ -15,6 +15,9 @@ urlpatterns = [
     path('suspensions/', views.manage_suspensions, name='manage_suspensions'),
     path('user/<int:user_id>/suspensions/', views.user_suspension_history, name='user_suspension_history'),
     path('suspension-notice/<int:suspension_id>/', views.suspension_notice, name='suspension_notice'),
+    path('notification/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('activity-log/<int:user_id>/', views.organization_activity_log, name='organization_activity_log'),
+    path('activity-log/', views.organization_activity_log, name='organization_activity_log'),
 ]
 
 

@@ -8,29 +8,33 @@ from .models import Friend
 from .models import FriendRequest, Conversation
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Max
+from django.db.models import Max, Count, Q
 
 
 
 # Create your views here.
 @login_required
 def messages_index(request):
-    # All conversations the user is part of, with last message time
     qs = (
         request.user.conversations
-        .annotate(last_time=Max('messages__timestamp'))
+        .annotate(
+            last_time=Max('messages__timestamp'),
+            unread_count=Count(
+                'messages',
+                filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user)
+            )
+        )
         .order_by('-last_time')
     )
 
-    # If they have at least one conversation, go to the most recent one
     latest = qs.first()
     if latest and latest.last_time is not None:
         return redirect('chat:conversation', convo_id=latest.id)
 
-    # No conversations yet → show a simple placeholder page
     return render(request, 'chat/index.html', {
         'conversations': [],
     })
+
 @login_required
 def conversation_detail(request, convo_id):
     # 1) Get the conversation the user is part of
@@ -43,6 +47,7 @@ def conversation_detail(request, convo_id):
     # 2) All messages in this conversation
     messages_qs = conversation.messages.select_related("sender").all()
 
+    # mark messages in this convo as read (except ones I sent)
     conversation.messages.filter(
         is_read=False
     ).exclude(sender=request.user).update(is_read=True)
@@ -63,13 +68,20 @@ def conversation_detail(request, convo_id):
             )
         return redirect("chat:conversation", convo_id=conversation.id)
 
-    # Sidebar conversations list (all conversations this user is in)
+    
     all_conversations = (
         request.user.conversations
-        .all()
-        .prefetch_related("participants", "messages")
+        .annotate(
+            last_time=Max('messages__timestamp'),
+            unread_count=Count(
+                'messages',
+                filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user)
+            )
+        )
+        .order_by('-last_time')
+        .prefetch_related("participants")
     )
-    
+
     # Get content type for Message model (for flagging)
     from django.contrib.contenttypes.models import ContentType
     message_content_type = ContentType.objects.get_for_model(Message)
@@ -81,6 +93,7 @@ def conversation_detail(request, convo_id):
         "all_conversations": all_conversations,
         "message_content_type_id": message_content_type.id,
     })
+
 
 @login_required
 def start_conversation(request):

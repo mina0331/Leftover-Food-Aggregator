@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FlaggedContent, UserSuspension
+from .models import FlaggedContent, UserSuspension, ModeratorNotification, ModeratorActivityLog
 
 
 @admin.register(FlaggedContent)
@@ -55,3 +55,33 @@ class UserSuspensionAdmin(admin.ModelAdmin):
     def get_duration_display(self, obj):
         return obj.get_duration_display()
     get_duration_display.short_description = 'Duration'
+
+
+@admin.register(ModeratorNotification)
+class ModeratorNotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'moderator', 'flagged_content', 'is_read', 'created_at')
+    list_filter = ('is_read', 'created_at', 'moderator')
+    search_fields = ('moderator__username', 'flagged_content__reason')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+    
+    def has_add_permission(self, request):
+        return False  # Notifications are created automatically via signals
+
+
+@admin.register(ModeratorActivityLog)
+class ModeratorActivityLogAdmin(admin.ModelAdmin):
+    list_display = ('id', 'organization', 'action_type', 'performed_by', 'created_at', 'get_related_content')
+    list_filter = ('action_type', 'created_at', 'organization')
+    search_fields = ('organization__username', 'performed_by__username', 'description')
+    readonly_fields = ('created_at', 'content_type', 'object_id')
+    date_hierarchy = 'created_at'
+    
+    def get_related_content(self, obj):
+        if obj.related_content:
+            return str(obj.related_content)[:50]
+        return "—"
+    get_related_content.short_description = 'Related Content'
+    
+    def has_add_permission(self, request):
+        return False  # Activity logs are created automatically
