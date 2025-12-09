@@ -214,16 +214,19 @@ def create_post(request):
             
             post.save()
             
-            # Log activity for organization
-            if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
-                ModeratorActivityLog.objects.create(
-                    organization=request.user,
-                    action_type=ModeratorActivityLog.ActionType.POST_CREATED,
-                    performed_by=request.user,
-                    content_type=ContentType.objects.get_for_model(Post),
-                    object_id=post.id,
-                    description=f"Post created: {post.event[:100]}"
-                )
+            # Log activity for organization (gracefully handle missing table)
+            try:
+                if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+                    ModeratorActivityLog.objects.create(
+                        organization=request.user,
+                        action_type=ModeratorActivityLog.ActionType.POST_CREATED,
+                        performed_by=request.user,
+                        content_type=ContentType.objects.get_for_model(Post),
+                        object_id=post.id,
+                        description=f"Post created: {post.event[:100]}"
+                    )
+            except Exception:
+                pass  # Logging is optional, don't break post creation
             
             return redirect("posting:post_list")
         else:
@@ -321,16 +324,19 @@ def edit_post(request, post_id):
             form.save()
             post.read_users.clear()
             
-            # Log activity for organization
-            if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
-                ModeratorActivityLog.objects.create(
-                    organization=request.user,
-                    action_type=ModeratorActivityLog.ActionType.POST_EDITED,
-                    performed_by=request.user,
-                    content_type=ContentType.objects.get_for_model(Post),
-                    object_id=post.id,
-                    description=f"Post edited: {post.event[:100]}"
-                )
+            # Log activity for organization (gracefully handle missing table)
+            try:
+                if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+                    ModeratorActivityLog.objects.create(
+                        organization=request.user,
+                        action_type=ModeratorActivityLog.ActionType.POST_EDITED,
+                        performed_by=request.user,
+                        content_type=ContentType.objects.get_for_model(Post),
+                        object_id=post.id,
+                        description=f"Post edited: {post.event[:100]}"
+                    )
+            except Exception:
+                pass  # Logging is optional, don't break post editing
             
             return redirect('posting:post_detail', post_id=post.id)
     else:
@@ -357,16 +363,19 @@ def delete_post(request, post_id):
         # Clear read users when post is deleted
         post.read_users.clear()
         
-        # Log activity for organization
-        if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
-            ModeratorActivityLog.objects.create(
-                organization=request.user,
-                action_type=ModeratorActivityLog.ActionType.POST_DELETED,
-                performed_by=request.user,
-                content_type=ContentType.objects.get_for_model(Post),
-                object_id=post.id,
-                description=f"Post deleted: {post.event[:100]}"
-            )
+        # Log activity for organization (gracefully handle missing table)
+        try:
+            if hasattr(request.user, 'profile') and request.user.profile.role == Profile.Role.ORG:
+                ModeratorActivityLog.objects.create(
+                    organization=request.user,
+                    action_type=ModeratorActivityLog.ActionType.POST_DELETED,
+                    performed_by=request.user,
+                    content_type=ContentType.objects.get_for_model(Post),
+                    object_id=post.id,
+                    description=f"Post deleted: {post.event[:100]}"
+                )
+        except Exception:
+            pass  # Logging is optional, don't break post deletion
         
         messages.success(request, 'Your post has been deleted.')
         return redirect("posting:post_list")
