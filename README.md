@@ -54,7 +54,7 @@ A full-stack Django web application that aggregates real-time leftover food even
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/leftover-food-aggregator.git
+   git clone https://github.com/mina0331/leftover-food-aggregator.git
    cd leftover-food-aggregator
 2. **Create and activate a virtual environment**
    ```bash
